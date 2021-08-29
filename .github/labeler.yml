@@ -1,0 +1,27 @@
+elixir:
+  - instrumentation/**/*.ex
+  - instrumentation/**/*.exs
+  - propagators/**/*.ex
+  - propagators/**/*.exs
+  - exporters/**/*.ex
+  - exporters/**/*.exs
+
+erlang:
+  - instrumentation/**/*.erl
+  - instrumentation/**/*.hrl
+  - instrumentation/**/rebar.config
+  - propagators/**/*.erl
+  - propagators/**/*.hrl
+  - propagators/**/rebar.config
+  - exporters/**/*.erl
+  - exporters/**/*.hrl
+  - exporters/**/rebar.config
+
+instrumentation:
+  - instrumentation/**/*
+
+propagators:
+  - propagators/**/*
+
+scope-ci:
+  - .github/workflows/**
