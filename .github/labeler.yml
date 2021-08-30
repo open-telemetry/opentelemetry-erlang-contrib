@@ -58,3 +58,6 @@ opentelemetry_phoenix:
 
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
+
+opentelemetry_oban:
+  - instrumentation/opentelemetry_oban/**/*

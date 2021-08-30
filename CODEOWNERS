@@ -16,5 +16,6 @@
 
 /instrumentation/opentelemetry_cowboy  @bryannaegele @tsloughter
 /instrumentation/opentelemetry_ecto    @bryannaegele @tsloughter
+/instrumentation/opentelemetry_oban    @indrekj
 /instrumentation/opentelemetry_phoenix @bryannaegele @tsloughter
 /utilities/opentelemetry_telemetry     @bryannaegele @tsloughter
