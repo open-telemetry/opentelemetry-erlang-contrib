@@ -12,4 +12,6 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-*  @open-telemetry/erlang-approvers
+@open-telemetry/erlang-approvers
+
+/instrumentation/opentelemetry_phoenix @bryannaegele @tristansloughter
