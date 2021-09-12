@@ -5,6 +5,8 @@ elixir:
   - propagators/**/*.exs
   - exporters/**/*.ex
   - exporters/**/*.exs
+  - examples/**/*.ex
+  - examples/**/*.exs
 
 erlang:
   - instrumentation/**/*.erl
@@ -16,6 +18,9 @@ erlang:
   - exporters/**/*.erl
   - exporters/**/*.hrl
   - exporters/**/rebar.config
+  - examples/**/*.erl
+  - examples/**/*.hrl
+  - examples/**/rebar.config
 
 instrumentation:
   - instrumentation/**/*
@@ -23,5 +28,11 @@ instrumentation:
 propagators:
   - propagators/**/*
 
+examples:
+  - examples/**/*
+
 scope-ci:
   - .github/workflows/**
+
+opentelemetry_phoenix:
+  - instrumentation/opentelemetry_phoenix
