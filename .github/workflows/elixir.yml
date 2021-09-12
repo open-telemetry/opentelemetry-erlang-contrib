@@ -22,7 +22,9 @@ jobs:
   #         echo "::set-output name=matrix::$(cat ./.github/test-matrix.json | jq -r -s '.|tojson')"
   opentelemetry-phoenix:
     # needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix'))
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix') && contains(github.event.pull_request.labels.*.name, 'scope-ci'))
+    env:
+      app: 'opentelemetry_phoenix'
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
@@ -42,8 +44,6 @@ jobs:
         exclude:
           - otp_version: '21.3.8.24'
             elixir_version: '1.12.3'
-    env:
-      app: 'opentelemetry_phoenix'
     steps:
       - uses: actions/checkout@v2
       - uses: erlef/setup-beam@v1
