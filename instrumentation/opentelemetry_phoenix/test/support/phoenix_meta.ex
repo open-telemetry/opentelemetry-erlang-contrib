@@ -36,7 +36,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
@@ -118,7 +117,6 @@ defmodule PhoenixMeta do
                version: :"HTTP/1.1"
              }},
           assigns: %{},
-          before_send: [],
           body_params: %{},
           cookies: %{},
           halted: false,
@@ -245,7 +243,6 @@ defmodule PhoenixMeta do
                version: :"HTTP/1.1"
              }},
           assigns: %{},
-          before_send: [],
           body_params: %{},
           cookies: %{},
           halted: false,
@@ -403,7 +400,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
@@ -501,7 +497,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{layout: {MyStoreWeb.LayoutView, "app.html"}},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
@@ -607,7 +602,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
@@ -708,7 +702,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %Plug.Conn.Unfetched{aspect: :body_params},
         cookies: %{},
         halted: false,
@@ -793,7 +786,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %Plug.Conn.Unfetched{aspect: :body_params},
         cookies: %{},
         halted: false,
@@ -878,7 +870,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
@@ -972,7 +963,6 @@ defmodule PhoenixMeta do
              version: :"HTTP/1.1"
            }},
         assigns: %{},
-        before_send: [],
         body_params: %{},
         cookies: %{},
         halted: false,
