@@ -41,3 +41,4 @@
   - [ ] The job is scoped to only run for relevant code changes
 - [ ] [Codeowners](https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/CODEOWNERS) adds scoped ownership for project maintainers
 - [ ] License file (Apache2 - copyright to OpenTelemetry Authors)
+- [ ] All code complies with the [Otel Specification](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification) and Otel Semantic Conventions - [Trace](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/trace/semantic_conventions) [Metrics](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/metrics/semantic_conventions)
