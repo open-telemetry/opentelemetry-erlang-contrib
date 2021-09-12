@@ -56,9 +56,9 @@ defmodule OpentelemetryPhoenix.MixProject do
   defp deps do
     [
       {:opentelemetry_api, "~> 1.0.0-rc"},
-      {:opentelemetry, "~> 1.0.0-rc"},
       {:opentelemetry_telemetry, "~> 1.0.0-beta"},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 0.4 or ~> 1.0.0"},
+      {:opentelemetry, "~> 1.0.0-rc", only: [:dev, :test]},
       {:plug, "~> 1.11", only: [:dev, :test]},
       {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.4", only: [:test]},
