@@ -23,7 +23,7 @@ jobs:
           echo "::set-output name=matrix::$matrixStringifiedObject"
   opentelemetry-phoenix:
     needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix') && contains(github.event.pull_request.labels.*.name, 'scope-ci'))
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix'))
     env:
       app: 'opentelemetry_phoenix'
     defaults:
