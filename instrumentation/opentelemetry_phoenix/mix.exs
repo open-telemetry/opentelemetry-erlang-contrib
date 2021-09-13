@@ -21,7 +21,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
-      source_url: "https://github.com/opentelemetry-beam/opentelemetry_phoenix"
+      source_url: "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_phoenix"
     ]
   end
 
@@ -42,8 +42,10 @@ defmodule OpentelemetryPhoenix.MixProject do
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{
-        "GitHub" => "https://github.com/opentelemetry-beam/opentelemetry_phoenix",
+        "GitHub" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_phoenix",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
+        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
