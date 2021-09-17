@@ -31,10 +31,16 @@ defmodule OpentelemetryPhoenix do
   @tracer_id :opentelemetry_phoenix
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix()]
+  @type opts :: [endpoint_prefix() | sampler()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
+
+  @typedoc "The sampler or sampler function to use when creating the spans."
+  @type sampler :: {:sampler, :otel_sampler.t() | sampler_fun() | nil}
+
+  @type sampler_fun :: (telemetry_data() -> :otel_sampler.t() | nil)
+  @type telemetry_data :: %{measurements: map(), meta: map()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -46,12 +52,24 @@ defmodule OpentelemetryPhoenix do
     {:ok, otel_phx_vsn} = :application.get_key(@tracer_id, :vsn)
     OpenTelemetry.register_tracer(@tracer_id, otel_phx_vsn)
 
-    attach_endpoint_start_handler(opts)
-    attach_endpoint_stop_handler(opts)
-    attach_router_start_handler()
-    attach_router_dispatch_exception_handler()
+    :ok = attach_endpoint_start_handler(opts)
+    :ok = attach_endpoint_stop_handler(opts)
+    :ok = attach_router_start_handler(opts)
+    :ok = attach_router_dispatch_exception_handler(opts)
 
     :ok
+  end
+
+  if Mix.env() == :test do
+    def detach_all do
+      [
+        {__MODULE__, :endpoint_start},
+        {__MODULE__, :endpoint_stop},
+        {__MODULE__, :router_dispatch_start},
+        {__MODULE__, :router_dispatch_exception}
+      ]
+      |> Enum.each(&:telemetry.detach/1)
+    end
   end
 
   defp ensure_opts(opts), do: Keyword.merge(default_opts(), opts)
@@ -66,7 +84,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
-      %{}
+      opts
     )
   end
 
@@ -76,33 +94,32 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_stop},
       opts[:endpoint_prefix] ++ [:stop],
       &__MODULE__.handle_endpoint_stop/4,
-      %{}
+      opts
     )
   end
 
   @doc false
-  def attach_router_start_handler do
+  def attach_router_start_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_start},
       [:phoenix, :router_dispatch, :start],
       &__MODULE__.handle_router_dispatch_start/4,
-      %{}
+      opts
     )
   end
 
   @doc false
-  def attach_router_dispatch_exception_handler do
+  def attach_router_dispatch_exception_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_exception},
       [:phoenix, :router_dispatch, :exception],
       &__MODULE__.handle_router_dispatch_exception/4,
-      %{}
+      opts
     )
   end
 
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config) do
-    # TODO: maybe add config for what paths are traced? Via sampler?
+  def handle_endpoint_start(_event, measurements, %{conn: %{adapter: adapter} = conn} = meta, config) do
     :otel_propagator.text_map_extract(conn.req_headers)
 
     peer_data = Plug.Conn.get_peer_data(conn)
@@ -125,8 +142,14 @@ defmodule OpentelemetryPhoenix do
       "net.transport": :"IP.TCP"
     ]
 
+    sampler = get_sampler(config[:sampler], %{measurements: measurements, meta: meta})
+
+    start_opts =
+      %{kind: :server}
+      |> maybe_put_sampler(sampler)
+
     # start the span with a default name. Route name isn't known until router dispatch
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{kind: :server})
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, start_opts)
     |> Span.set_attributes(attributes)
   end
 
@@ -216,6 +239,20 @@ defmodule OpentelemetryPhoenix do
 
       [value | _] ->
         value
+    end
+  end
+
+  defp get_sampler(sampler_fun, telemetry_data) when is_function(sampler_fun) do
+    sampler_fun.(telemetry_data)
+  end
+
+  defp get_sampler(sampler, _telemetry_data), do: sampler
+
+  defp maybe_put_sampler(opts, sampler) do
+    if sampler == nil do
+      opts
+    else
+      Map.put(opts, :sampler, sampler)
     end
   end
 end

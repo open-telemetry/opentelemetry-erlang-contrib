@@ -17,6 +17,7 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   setup do
+    OpentelemetryPhoenix.detach_all()
     :application.stop(:opentelemetry)
     :application.set_env(:opentelemetry, :tracer, :otel_tracer_default)
 
@@ -234,6 +235,101 @@ defmodule OpentelemetryPhoenixTest do
              "phoenix.action": :code_exception,
              "phoenix.plug": MyStoreWeb.PageController
            ] == List.keysort(list, 0)
+  end
+
+  test "sampler option" do
+    OpentelemetryPhoenix.setup(sampler: my_sampler())
+
+    # GET should be sampled
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start()
+    )
+
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 444}, Meta.endpoint_stop())
+
+    # POST should not be sampled
+    meta = Meta.endpoint_start()
+    meta = %{meta | conn: %{meta.conn | method: "POST"}}
+    :telemetry.execute([:phoenix, :endpoint, :start], %{system_time: System.system_time()}, meta)
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 444}, Meta.endpoint_stop())
+
+    assert_receive {:span, span(name: "HTTP GET")}
+    refute_receive {:span, span(name: "HTTP POST")}
+  end
+
+  test "sampler function option with function" do
+    always_on = :otel_sampler.setup({:always_on, %{}})
+    always_off = :otel_sampler.setup({:always_off, %{}})
+
+    OpentelemetryPhoenix.setup(
+      sampler: fn
+        %{measurements: %{system_time: system_time}, meta: %{conn: %{method: method}}} ->
+          assert system_time > 0
+
+          case method do
+            "GET" -> always_on
+            "POST" -> always_off
+          end
+      end
+    )
+
+    # GET should be sampled
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start()
+    )
+
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 444}, Meta.endpoint_stop())
+
+    # POST should not be sampled
+    meta = Meta.endpoint_start()
+    meta = %{meta | conn: %{meta.conn | method: "POST"}}
+    :telemetry.execute([:phoenix, :endpoint, :start], %{system_time: System.system_time()}, meta)
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 444}, Meta.endpoint_stop())
+
+    assert_receive {:span, span(name: "HTTP GET")}
+    refute_receive {:span, span(name: "HTTP POST")}
+  end
+
+  test "sampler function option gets measurements" do
+    always_on = :otel_sampler.setup({:always_on, %{}})
+    always_off = :otel_sampler.setup({:always_off, %{}})
+
+    OpentelemetryPhoenix.setup(
+      sampler_for: fn
+        %{measurements: %{system_time: system_time}} when system_time > 0 -> {:sampler, always_on}
+        _ -> {:sampler, always_off}
+      end
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start()
+    )
+
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 444}, Meta.endpoint_stop())
+
+    assert_receive {:span, span(name: "HTTP GET")}
+  end
+
+  # when https://github.com/open-telemetry/opentelemetry-erlang/pull/260 is released you should
+  # use :otel_sampler.new(&sample/7, "my sampler", :my_opts) to create the sampler
+  defp my_sampler, do: {&sample/7, "my sampler", :my_opts}
+
+  defp sample(_ctx, _trace_id, _links, span_name, _span_kind, _attributes, opts) do
+    assert opts == :my_opts
+
+    decision =
+      case span_name do
+        "HTTP GET" -> :record_and_sample
+        "HTTP POST" -> :drop
+      end
+
+    {decision, [], []}
   end
 
   defp x_forwarded_for_request(x_forwarded_for) do
