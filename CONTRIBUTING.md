@@ -15,4 +15,3 @@ Updating the file:
 1. Update the beautified json file (this is the form you'll commit)
 2. Uglify and escape the json object
 3. Copy this final value to the `test-matrix` job output
-
