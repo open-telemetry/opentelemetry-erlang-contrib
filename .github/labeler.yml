@@ -1,12 +1,16 @@
 elixir:
   - instrumentation/**/*.ex
   - instrumentation/**/*.exs
+  - instrumentation/**/mix.lock
   - propagators/**/*.ex
   - propagators/**/*.exs
+  - propagators/**/mix.lock
   - exporters/**/*.ex
   - exporters/**/*.exs
+  - exporters/**/mix.lock
   - examples/**/*.ex
   - examples/**/*.exs
+  - examples/**/mix.lock
 
 erlang:
   - instrumentation/**/*.erl
@@ -35,4 +39,4 @@ scope-ci:
   - .github/workflows/**
 
 opentelemetry_phoenix:
-  - instrumentation/opentelemetry_phoenix
+  - instrumentation/opentelemetry_phoenix/**/*
