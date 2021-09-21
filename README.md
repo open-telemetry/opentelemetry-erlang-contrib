@@ -38,7 +38,7 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 - [opentelemetry-phoenix](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix)
 
 ## Supported Runtimes
-      
+
 OpenTelemetry requires OTP v21.3 and above.
 
 See [Elixir OTP Compatability](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
@@ -59,7 +59,6 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 
 Apache 2.0 - See [LICENSE][license-url] for more information.
 
-[discussions-url]: https://github.com/open-telemetry/opentelemetry-js/discussions
-[license-url]: https://github.com/open-telemetry/opentelemetry-js-contrib/blob/main/LICENSE
-[up-for-grabs-issues]: https://github.com/open-telemetry/opentelemetry-js-contrib/issues?q=is%3Aissue+is%3Aopen+label%3Aup-for-grabs
-[good-first-issues]: https://github.com/open-telemetry/openTelemetry-js-contrib/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[discussions-url]: https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions
+[license-url]: https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/LICENSE
+[good-first-issues]: https://github.com/open-telemetry/openTelemetry-erlang-contrib/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
