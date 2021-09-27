@@ -15,16 +15,16 @@ elixir:
 erlang:
   - instrumentation/**/*.erl
   - instrumentation/**/*.hrl
-  - instrumentation/**/rebar.config
+  - instrumentation/**/rebar.*
   - propagators/**/*.erl
   - propagators/**/*.hrl
-  - propagators/**/rebar.config
+  - propagators/**/rebar.*
   - exporters/**/*.erl
   - exporters/**/*.hrl
-  - exporters/**/rebar.config
+  - exporters/**/rebar.*
   - examples/**/*.erl
   - examples/**/*.hrl
-  - examples/**/rebar.config
+  - examples/**/rebar.*
 
 instrumentation:
   - instrumentation/**/*
@@ -37,6 +37,9 @@ examples:
 
 scope-ci:
   - .github/workflows/**
+
+opentelemetry_cowboy:
+  - instrumentation/opentelemetry_cowboy/**/*
 
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*

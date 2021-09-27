@@ -33,6 +33,10 @@ core distribution of the API and SDK.
 
 OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can also create and use their own. Currently, OpenTelemetry supports automatic tracing for:
 
+### Erlang Instrumentation
+
+- [opentelemetry-cowboy](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_cowboy)
+
 ### Elixir Instrumentation
 
 - [opentelemetry-phoenix](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix)
