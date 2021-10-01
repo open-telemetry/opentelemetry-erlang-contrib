@@ -40,4 +40,5 @@ defmodule MyApp.Endpoint do
   ...
 end
 ```
+The [Phoenix endpoint.ex template](https://github.com/phoenixframework/phoenix/blob/v1.6.0/installer/templates/phx_web/endpoint.ex#L39) can be used as a reference
 
