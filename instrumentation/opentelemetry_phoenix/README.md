@@ -27,3 +27,17 @@ def deps do
 end
 ```
 
+## Note on phoenix integration
+
+`OpentelemetryPhoenix` requires phoenix to use `Plug.Telemetry` in order to correctly trace endpoint calls.
+
+The `endpoint.ex` file should look like:
+```Elixir
+defmodule MyApp.Endpoint do
+  use Phoenix.Endpoint, otp_app: :my_app
+  ...
+  plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+  ...
+end
+```
+
