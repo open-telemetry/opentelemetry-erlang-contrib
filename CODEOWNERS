@@ -15,4 +15,5 @@
 @open-telemetry/erlang-approvers
 
 /instrumentation/opentelemetry_cowboy @bryannaegele @tsloughter
+/instrumentation/opentelemetry_ecto    @bryannaegele @tsloughter
 /instrumentation/opentelemetry_phoenix @bryannaegele @tsloughter

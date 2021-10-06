@@ -21,6 +21,52 @@ jobs:
         run: |
           matrixStringifiedObject="{\"otp_version\":[\"24.0.6\",\"23.3.4.7\",\"22.3.4.21\"],\"elixir_version\":[\"1.12.3\",\"1.11.4\"],\"rebar3_version\":[\"3.16.1\"],\"os\":[\"ubuntu-18.04\"],\"include\":[{\"otp_version\":\"21.3.8.24\",\"elixir_version\":\"1.10.4\",\"rebar3_version\":\"3.15.2\"},{\"otp_version\":\"21.3.8.24\",\"elixir_version\":\"1.11.4\",\"rebar3_version\":\"3.15.2\"}],\"exclude\":[{\"otp_version\":\"21.3.8.24\",\"elixir_version\":\"1.12.3\"}]}"
           echo "::set-output name=matrix::$matrixStringifiedObject"
+  opentelemetry-ecto:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
+    env:
+      app: 'opentelemetry_ecto'
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ubuntu-18.04
+    name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    services:
+      postgres:
+        image: circleci/postgres:11.3-alpine-ram
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: opentelemetry_ecto_test
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            instrumentation/${{ env.app }}/deps
+            instrumentation/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'instrumentation/${{ env.app }}/mix.lock')) }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+      - name: Test
+        run: mix test
+
   opentelemetry-phoenix:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix'))
@@ -45,8 +91,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.app }}/deps
-            ${{ env.app }}/_build
+            instrumentation/${{ env.app }}/deps
+            instrumentation/${{ env.app }}/_build
           key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'instrumentation/${{ env.app }}/mix.lock')) }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
