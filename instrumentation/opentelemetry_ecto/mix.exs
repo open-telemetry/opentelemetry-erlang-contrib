@@ -25,7 +25,7 @@ defmodule OpentelemetryEcto.MixProject do
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2"],
       links: %{
-        "GitHub" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_ecto",
+        "GitHub" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
         "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
