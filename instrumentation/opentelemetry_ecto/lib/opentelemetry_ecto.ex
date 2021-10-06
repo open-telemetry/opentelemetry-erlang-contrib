@@ -97,7 +97,11 @@ defmodule OpentelemetryEcto do
         {String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit)}
       end)
 
-    s = OpenTelemetry.Tracer.start_span(span_name, %{start_time: start_time, attributes: attributes ++ base_attributes})
+    s =
+      OpenTelemetry.Tracer.start_span(span_name, %{
+        start_time: start_time,
+        attributes: attributes ++ base_attributes
+      })
 
     OpenTelemetry.Span.end_span(s)
   end

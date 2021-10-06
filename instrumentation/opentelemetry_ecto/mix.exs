@@ -12,7 +12,8 @@ defmodule OpentelemetryEcto.MixProject do
       aliases: aliases(),
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
-      source_url: "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_ecto"
+      source_url:
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto"
     ]
   end
 
@@ -25,7 +26,8 @@ defmodule OpentelemetryEcto.MixProject do
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2"],
       links: %{
-        "GitHub" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto",
+        "GitHub" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
         "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
@@ -50,8 +52,8 @@ defmodule OpentelemetryEcto.MixProject do
       {:opentelemetry_api, "~> 1.0.0-rc"},
       {:opentelemetry, "~> 1.0.0-rc", only: [:dev, :test]},
       {:ex_doc, "~> 0.25.0", only: [:dev], runtime: false},
-      {:ecto_sql, ">= 3.0.0", only: [:test]},
-      {:postgrex, ">= 0.15.0", only: [:test]}
+      {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
+      {:postgrex, ">= 0.15.0", only: [:dev, :test]}
     ]
   end
 end
