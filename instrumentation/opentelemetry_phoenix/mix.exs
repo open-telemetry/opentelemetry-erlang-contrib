@@ -5,7 +5,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.0.0-rc.3",
+      version: "1.0.0-rc.4",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -21,7 +21,8 @@ defmodule OpentelemetryPhoenix.MixProject do
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
-      source_url: "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix"
+      source_url:
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix"
     ]
   end
 
@@ -57,10 +58,10 @@ defmodule OpentelemetryPhoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry_api, "~> 1.0.0-rc"},
+      {:opentelemetry_api, "~> 1.0.0-rc.2"},
       {:opentelemetry_telemetry, "~> 1.0.0-beta"},
       {:telemetry, "~> 0.4 or ~> 1.0.0"},
-      {:opentelemetry, "~> 1.0.0-rc", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.0.0-rc.2", only: [:dev, :test]},
       {:plug, "~> 1.11", only: [:dev, :test]},
       {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.4", only: [:test]},
