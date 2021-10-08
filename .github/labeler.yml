@@ -41,5 +41,8 @@ scope-ci:
 opentelemetry_cowboy:
   - instrumentation/opentelemetry_cowboy/**/*
 
+opentelemetry_ecto:
+  - instrumentation/opentelemetry_ecto/**/*
+
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
