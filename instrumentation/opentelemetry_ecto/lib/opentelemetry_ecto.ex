@@ -24,9 +24,6 @@ defmodule OpentelemetryEcto do
       source (the table name for SQL adapters).
   """
   def setup(event_prefix, config \\ []) do
-    # register the tracer. just re-registers if called for multiple repos
-    _ = OpenTelemetry.register_application_tracer(:opentelemetry_ecto)
-
     event = event_prefix ++ [:query]
     :telemetry.attach({__MODULE__, event}, event, &__MODULE__.handle_event/4, config)
   end

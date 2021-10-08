@@ -49,8 +49,8 @@ defmodule OpentelemetryEcto.MixProject do
   defp deps do
     [
       {:telemetry, "~> 0.4 or ~> 1.0.0"},
-      {:opentelemetry_api, "~> 1.0.0-rc"},
-      {:opentelemetry, "~> 1.0.0-rc", only: [:dev, :test]},
+      {:opentelemetry_api, "<= 1.0.0-rc.2"},
+      {:opentelemetry, "<= 1.0.0-rc.2", only: [:dev, :test]},
       {:ex_doc, "~> 0.25.0", only: [:dev], runtime: false},
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
       {:postgrex, ">= 0.15.0", only: [:dev, :test]}
