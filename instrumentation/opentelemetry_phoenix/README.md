@@ -22,10 +22,20 @@ may be supplied.
 ```elixir
 def deps do
   [
-    {:opentelemetry_phoenix, "~> 1.0.0-rc"}
+    {:opentelemetry_phoenix, "~> 1.0.0-rc.4"}
   ]
 end
 ```
+
+## Compatibility Matrix
+
+| OpentelemetryPhoenix Version | Otel Version | Notes |
+| :--------------------------- | :----------- | :---- |
+|                              |              |       |
+| v0.1.0                       | <= v.0.5.0   |       |
+| v1.0.0-rc.3                  | v1.0.0-rc.1  |       |
+|                              | v1.0.0-rc.2  |       |
+| v1.0.0-rc.4                  | v1.0.0-rc.2  | Otel rc.3 will be a breaking change |
 
 ## Note on phoenix integration
 
