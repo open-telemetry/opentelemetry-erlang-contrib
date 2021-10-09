@@ -57,7 +57,7 @@ defmodule OpentelemetryEcto do
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
-      end <> ":#{source}"
+      end <> if source != nil, do: ":#{source}", else: ""
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
 
