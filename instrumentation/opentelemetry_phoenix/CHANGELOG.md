@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+* Opentelemetry dependency upgraded to rc3
+
 ## 1.0.0-rc.4
 
 ### Changed

@@ -36,6 +36,7 @@ end
 | v1.0.0-rc.3                  | v1.0.0-rc.1  |       |
 |                              | v1.0.0-rc.2  |       |
 | v1.0.0-rc.4                  | v1.0.0-rc.2  | Otel rc.3 will be a breaking change |
+| unreleased                   | v1.0.0-rc.3  |       |
 
 ## Note on phoenix integration
 
