@@ -15,12 +15,8 @@ setup() ->
 
 -spec setup([]) -> ok.
 setup(_Opts) ->
-    register_tracer(),
     attach_event_handlers(),
     ok.
-
-register_tracer() ->
-    opentelemetry:register_tracer(?MODULE, "0.1.0").
 
 attach_event_handlers() ->
     Events = [
@@ -33,7 +29,7 @@ attach_event_handlers() ->
 
 handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Config) ->
     Headers = maps:get(headers, Req),
-    otel_propagator:text_map_extract(maps:to_list(Headers)),
+    otel_propagator_text_map:extract(maps:to_list(Headers)),
     {RemoteIP, _Port} = maps:get(peer, Req),
     Method = maps:get(method, Req),
 
@@ -72,7 +68,8 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
         Status when Status < 400 ->
             otel_span:set_attributes(Ctx, [{'http.status', Status}])
     end,
-    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta);
+    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
+    otel_ctx:clear();
 
 handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
     Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
@@ -89,7 +86,8 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
                                    {'http.request_content_length', maps:get(req_body_length, Measurements)},
                                    {'http.response_content_length', maps:get(resp_body_length, Measurements)}
                                   ]),
-    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta);
+    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
+    otel_ctx:clear();
 
 handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
     Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{}),
@@ -104,7 +102,8 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
                                   ]),
     otel_span:add_event(Ctx, atom_to_binary(ErrorType, utf8), [{error, Error}, {reason, Reason}]),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
-    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta).
+    otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
+    otel_ctx:clear().
 
 http_flavor(Req) ->
     case maps:get(version, Req, undefined) of

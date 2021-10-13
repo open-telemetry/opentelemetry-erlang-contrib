@@ -48,8 +48,10 @@ end_per_suite(_Config) ->
 init_per_testcase(_, Config) ->
     application:set_env(opentelemetry, processors, [{otel_batch_processor, #{scheduled_delay_ms => 1}}]),
 
+    {ok, _} = application:ensure_all_started(telemetry),
     {ok, _} = application:ensure_all_started(opentelemetry),
     {ok, _} = application:ensure_all_started(opentelemetry_telemetry),
+    {ok, _} = application:ensure_all_started(opentelemetry_cowboy),
     opentelemetry_cowboy:setup(),
 
     otel_batch_processor:set_exporter(otel_exporter_pid, self()),
@@ -58,6 +60,7 @@ init_per_testcase(_, Config) ->
 
 end_per_testcase(_, Config) ->
     application:stop(telemetry),
+    application:stop(opentelemetry_cowboy),
     application:stop(opentelemetry_telemetry),
     application:stop(opentelemetry),
 
