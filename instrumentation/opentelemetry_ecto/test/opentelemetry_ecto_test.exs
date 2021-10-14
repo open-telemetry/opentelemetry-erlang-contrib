@@ -13,7 +13,15 @@ defmodule OpentelemetryEctoTest do
   end
 
   setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(OpentelemetryEcto.TestRepo)
+    :application.stop(:opentelemetry)
+    :application.set_env(:opentelemetry, :tracer, :otel_tracer_default)
+
+    :application.set_env(:opentelemetry, :processors, [
+      {:otel_batch_processor, %{scheduled_delay_ms: 1}}
+    ])
+
+    :application.start(:opentelemetry)
+
     :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
 
     OpenTelemetry.Tracer.start_span("test")
