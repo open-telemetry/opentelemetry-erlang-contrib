@@ -1,5 +1,5 @@
 {application, opentelemetry_cowboy,
- [{description, "An OTP library"},
+ [{description, "OpenTelemetry Cowboy Instrumentation"},
   {vsn, "0.1.0"},
   {registered, []},
   {applications,
@@ -12,6 +12,7 @@
   {env,[]},
   {modules, []},
 
+  {doc, "doc"},
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {links, [{"GitHub", "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_cowboy"}]}
  ]}.
