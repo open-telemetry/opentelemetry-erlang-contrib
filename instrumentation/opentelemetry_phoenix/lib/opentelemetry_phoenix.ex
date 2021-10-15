@@ -10,7 +10,6 @@ defmodule OpentelemetryPhoenix do
   In your application start:
 
       def start(_type, _args) do
-        OpenTelemetry.register_application_tracer(:my_app)
         OpentelemetryPhoenix.setup()
 
         children = [
