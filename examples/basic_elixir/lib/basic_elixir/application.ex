@@ -11,8 +11,6 @@ defmodule BasicElixir.Application do
       {BasicElixir.Worker, []}
     ]
 
-    OpenTelemetry.register_application_tracer(:basic_elixir)
-
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: BasicElixir.Supervisor]
