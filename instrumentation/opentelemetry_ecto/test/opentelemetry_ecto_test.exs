@@ -39,7 +39,8 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       name: "opentelemetry_ecto.test_repo.query:users",
-                      attributes: list
+                      attributes: list,
+                      kind: :client
                     )}
 
     assert [
