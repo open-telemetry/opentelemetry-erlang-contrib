@@ -140,7 +140,7 @@ defmodule OpentelemetryPhoenixTest do
                             {"exception.message", "Erlang error: :badkey"},
                             {"exception.stacktrace", _stacktrace},
                             {:key, :name},
-                            {:map, %{username: "rick"}}
+                            {:map, "%{username: \"rick\"}"}
                           ]
                         )
                       ],
