@@ -131,7 +131,7 @@ defmodule OpentelemetryPhoenix do
     # ensure the correct span is current and update the status
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    Span.set_attribute(ctx, :"http.status", conn.status)
+    Span.set_attribute(ctx, :"http.status_code", conn.status)
 
     if conn.status >= 400 do
       Span.set_status(ctx, OpenTelemetry.status(:error, ""))
