@@ -95,7 +95,7 @@ defmodule OpentelemetryEcto do
 
     case query_result do
       {:error, error} ->
-        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, Postgrex.Error.message(error)))
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
 
       {:ok, _} ->
         :ok
@@ -103,4 +103,10 @@ defmodule OpentelemetryEcto do
 
     OpenTelemetry.Span.end_span(s)
   end
+
+  defp format_error(%{__exception__: true} = exception) do
+    Exception.message(exception)
+  end
+
+  defp format_error(_), do: ""
 end
