@@ -97,7 +97,8 @@ defmodule OpentelemetryEcto do
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: attributes ++ base_attributes
+        attributes: attributes ++ base_attributes,
+        kind: :client
       })
 
     OpenTelemetry.Span.end_span(s)
