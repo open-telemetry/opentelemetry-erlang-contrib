@@ -1,8 +1,10 @@
 defmodule OpentelemetryEctoTest do
+  use ExUnit.Case
+  import Ecto.Query
+  require OpenTelemetry.Tracer
+
   alias OpentelemetryEcto.TestRepo, as: Repo
   alias OpentelemetryEcto.TestModels.{User, Post}
-  require OpenTelemetry.Tracer
-  use ExUnit.Case
 
   @event_name [:opentelemetry_ecto, :test_repo]
 
@@ -100,6 +102,24 @@ defmodule OpentelemetryEctoTest do
 
     assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:users")}
     assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:posts")}
+  end
+
+  test "sets error message on error" do
+    attach_handler()
+
+    try do
+      Repo.all(from u in "users", select: u.non_existant_field)
+    rescue
+      _ -> :ok
+    end
+
+    assert_receive {:span,
+                    span(
+                      name: "opentelemetry_ecto.test_repo.query:users",
+                      status: {:status, :error, message}
+                    )}
+
+    assert message =~ "non_existant_field does not exist"
   end
 
   def attach_handler(config \\ []) do

@@ -67,23 +67,16 @@ defmodule OpentelemetryEcto do
         _ -> type
       end
 
-    result =
-      case query_result do
-        {:ok, _} -> []
-        _ -> [error: true]
-      end
-
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
-    base_attributes =
-      Keyword.merge(result,
-        "db.type": db_type,
-        "db.statement": query,
-        source: source,
-        "db.instance": database,
-        "db.url": url,
-        "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
-      )
+    base_attributes = [
+      "db.type": db_type,
+      "db.statement": query,
+      source: source,
+      "db.instance": database,
+      "db.url": url,
+      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+    ]
 
     attributes =
       measurements
@@ -101,6 +94,20 @@ defmodule OpentelemetryEcto do
         kind: :client
       })
 
+    case query_result do
+      {:error, error} ->
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
+
+      {:ok, _} ->
+        :ok
+    end
+
     OpenTelemetry.Span.end_span(s)
   end
+
+  defp format_error(%{__exception__: true} = exception) do
+    Exception.message(exception)
+  end
+
+  defp format_error(_), do: ""
 end
