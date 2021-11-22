@@ -11,6 +11,9 @@ elixir:
   - examples/**/*.ex
   - examples/**/*.exs
   - examples/**/mix.lock
+  - utilities/**/*.ex
+  - utilities/**/*.exs
+  - utilities/**/mix.lock
 
 erlang:
   - instrumentation/**/*.erl
@@ -25,6 +28,9 @@ erlang:
   - examples/**/*.erl
   - examples/**/*.hrl
   - examples/**/rebar.*
+  - utilities/**/*.erl
+  - utilities/**/*.hrl
+  - utilities/**/rebar.*
 
 instrumentation:
   - instrumentation/**/*
@@ -34,6 +40,9 @@ propagators:
 
 examples:
   - examples/**/*
+
+utilities:
+  - utilities/**/*
 
 scope-ci:
   - .github/workflows/**
@@ -46,3 +55,6 @@ opentelemetry_ecto:
 
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
+
+opentelemetry_telemetry:
+  - utilities/opentelemetry_telemetry/**/*
