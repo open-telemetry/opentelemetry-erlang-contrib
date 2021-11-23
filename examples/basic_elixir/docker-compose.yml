@@ -1,0 +1,28 @@
+version: '3'
+services:
+  elixir:
+    build: .
+
+  otel:
+    image: otel/opentelemetry-collector-contrib-dev:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - '55681:55681'
+      - '55680:55680'
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
+  zipkin:
+    image: openzipkin/zipkin-slim
+    ports:
+      - '9411:9411'
+
+  # Jaeger
+  jaeger-all-in-one:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "14268"
+      - "14250"
+
+
