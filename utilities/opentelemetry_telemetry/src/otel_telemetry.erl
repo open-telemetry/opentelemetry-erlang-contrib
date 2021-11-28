@@ -149,7 +149,7 @@ handle_event(_Event,
              _Measurements,
              Metadata,
              #{type := stop, tracer_id := TracerId}) ->
-    Ctx = set_current_telemetry_span(TracerId, Metadata),
+    _Ctx = set_current_telemetry_span(TracerId, Metadata),
     end_telemetry_span(TracerId, Metadata),
     ok;
 handle_event(_Event,
