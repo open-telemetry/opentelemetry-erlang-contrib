@@ -60,9 +60,14 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
     Status1 = transform_status(Status),
     case Status1 of
         undefined ->
-          {ErrorType, Error, Reason} = maps:get(error, Meta)
-          otel_span:add_event(Ctx, atom_to_binary(ErrorType, utf8), [{error, Error}, {reason, Reason}]),
-          otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
+          case maps:get(error, Meta, undefined) of
+            {ErrorType, Error, Reason} ->
+              otel_span:add_event(Ctx, atom_to_binary(ErrorType, utf8), [{error, Error}, {reason, Reason}]),
+              otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
+            _ ->
+              % do nothing first as I'm unsure how should we handle this
+              ok
+          end;
         Status1 when Status1 >= 400 ->
             otel_span:set_attributes(Ctx, [{'http.status_code', Status1}]),
             otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
