@@ -89,7 +89,7 @@ successful_request(_Config) ->
                              {'http.user_agent', <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>},
                              {'net.host.ip', <<"127.0.0.1">>},
                              {'net.transport', 'IP.TCP'},
-                             {'http.status', 200},
+                             {'http.status_code', 200},
                              {'http.request_content_length', 0},
                              {'http.response_content_length', 12}],
             ?assertListsMatch(ExpectedAttrs, Attributes)
@@ -114,7 +114,7 @@ chunked_request(_Config) ->
                              {'http.user_agent', <<>>},
                              {'net.host.ip', <<"127.0.0.1">>},
                              {'net.transport', 'IP.TCP'},
-                             {'http.status', 200},
+                             {'http.status_code', 200},
                              {'http.request_content_length', 0},
                              {'http.response_content_length', 14}],
             ?assertListsMatch(ExpectedAttrs, Attributes)
@@ -144,7 +144,7 @@ failed_request(_Config) ->
                              {'http.user_agent', <<>>},
                              {'net.host.ip', <<"127.0.0.1">>},
                              {'net.transport', 'IP.TCP'},
-                             {'http.status', 500},
+                             {'http.status_code', 500},
                              {'http.request_content_length', 0},
                              {'http.response_content_length', 0}],
             ?assertListsMatch(ExpectedAttrs, Attributes)
@@ -226,7 +226,7 @@ chunk_timeout_request(_Config) ->
                              {'http.user_agent', <<>>},
                              {'net.host.ip', <<"127.0.0.1">>},
                              {'net.transport', 'IP.TCP'},
-                             {'http.status',200},
+                             {'http.status_code',200},
                              {'http.request_content_length', 0},
                              {'http.response_content_length', 0}],
             ?assertListsMatch(ExpectedAttrs, Attributes)
@@ -250,7 +250,7 @@ bad_request(_Config) ->
             } = Event,
             ?assertEqual(<<"HTTP Error">>, Name),
             ExpectedAttrs = [
-                             {'http.status', 501},
+                             {'http.status_code', 501},
                              {'http.response_content_length', 0}],
             ?assertListsMatch(ExpectedAttrs, Attributes)
     after
