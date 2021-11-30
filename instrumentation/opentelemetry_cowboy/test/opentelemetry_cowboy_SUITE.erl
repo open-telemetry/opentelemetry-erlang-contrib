@@ -19,7 +19,8 @@ all() ->
      client_timeout_request,
      idle_timeout_request,
      chunk_timeout_request,
-     bad_request
+     bad_request,
+     binary_status_code_request
      ].
 
 init_per_suite(Config) ->
@@ -30,7 +31,9 @@ init_per_suite(Config) ->
                                       {"/chunked", test_h, chunked},
                                       {"/chunked_slow", test_h, chunked_slow},
                                       {"/slow", test_h, slow},
-                                      {"/failure", test_h, failure}
+                                      {"/failure", test_h, failure},
+                                      {"/binary_status_code", test_h,
+                                       binary_status_code}
                                      ]}]),
     {ok, _} = cowboy:start_clear(http, [{port, 8080}], #{
                   env => #{dispatch => Dispatch},
@@ -255,4 +258,35 @@ bad_request(_Config) ->
             ?assertListsMatch(ExpectedAttrs, Attributes)
     after
         1000 -> ct:fail(bad_request)
+    end.
+
+binary_status_code_request(_Config) ->
+    Headers = [
+               {"traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"},
+               {"tracestate", "congo=t61rcWkgMzE"},
+               {"x-forwarded-for", "203.0.133.195, 70.41.3.18, 150.172.238.178"},
+               {"user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"}],
+    {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
+        httpc:request(get, {"http://localhost:8080/binary_status_code", Headers}, [], []),
+    receive
+        {span, #span{name=Name,events=[],attributes=Attributes,parent_span_id=ParentSpanId}} ->
+            ?assertEqual(<<"HTTP GET">>, Name),
+            ?assertEqual(13235353014750950193, ParentSpanId),
+            ExpectedAttrs = [
+                             {'http.client_ip', <<"203.0.133.195">>},
+                             {'http.flavor', '1.1'},
+                             {'http.host', <<"localhost">>},
+                             {'http.host.port', 8080},
+                             {'http.method', <<"GET">>},
+                             {'http.scheme', <<"http">>},
+                             {'http.target', <<"/binary_status_code">>},
+                             {'http.user_agent', <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>},
+                             {'net.host.ip', <<"127.0.0.1">>},
+                             {'net.transport', 'IP.TCP'},
+                             {'http.status_code', 200},
+                             {'http.request_content_length', 0},
+                             {'http.response_content_length', 12}],
+            ?assertListsMatch(ExpectedAttrs, Attributes)
+    after
+        1000 -> ct:fail(binary_status_code_request)
     end.
