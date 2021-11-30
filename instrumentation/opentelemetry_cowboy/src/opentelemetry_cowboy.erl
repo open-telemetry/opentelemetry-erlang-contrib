@@ -57,8 +57,8 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
                   {'http.response_content_length', maps:get(resp_body_length, Measurements)}
                  ],
     otel_span:set_attributes(Ctx, Attributes),
-    Status1 = transform_status(Status),
-    case Status1 of
+    StatusCode = transform_status_to_code(Status),
+    case StatusCode of
         undefined ->
           case maps:get(error, Meta, undefined) of
             {ErrorType, Error, Reason} ->
@@ -68,11 +68,11 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
               % do nothing first as I'm unsure how should we handle this
               ok
           end;
-        Status1 when Status1 >= 400 ->
-            otel_span:set_attributes(Ctx, [{'http.status_code', Status1}]),
+        StatusCode when StatusCode >= 400 ->
+            otel_span:set_attributes(Ctx, [{'http.status_code', StatusCode}]),
             otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
-        Status1 when Status1 < 400 ->
-            otel_span:set_attributes(Ctx, [{'http.status_code', Status1}])
+        StatusCode when StatusCode < 400 ->
+            otel_span:set_attributes(Ctx, [{'http.status_code', StatusCode}])
     end,
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
@@ -111,11 +111,11 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear().
 
-transform_status(Status) when is_binary(Status) ->
+transform_status_to_code(Status) when is_binary(Status) ->
   [CodeString | _Message] = string:split(Status, " "),
   {Code, _Rest} = string:to_integer(CodeString),
   Code;
-transform_status(Status) ->
+transform_status_to_code(Status) ->
   Status.
 
 http_flavor(Req) ->
