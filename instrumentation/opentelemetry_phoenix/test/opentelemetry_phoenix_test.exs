@@ -78,6 +78,30 @@ defmodule OpentelemetryPhoenixTest do
            ] == List.keysort(list, 0)
   end
 
+  test "does not trace Phoenix web requests when the route to ignore is passed into ignore_routes" do
+    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/healthz"]})
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start(:ignore_route)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start(:ignore_route)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      Meta.endpoint_stop(:ignore_route)
+    )
+
+    refute_receive {:span, span(name: "/users/:user_id")}
+  end
+
   test "parses x-forwarded-for with single value" do
     OpentelemetryPhoenix.setup()
 

@@ -35,14 +35,21 @@ defmodule OpentelemetryPhoenix do
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
 
+  @typedoc """
+  Config for span setup.
+  To not trace certain routes, pass a list of routes in ignore_routes e.g. ["/metrics", "/healthz"]
+  Note: match on route is exact i.e. ["/user/:id"] would not match route /user/123, but ["/user/123"] would match
+  """
+  @type config :: %{ignore_routes: list(String.t())}
+
   @doc """
   Initializes and configures the telemetry handlers.
   """
-  @spec setup(opts()) :: :ok
-  def setup(opts \\ []) do
+  @spec setup(opts(), config()) :: :ok
+  def setup(opts \\ [], config \\ %{ignore_routes: []}) do
     opts = ensure_opts(opts)
 
-    attach_endpoint_start_handler(opts)
+    attach_endpoint_start_handler(opts, config)
     attach_endpoint_stop_handler(opts)
     attach_router_start_handler()
     attach_router_dispatch_exception_handler()
@@ -57,11 +64,13 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def attach_endpoint_start_handler(opts) do
+  def attach_endpoint_start_handler(opts, config) do
     :telemetry.attach(
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
-      &__MODULE__.handle_endpoint_start/4,
+      fn event, measurements, meta, _config ->
+        __MODULE__.handle_endpoint_start(event, measurements, meta, config)
+      end,
       %{}
     )
   end
@@ -97,8 +106,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config) do
-    # TODO: maybe add config for what paths are traced? Via sampler?
+  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, config) do
     :otel_propagator_text_map.extract(conn.req_headers)
 
     peer_data = Plug.Conn.get_peer_data(conn)
@@ -106,13 +114,18 @@ defmodule OpentelemetryPhoenix do
     user_agent = header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
+    # Turn of all tracing for any routes passed in the config 'ignore_routes' property
+    %{ignore_routes: ignore_routes} = config
+    request_path = conn.request_path
+    sampler = build_sampler(request_path, ignore_routes)
+
     attributes = [
       "http.client_ip": client_ip(conn),
       "http.flavor": http_flavor(adapter),
       "http.host": conn.host,
       "http.method": conn.method,
       "http.scheme": "#{conn.scheme}",
-      "http.target": conn.request_path,
+      "http.target": request_path,
       "http.user_agent": user_agent,
       "net.host.ip": to_string(:inet_parse.ntoa(conn.remote_ip)),
       "net.host.port": conn.port,
@@ -122,8 +135,20 @@ defmodule OpentelemetryPhoenix do
     ]
 
     # start the span with a default name. Route name isn't known until router dispatch
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{kind: :server})
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
+      kind: :server,
+      sampler: sampler
+    })
     |> Span.set_attributes(attributes)
+  end
+
+  defp build_sampler(route, ignore_routes) when is_binary(route) and is_list(ignore_routes) do
+    contains_ignore_route? = Enum.any?(ignore_routes, fn ignore_route -> ignore_route == route end)
+
+    case contains_ignore_route? do
+      true -> :otel_sampler.new(:always_off)
+      false -> :otel_sampler.new(:always_on)
+    end
   end
 
   @doc false
