@@ -25,6 +25,7 @@ defmodule OpentelemetryPhoenixTest do
     ])
 
     :application.start(:opentelemetry)
+    TestHelpers.remove_phoenix_handlers()
 
     :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
     :ok
@@ -79,7 +80,7 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "does not trace Phoenix web requests when the route to ignore is passed into ignore_routes" do
-    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/healthz"]})
+    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/ignore"]})
 
     :telemetry.execute(
       [:phoenix, :endpoint, :start],
@@ -99,7 +100,31 @@ defmodule OpentelemetryPhoenixTest do
       Meta.endpoint_stop(:ignore_route)
     )
 
-    refute_receive {:span, span(name: "/users/:user_id")}
+    refute_receive {:span, span(name: "/ignore", parent_span_id: 13_235_353_014_750_950_193)}
+  end
+
+  test "traces Phoenix web requests when the route is not present in the ignore_routes config" do
+    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/not-ignore"]})
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start(:ignore_route)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start(:ignore_route)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      Meta.endpoint_stop(:ignore_route)
+    )
+
+    assert_receive {:span, span(name: "/ignore", parent_span_id: 13_235_353_014_750_950_193)}
   end
 
   test "parses x-forwarded-for with single value" do

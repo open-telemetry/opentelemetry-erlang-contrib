@@ -687,7 +687,7 @@ defmodule PhoenixMeta do
              host: "localhost",
              host_info: :undefined,
              method: "GET",
-             path: "/healthz",
+             path: "/ignore",
              path_info: :undefined,
              peer: {{10, 211, 55, 2}, 64291},
              pid: "",
@@ -707,7 +707,7 @@ defmodule PhoenixMeta do
         method: "GET",
         owner: "",
         params: %{"page" => "1"},
-        path_info: ["healthz"],
+        path_info: ["ignore"],
         path_params: %{},
         port: 4000,
         private: %{
@@ -739,7 +739,7 @@ defmodule PhoenixMeta do
           {"upgrade-insecure-requests", "1"},
           {"user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"}
         ],
-        request_path: "/healthz",
+        request_path: "/ignore",
         resp_body: [
           "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\"/>\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"/>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n    <title>MyStore · Phoenix Framework</title>\n    <link rel=\"stylesheet\" href=\"",
           "/css/app.css",
@@ -962,7 +962,7 @@ defmodule PhoenixMeta do
              host: "localhost",
              host_info: :undefined,
              method: "GET",
-             path: "/healthz",
+             path: "/ignore",
              path_info: :undefined,
              peer: {{10, 211, 55, 2}, 64291},
              pid: "",
@@ -982,7 +982,7 @@ defmodule PhoenixMeta do
         method: "GET",
         owner: "",
         params: %{"page" => "1"},
-        path_info: ["healthz"],
+        path_info: ["ignore"],
         path_params: %{},
         port: 4000,
         private: %{
@@ -1005,7 +1005,7 @@ defmodule PhoenixMeta do
           {"upgrade-insecure-requests", "1"},
           {"user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"}
         ],
-        request_path: "/healthz",
+        request_path: "/ignore",
         resp_body: nil,
         resp_cookies: %{},
         resp_headers: [
@@ -1232,7 +1232,7 @@ defmodule PhoenixMeta do
              host: "localhost",
              host_info: :undefined,
              method: "GET",
-             path: "/healthz",
+             path: "/ignore",
              path_info: :undefined,
              peer: {{10, 211, 55, 2}, 64291},
              pid: "",
@@ -1252,7 +1252,7 @@ defmodule PhoenixMeta do
         method: "GET",
         owner: "",
         params: %{"page" => "1"},
-        path_info: ["healthz"],
+        path_info: ["ignore"],
         path_params: %{},
         port: 4000,
         private: %{
@@ -1278,7 +1278,7 @@ defmodule PhoenixMeta do
           {"upgrade-insecure-requests", "1"},
           {"user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0"}
         ],
-        request_path: "/healthz",
+        request_path: "/ignore",
         resp_body: nil,
         resp_cookies: %{},
         resp_headers: [
@@ -1296,7 +1296,7 @@ defmodule PhoenixMeta do
       pipe_through: [:browser],
       plug: MyStoreWeb.PageController,
       plug_opts: :user,
-      route: "/healthz"
+      route: "/ignore"
     }
   end
 end
