@@ -117,7 +117,7 @@ defmodule OpentelemetryPhoenix do
     peer_ip = Map.get(peer_data, :address)
 
     # Turn of all tracing for any routes passed in the config 'ignore_paths' property
-    ignore_path? = maybe_ignore_path(conn, config)
+    ignore_path? = should_ignore_path(conn, config)
 
     attributes = [
       "http.client_ip": client_ip(conn),
@@ -150,7 +150,7 @@ defmodule OpentelemetryPhoenix do
 
   @doc false
   def handle_endpoint_stop(_event, _measurements, %{conn: conn} = meta, config) do
-    ignore_path? = maybe_ignore_path(conn, config)
+    ignore_path? = should_ignore_path(conn, config)
 
     # if the request_path is not in the ignore_paths option, then its parent span was created
     # can be stopped. Otherwise, no-op
@@ -173,7 +173,7 @@ defmodule OpentelemetryPhoenix do
     end
   end
 
-  defp maybe_ignore_path(%Plug.Conn{request_path: request_path} = _conn, %{ignore_paths: ignore_paths})
+  defp should_ignore_path(%Plug.Conn{request_path: request_path} = _conn, %{ignore_paths: ignore_paths})
        when is_list(ignore_paths) and is_binary(request_path) do
     Enum.any?(ignore_paths, fn path -> path == request_path end)
   end
