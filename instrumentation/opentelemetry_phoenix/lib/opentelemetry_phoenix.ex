@@ -37,20 +37,20 @@ defmodule OpentelemetryPhoenix do
 
   @typedoc """
   Config for span setup.
-  To not trace certain routes, pass a list of routes in ignore_routes e.g. ["/metrics", "/healthz"]
-  Note: match on route is exact i.e. ["/user/:id"] would not match route /user/123, but ["/user/123"] would match
+  To not trace certain paths, pass a list of paths in ignore_paths e.g. ["/metrics", "/healthz"]
+  Note: match on path is exact i.e. ["/user/:id"] would not match path /user/123, but ["/user/123"] would match
   """
-  @type config :: %{ignore_routes: list(String.t())}
+  @type config :: %{ignore_paths: list(String.t())}
 
   @doc """
   Initializes and configures the telemetry handlers.
   """
   @spec setup(opts(), config()) :: :ok
-  def setup(opts \\ [], config \\ %{ignore_routes: []}) do
+  def setup(opts \\ [], config \\ %{ignore_paths: []}) do
     opts = ensure_opts(opts)
 
     attach_endpoint_start_handler(opts, config)
-    attach_endpoint_stop_handler(opts)
+    attach_endpoint_stop_handler(opts, config)
     attach_router_start_handler()
     attach_router_dispatch_exception_handler()
 
@@ -76,11 +76,13 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def attach_endpoint_stop_handler(opts) do
+  def attach_endpoint_stop_handler(opts, config) do
     :telemetry.attach(
       {__MODULE__, :endpoint_stop},
       opts[:endpoint_prefix] ++ [:stop],
-      &__MODULE__.handle_endpoint_stop/4,
+      fn event, measurements, meta, _config ->
+        __MODULE__.handle_endpoint_stop(event, measurements, meta, config)
+      end,
       %{}
     )
   end
@@ -114,10 +116,8 @@ defmodule OpentelemetryPhoenix do
     user_agent = header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
-    # Turn of all tracing for any routes passed in the config 'ignore_routes' property
-    %{ignore_routes: ignore_routes} = config
-    request_path = conn.request_path
-    sampler = build_sampler(request_path, ignore_routes)
+    # Turn of all tracing for any routes passed in the config 'ignore_paths' property
+    ignore_path? = maybe_ignore_path(conn, config)
 
     attributes = [
       "http.client_ip": client_ip(conn),
@@ -125,7 +125,7 @@ defmodule OpentelemetryPhoenix do
       "http.host": conn.host,
       "http.method": conn.method,
       "http.scheme": "#{conn.scheme}",
-      "http.target": request_path,
+      "http.target": conn.request_path,
       "http.user_agent": user_agent,
       "net.host.ip": to_string(:inet_parse.ntoa(conn.remote_ip)),
       "net.host.port": conn.port,
@@ -134,36 +134,48 @@ defmodule OpentelemetryPhoenix do
       "net.transport": :"IP.TCP"
     ]
 
-    # start the span with a default name. Route name isn't known until router dispatch
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
-      kind: :server,
-      sampler: sampler
-    })
-    |> Span.set_attributes(attributes)
-  end
+    # if the request_path is not in the ignore_paths option, then start the span, otherwise don't
+    case ignore_path? do
+      false ->
+        # start the span with a default name. Route name isn't known until router dispatch
+        OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
+          kind: :server
+        })
+        |> Span.set_attributes(attributes)
 
-  defp build_sampler(route, ignore_routes) when is_binary(route) and is_list(ignore_routes) do
-    contains_ignore_route? = Enum.any?(ignore_routes, fn ignore_route -> ignore_route == route end)
-
-    case contains_ignore_route? do
-      true -> :otel_sampler.new(:always_off)
-      false -> :otel_sampler.new(:always_on)
+      true ->
+        :noop
     end
   end
 
   @doc false
-  def handle_endpoint_stop(_event, _measurements, %{conn: conn} = meta, _config) do
-    # ensure the correct span is current and update the status
-    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+  def handle_endpoint_stop(_event, _measurements, %{conn: conn} = meta, config) do
+    ignore_path? = maybe_ignore_path(conn, config)
 
-    Span.set_attribute(ctx, :"http.status_code", conn.status)
+    # if the request_path is not in the ignore_paths option, then its parent span was created
+    # can be stopped. Otherwise, no-op
+    case ignore_path? do
+      false ->
+        # ensure the correct span is current and update the status
+        ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    if conn.status >= 400 do
-      Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+        Span.set_attribute(ctx, :"http.status_code", conn.status)
+
+        if conn.status >= 400 do
+          Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+        end
+
+        # end the Phoenix span
+        OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+
+      true ->
+        :noop
     end
+  end
 
-    # end the Phoenix span
-    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  defp maybe_ignore_path(%Plug.Conn{request_path: request_path} = _conn, %{ignore_paths: ignore_paths})
+       when is_list(ignore_paths) and is_binary(request_path) do
+    Enum.any?(ignore_paths, fn path -> path == request_path end)
   end
 
   @doc false

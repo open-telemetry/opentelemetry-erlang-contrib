@@ -79,8 +79,8 @@ defmodule OpentelemetryPhoenixTest do
            ] == List.keysort(list, 0)
   end
 
-  test "does not trace Phoenix web requests when the route to ignore is passed into ignore_routes" do
-    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/ignore"]})
+  test "does not trace Phoenix web requests when the path to ignore is passed into ignore_paths" do
+    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/ignore"]})
 
     :telemetry.execute(
       [:phoenix, :endpoint, :start],
@@ -103,8 +103,8 @@ defmodule OpentelemetryPhoenixTest do
     refute_receive {:span, span(name: "/ignore", parent_span_id: 13_235_353_014_750_950_193)}
   end
 
-  test "traces Phoenix web requests when the route is not present in the ignore_routes config" do
-    OpentelemetryPhoenix.setup([], %{ignore_routes: ["/not-ignore"]})
+  test "traces Phoenix web requests when the path is not present in the ignore_paths config" do
+    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/not-ignore"]})
 
     :telemetry.execute(
       [:phoenix, :endpoint, :start],
