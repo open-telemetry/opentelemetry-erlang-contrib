@@ -79,52 +79,60 @@ defmodule OpentelemetryPhoenixTest do
            ] == List.keysort(list, 0)
   end
 
-  test "does not trace Phoenix web requests when the path to ignore is passed into ignore_paths" do
-    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/ignore"]})
+  test "does not trace Phoenix web requests when the path to ignore is present in the config's ignore_paths property" do
+    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/users/123"]})
 
     :telemetry.execute(
       [:phoenix, :endpoint, :start],
       %{system_time: System.system_time()},
-      Meta.endpoint_start(:ignore_route)
+      Meta.endpoint_start()
     )
 
     :telemetry.execute(
       [:phoenix, :router_dispatch, :start],
       %{system_time: System.system_time()},
-      Meta.router_dispatch_start(:ignore_route)
+      Meta.router_dispatch_start()
     )
 
     :telemetry.execute(
       [:phoenix, :endpoint, :stop],
       %{duration: 444},
-      Meta.endpoint_stop(:ignore_route)
+      Meta.endpoint_stop()
     )
 
-    refute_receive {:span, span(name: "/ignore", parent_span_id: 13_235_353_014_750_950_193)}
+    refute_receive {:span,
+                    span(
+                      name: "/users/:user_id",
+                      parent_span_id: 13_235_353_014_750_950_193
+                    )}
   end
 
-  test "traces Phoenix web requests when the path is not present in the ignore_paths config" do
-    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/not-ignore"]})
+  test "traces Phoenix web requests when the path doesn't match a path present in the config's ignore_paths property" do
+    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/users/:user_id"]})
 
     :telemetry.execute(
       [:phoenix, :endpoint, :start],
       %{system_time: System.system_time()},
-      Meta.endpoint_start(:ignore_route)
+      Meta.endpoint_start()
     )
 
     :telemetry.execute(
       [:phoenix, :router_dispatch, :start],
       %{system_time: System.system_time()},
-      Meta.router_dispatch_start(:ignore_route)
+      Meta.router_dispatch_start()
     )
 
     :telemetry.execute(
       [:phoenix, :endpoint, :stop],
       %{duration: 444},
-      Meta.endpoint_stop(:ignore_route)
+      Meta.endpoint_stop()
     )
 
-    assert_receive {:span, span(name: "/ignore", parent_span_id: 13_235_353_014_750_950_193)}
+    assert_receive {:span,
+                    span(
+                      name: "/users/:user_id",
+                      parent_span_id: 13_235_353_014_750_950_193
+                    )}
   end
 
   test "parses x-forwarded-for with single value" do
