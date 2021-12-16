@@ -80,6 +80,9 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "does not trace Phoenix web requests when the path to ignore is present in the config's ignore_paths property" do
+    # note: ignore_paths only works on exact matches for the request path. See should_ignore_path/2 in opentelemetry_phoenix.ex
+    # "/users/123" path in ignore_paths would match the route handler for "/users/:user_id" and prevent a span of the same name
+    # being recorded
     OpentelemetryPhoenix.setup([], %{ignore_paths: ["/users/123"]})
 
     :telemetry.execute(
@@ -101,34 +104,6 @@ defmodule OpentelemetryPhoenixTest do
     )
 
     refute_receive {:span,
-                    span(
-                      name: "/users/:user_id",
-                      parent_span_id: 13_235_353_014_750_950_193
-                    )}
-  end
-
-  test "traces Phoenix web requests when the path doesn't match a path present in the config's ignore_paths property" do
-    OpentelemetryPhoenix.setup([], %{ignore_paths: ["/users/:user_id"]})
-
-    :telemetry.execute(
-      [:phoenix, :endpoint, :start],
-      %{system_time: System.system_time()},
-      Meta.endpoint_start()
-    )
-
-    :telemetry.execute(
-      [:phoenix, :router_dispatch, :start],
-      %{system_time: System.system_time()},
-      Meta.router_dispatch_start()
-    )
-
-    :telemetry.execute(
-      [:phoenix, :endpoint, :stop],
-      %{duration: 444},
-      Meta.endpoint_stop()
-    )
-
-    assert_receive {:span,
                     span(
                       name: "/users/:user_id",
                       parent_span_id: 13_235_353_014_750_950_193
