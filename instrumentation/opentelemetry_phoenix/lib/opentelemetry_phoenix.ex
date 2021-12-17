@@ -122,8 +122,10 @@ defmodule OpentelemetryPhoenix do
     ]
 
     # start the span with a default name. Route name isn't known until router dispatch
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{kind: :server})
-    |> Span.set_attributes(attributes)
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
+      kind: :server,
+      attributes: attributes
+    })
   end
 
   @doc false
