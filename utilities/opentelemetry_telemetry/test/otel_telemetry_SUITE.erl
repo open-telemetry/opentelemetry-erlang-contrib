@@ -29,7 +29,6 @@ init_per_testcase(_, Config) ->
     {ok, _} = application:ensure_all_started(opentelemetry_telemetry),
     otel_batch_processor:set_exporter(otel_exporter_pid, self()),
     otel_telemetry:trace_application(test_app),
-    opentelemetry:register_tracer(test_tracer, "0.1.0"),
     Config.
 
 end_per_testcase(_, Config) ->
@@ -64,7 +63,7 @@ telemetry_span_handling(_Config) ->
 
 successful_span_listener(Name) ->
     receive
-        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentId,span_id=Id}} ->
+        {span, #span{name=Name,parent_span_id=ParentId,span_id=Id}} ->
             {Id, ParentId}
     after
         5000 ->
@@ -75,7 +74,7 @@ exception_span_listener(Name) ->
     receive
         {span, #span{name=Name,events=Events,status=Status,parent_span_id=ParentId,span_id=Id}} ->
             ?assertEqual({status,error,<<"badarg">>}, Status),
-            ?assertEqual(1, erlang:length(Events)),
+            ?assertEqual(1, erlang:length(otel_events:list(Events))),
             {Id, ParentId}
     after
         5000 ->

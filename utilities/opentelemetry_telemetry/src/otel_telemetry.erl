@@ -38,7 +38,7 @@ trace_application(Application, _Opts) ->
 -spec start_telemetry_span(atom(), opentelemetry:span_name(), telemetry:event_metadata(), otel_span:start_opts()) -> opentelemetry:span_ctx().
 start_telemetry_span(TracerId, SpanName, EventMetadata, Opts) ->
     ParentCtx = otel_tracer:current_span_ctx(),
-    Tracer = opentelemetry:get_tracer(TracerId),
+    Tracer = opentelemetry:get_application_tracer(TracerId),
     Ctx = otel_tracer:start_span(Tracer, SpanName, Opts),
     otel_tracer:set_current_span(Ctx),
     _ = store_ctx({ParentCtx, Ctx}, TracerId, EventMetadata),

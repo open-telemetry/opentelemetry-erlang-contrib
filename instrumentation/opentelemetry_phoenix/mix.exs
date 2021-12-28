@@ -5,7 +5,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.0.0-rc.5",
+      version: "1.0.0-rc.6",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -58,14 +58,14 @@ defmodule OpentelemetryPhoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry_api, "~> 1.0.0-rc.3"},
-      {:opentelemetry_telemetry, "~> 1.0.0-beta.4"},
+      {:opentelemetry_api, "~> 1.0.0-rc.4"},
+      {:opentelemetry_telemetry, "~> 1.0.0-beta.6"},
       {:telemetry, "~> 0.4 or ~> 1.0.0"},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.0.0-rc.3", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0.0-rc.3", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.0.0-rc.4", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.0.0-rc.4", only: [:dev, :test]},
       {:plug, "~> 1.11", only: [:dev, :test]},
-      {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.26", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.4", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]

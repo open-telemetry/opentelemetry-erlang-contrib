@@ -1,7 +1,7 @@
 defmodule OpentelemetryOban.JobHandler do
   alias OpenTelemetry.Span
 
-  @tracer_id :opentelemetry_oban
+  @tracer_id __MODULE__
 
   def attach() do
     attach_job_start_handler()
@@ -56,11 +56,11 @@ defmodule OpentelemetryOban.JobHandler do
     links = if parent == :undefined, do: [], else: [OpenTelemetry.link(parent)]
     OpenTelemetry.Tracer.set_current_span(:undefined)
 
-    attributes = [
-      "messaging.system": "oban",
+    attributes = %{
+      "messaging.system": :oban,
       "messaging.destination": queue,
-      "messaging.destination_kind": "queue",
-      "messaging.operation": "process",
+      "messaging.destination_kind": :queue,
+      "messaging.operation": :process,
       "messaging.oban.job_id": id,
       "messaging.oban.worker": worker,
       "messaging.oban.priority": priority,
@@ -69,7 +69,7 @@ defmodule OpentelemetryOban.JobHandler do
       "messaging.oban.inserted_at":
         if(inserted_at, do: DateTime.to_iso8601(inserted_at), else: nil),
       "messaging.oban.scheduled_at": DateTime.to_iso8601(scheduled_at)
-    ]
+    }
 
     span_name = "#{worker} process"
 

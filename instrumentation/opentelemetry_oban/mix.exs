@@ -4,7 +4,7 @@ defmodule OpentelemetryOban.MixProject do
   def project do
     [
       app: :opentelemetry_oban,
-      version: "0.2.0-rc.3",
+      version: "0.2.0-rc.4",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -39,12 +39,12 @@ defmodule OpentelemetryOban.MixProject do
   defp deps do
     [
       {:oban, "~> 2.0"},
-      {:opentelemetry_api, "~> 1.0.0-rc.3"},
-      {:opentelemetry_telemetry, "~> 1.0.0-beta"},
-      {:opentelemetry, "~> 1.0.0-rc.3", only: [:test]},
-      {:opentelemetry_exporter, "~> 1.0.0-rc.3", only: [:test]},
+      {:opentelemetry_api, "~> 1.0.0-rc.4"},
+      {:opentelemetry_telemetry, "~> 1.0.0-beta.6"},
+      {:opentelemetry, "~> 1.0.0-rc.4", only: [:test]},
+      {:opentelemetry_exporter, "~> 1.0.0-rc.4", only: [:test]},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:ex_doc, "~> 0.24", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.26", only: [:dev], runtime: false}
     ]
   end
 

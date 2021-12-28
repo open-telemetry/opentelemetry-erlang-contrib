@@ -69,28 +69,29 @@ defmodule OpentelemetryEcto do
 
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
-    base_attributes = [
+    base_attributes = %{
       "db.type": db_type,
       "db.statement": query,
       source: source,
       "db.instance": database,
       "db.url": url,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
-    ]
+    }
 
     attributes =
       measurements
-      |> Enum.into(%{})
-      |> Map.take(~w(decode_time query_time queue_time)a)
-      |> Enum.reject(&is_nil(elem(&1, 1)))
-      |> Enum.map(fn {k, v} ->
-        {String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit)}
+      |> Enum.reduce(%{}, fn
+        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time] ->
+          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
+
+        _, acc ->
+          acc
       end)
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: attributes ++ base_attributes,
+        attributes: Map.merge(attributes, base_attributes),
         kind: :client
       })
 
