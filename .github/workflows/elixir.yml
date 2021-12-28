@@ -57,7 +57,7 @@ jobs:
           path: |
             instrumentation/${{ env.app }}/deps
             instrumentation/${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}{1}', github.workspace, hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}', hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
@@ -94,6 +94,7 @@ jobs:
           path: |
             instrumentation/${{ env.app }}/deps
             instrumentation/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}', hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
           key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}{1}', github.workspace, hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
@@ -131,6 +132,7 @@ jobs:
           path: |
             utilities/${{ env.app }}/deps
             utilities/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}', hashFiles('utilities/${{ env.app }}/mix.lock')) }}
           key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}{1}', github.workspace, hashFiles('utilities/${{ env.app }}/mix.lock')) }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
@@ -177,7 +179,7 @@ jobs:
           path: |
             instrumentation/${{ env.app }}/deps
             instrumentation/${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}{1}', github.workspace, hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ format('{0}', hashFiles('instrumentation/${{ env.app }}/mix.lock')) }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
