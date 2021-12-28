@@ -1,19 +1,31 @@
 {"1.2.0",
-[{<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.0.0-rc.3.2">>},0},
+[{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.9.0">>},1},
+ {<<"cowboy_telemetry">>,{pkg,<<"cowboy_telemetry">>,<<"0.4.0">>},0},
+ {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.11.0">>},2},
+ {<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.0.0-rc.4">>},0},
  {<<"opentelemetry_telemetry">>,
-  {pkg,<<"opentelemetry_telemetry">>,<<"1.0.0-beta.4">>},
+  {pkg,<<"opentelemetry_telemetry">>,<<"1.0.0-beta.6.1">>},
   0},
+ {<<"ranch">>,{pkg,<<"ranch">>,<<"1.8.0">>},2},
  {<<"telemetry">>,{pkg,<<"telemetry">>,<<"1.0.0">>},0},
  {<<"telemetry_registry">>,{pkg,<<"telemetry_registry">>,<<"0.3.0">>},1}]}.
 [
 {pkg_hash,[
- {<<"opentelemetry_api">>, <<"588EBF85FA7D18EBA8DB297B7D0A2A654F680F35C4466CD0045CD12A6FDA27D7">>},
- {<<"opentelemetry_telemetry">>, <<"74B2A9DE1B2F1C22955A2FA3263D65A979FD64BF69D3D1571B5C34FDFED95CFA">>},
+ {<<"cowboy">>, <<"865DD8B6607E14CF03282E10E934023A1BD8BE6F6BACF921A7E2A96D800CD452">>},
+ {<<"cowboy_telemetry">>, <<"F239F68B588EFA7707ABCE16A84D0D2ACF3A0F50571F8BB7F56A15865AAE820C">>},
+ {<<"cowlib">>, <<"0B9FF9C346629256C42EBE1EEB769A83C6CB771A6EE5960BD110AB0B9B872063">>},
+ {<<"opentelemetry_api">>, <<"13FB20B8800149CE52DAA8FB793C1A45B826CC4BD0D5BC7E8A00CAB46285CBE6">>},
+ {<<"opentelemetry_telemetry">>, <<"CB8B9E0CC1E740D7FEDCB2F60498877A7593B1E46932076AAC9B58708C64763E">>},
+ {<<"ranch">>, <<"8C7A100A139FD57F17327B6413E4167AC559FBC04CA7448E9BE9057311597A1D">>},
  {<<"telemetry">>, <<"0F453A102CDF13D506B7C0AB158324C337C41F1CC7548F0BC0E130BBF0AE9452">>},
  {<<"telemetry_registry">>, <<"6768F151EA53FC0FBCA70DBFF5B20A8D663EE4E0C0B2AE589590E08658E76F1E">>}]},
 {pkg_hash_ext,[
- {<<"opentelemetry_api">>, <<"1E0BA55DB6718D5797E72C00E3821E60E02F7829E3FB64DC1A7C96F7C2776A58">>},
- {<<"opentelemetry_telemetry">>, <<"6EBBA3C47A26460A7302BFCDCCF87582EEB1A71C2E6ABC47845787DCD04FB256">>},
+ {<<"cowboy">>, <<"2C729F934B4E1AA149AFF882F57C6372C15399A20D54F65C8D67BEF583021BDE">>},
+ {<<"cowboy_telemetry">>, <<"7D98BAC1EE4565D31B62D59F8823DFD8356A169E7FCBB83831B8A5397404C9DE">>},
+ {<<"cowlib">>, <<"2B3E9DA0B21C4565751A6D4901C20D1B4CC25CBB7FD50D91D2AB6DD287BC86A9">>},
+ {<<"opentelemetry_api">>, <<"29C5BF7D5C40C4B9816906277BEB2438E6737073721C75398465B1ACD1B56B06">>},
+ {<<"opentelemetry_telemetry">>, <<"6BE70F51CD519EC225EED6018B747AAA7FB3176460669D7E9776745FF48753AC">>},
+ {<<"ranch">>, <<"49FBCFD3682FAB1F5D109351B61257676DA1A2FDBE295904176D5E521A2DDFE5">>},
  {<<"telemetry">>, <<"73BC09FA59B4A0284EFB4624335583C528E07EC9AE76ACA96EA0673850AEC57A">>},
  {<<"telemetry_registry">>, <<"492E2ADBC609F3E79ECE7F29FEC363A97A2C484AC78A83098535D6564781E917">>}]}
 ].

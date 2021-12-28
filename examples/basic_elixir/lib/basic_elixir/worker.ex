@@ -6,12 +6,19 @@ defmodule BasicElixir.Worker do
 
   # Client
   def start_link(default) when is_list(default) do
-    Tracer.with_span "start_link" do
-      Tracer.add_event("Nice operation!", [{"bogons", 100}])
-      Tracer.set_attributes([{:another_key, "yes"}])
+    # Span names can be a binary or an atom. Atoms are preferred
+    # for memory efficiency.
+    Tracer.with_span :start_link do
+      # Span name rules also apply to events
+      Tracer.add_event("Nice operation!", %{"bogons" => 100})
 
-      Tracer.with_span "Sub operation..." do
-        Tracer.set_attributes([{:lemons_key, "five"}])
+      # Attributes can be a map or a keyword list
+      Tracer.set_attributes(%{another_key: "yes"})
+
+      # Any attributes that can be known before starting a span
+      # should be passed on span creation so that they can be
+      # available for sampling decisions
+      Tracer.with_span "Sub operation...", %{attributes: [lemons_key: "five"]} do
         Tracer.add_event("Sub span event!", [])
       end
 
@@ -30,7 +37,7 @@ defmodule BasicElixir.Worker do
   # Server (callbacks)
   @impl true
   def init(stack) do
-    Tracer.with_span "init" do
+    Tracer.with_span :init do
       Logger.info("Starting #{__MODULE__}...")
       {:ok, stack}
     end

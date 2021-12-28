@@ -21,8 +21,6 @@ defmodule OpentelemetryOban do
 
   require OpenTelemetry.Tracer
 
-  @tracer_id :opentelemetry_oban
-
   @doc """
   Initializes and configures telemetry handlers.
 
@@ -38,9 +36,6 @@ defmodule OpentelemetryOban do
   """
   @spec setup() :: :ok
   def setup(opts \\ []) do
-    {:ok, otel_tracer_vsn} = :application.get_key(@tracer_id, :vsn)
-    OpenTelemetry.register_tracer(@tracer_id, otel_tracer_vsn)
-
     trace = Keyword.get(opts, :trace, [:jobs, :plugins])
 
     if Enum.member?(trace, :jobs) do
@@ -107,7 +102,7 @@ defmodule OpentelemetryOban do
     # changesets in insert_all can include different workers and different
     # queues. This means we cannot provide much information here, but we can
     # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span "Oban bulk insert", kind: :producer do
+    OpenTelemetry.Tracer.with_span :"Oban bulk insert", kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end
@@ -132,19 +127,19 @@ defmodule OpentelemetryOban do
     queue = Changeset.get_field(changeset, :queue, "unknown")
     worker = Changeset.get_field(changeset, :worker, "unknown")
 
-    [
-      "messaging.system": "oban",
+    %{
+      "messaging.system": :oban,
       "messaging.destination": queue,
-      "messaging.destination_kind": "queue",
+      "messaging.destination_kind": :queue,
       "messaging.oban.worker": worker
-    ]
+    }
   end
 
   defp attributes_after_insert(job) do
-    [
+    %{
       "messaging.oban.job_id": job.id,
       "messaging.oban.priority": job.priority,
       "messaging.oban.max_attempts": job.max_attempts
-    ]
+    }
   end
 end

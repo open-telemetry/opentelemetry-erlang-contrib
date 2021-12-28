@@ -59,11 +59,6 @@ init_per_testcase(_, Config) ->
     Config.
 
 end_per_testcase(_, Config) ->
-    application:stop(telemetry),
-    application:stop(opentelemetry_cowboy),
-    application:stop(opentelemetry_telemetry),
-    application:stop(opentelemetry),
-
     Config.
 
 successful_request(_Config) ->
@@ -75,24 +70,24 @@ successful_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/success", Headers}, [], []),
     receive
-        {span, #span{name=Name,events=[],attributes=Attributes,parent_span_id=ParentSpanId}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
             ?assertEqual(13235353014750950193, ParentSpanId),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"203.0.133.195">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"GET">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/success">>},
-                             {'http.user_agent', <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.status', 200},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 12}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"203.0.133.195">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"GET">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/success">>,
+                             'http.user_agent' => <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.status' => 200,
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 12},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(successful_request)
     end.
@@ -101,23 +96,23 @@ chunked_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/chunked", []}, [], []),
     receive
-        {span, #span{name=Name,events=[],attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"127.0.0.1">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"GET">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/chunked">>},
-                             {'http.user_agent', <<>>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.status', 200},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 14}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"127.0.0.1">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"GET">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/chunked">>,
+                             'http.user_agent' => <<>>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.status' => 200,
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 14},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(chunked_request)
     end.
@@ -126,28 +121,25 @@ failed_request(_Config) ->
     {ok, {{_Version, 500, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/failure", []}, [], []),
     receive
-        {span, #span{name=Name,events=[Event],attributes=Attributes,parent_span_id=undefined}} ->
-            {
-             event,_,<<"exception">>,[
-                                      {<<"exception.type">>, <<"exit:failure">>},
-                                      {<<"exception.stacktrace">>, _Stacktrace}]
-            } = Event,
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+            [Event] = otel_events:list(Events),
+            #event{name= <<"exception">>} = Event,
             ?assertEqual(<<"HTTP GET">>, Name),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"127.0.0.1">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"GET">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/failure">>},
-                             {'http.user_agent', <<>>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.status', 500},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 0}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"127.0.0.1">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"GET">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/failure">>,
+                             'http.user_agent' => <<>>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.status' => 500,
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 0},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(failed_request)
     end.
@@ -156,27 +148,29 @@ client_timeout_request(_Config) ->
     {error, timeout} =
         httpc:request(get, {"http://localhost:8080/slow", []}, [{timeout, 50}], []),
     receive
-        {span, #span{name=Name,events=[Event],attributes=Attributes,parent_span_id=undefined}} ->
-            {
-             event,_,<<"socket_error">>,[
-                                         {error, closed},
-                                         {reason, 'The socket has been closed.'}]
-            } = Event,
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+            [Event] = otel_events:list(Events),
+            #event{name='socket_error',attributes = EventAttributes} = Event,
+            ExpectedEventAttrs = #{
+                                   error => closed,
+                                   reason => 'The socket has been closed.'
+                                  },
+            ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP GET">>, Name),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"127.0.0.1">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"GET">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/slow">>},
-                             {'http.user_agent', <<>>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 0}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"127.0.0.1">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"GET">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/slow">>,
+                             'http.user_agent' => <<>>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 0},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(client_timeout_request)
     end.
@@ -185,27 +179,29 @@ idle_timeout_request(_Config) ->
     {error, socket_closed_remotely} =
         httpc:request(head, {"http://localhost:8080/slow", []}, [], []),
     receive
-        {span, #span{name=Name,events=[Event],attributes=Attributes,parent_span_id=undefined}} ->
-            {
-             event,_,<<"connection_error">>,[
-                                             {error, timeout},
-                                             {reason, 'Connection idle longer than configuration allows.'}]
-            } = Event,
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+            [Event] = otel_events:list(Events),
+            #event{name= 'connection_error',attributes = EventAttributes} = Event,
+            ExpectedEventAttrs = #{
+                                   error => timeout,
+                                   reason => 'Connection idle longer than configuration allows.'
+                                  },
+            ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP HEAD">>, Name),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"127.0.0.1">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"HEAD">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/slow">>},
-                             {'http.user_agent', <<>>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 0}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"127.0.0.1">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"HEAD">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/slow">>,
+                             'http.user_agent' => <<>>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 0},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(idle_timeout_request)
     end.
@@ -213,23 +209,23 @@ idle_timeout_request(_Config) ->
 chunk_timeout_request(_Config) ->
     httpc:request(head, {"http://localhost:8080/chunked_slow", []}, [], []),
     receive
-        {span, #span{name=Name,events=[],attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined}} ->
             ?assertEqual(<<"HTTP HEAD">>, Name),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"127.0.0.1">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"HEAD">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/chunked_slow">>},
-                             {'http.user_agent', <<>>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.status',200},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 0}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"127.0.0.1">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"HEAD">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/chunked_slow">>,
+                             'http.user_agent' => <<>>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.status' => 200,
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 0},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(chunk_timeout_request)
     end.
@@ -242,17 +238,19 @@ bad_request(_Config) ->
     {ok, {{_Version, 501, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(trace, {"http://localhost:8080/", Headers}, [], []),
     receive
-        {span, #span{name=Name,events=[Event],attributes=Attributes,parent_span_id=undefined}} ->
-            {
-             event,_,<<"connection_error">>,[
-                                             {error, no_error},
-                                             {reason, 'The TRACE method is currently not implemented. (RFC7231 4.3.8)'}]
-            } = Event,
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+            [Event] = otel_events:list(Events),
+            #event{name='connection_error',attributes = EventAttributes} = Event,
+            ExpectedEventAttrs = #{
+                                   error => no_error,
+                                   reason => 'The TRACE method is currently not implemented. (RFC7231 4.3.8)'
+                                  },
+            ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP Error">>, Name),
-            ExpectedAttrs = [
-                             {'http.status', 501},
-                             {'http.response_content_length', 0}],
-            ?assertListsMatch(ExpectedAttrs, Attributes)
+            ExpectedAttrs = #{
+                             'http.status' => 501,
+                             'http.response_content_length' => 0},
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(bad_request)
     end.

@@ -1,7 +1,7 @@
 defmodule OpentelemetryOban.PluginHandler do
   alias OpenTelemetry.Span
 
-  @tracer_id :opentelemetry_oban
+  @tracer_id __MODULE__
 
   def attach() do
     attach_plugin_start_handler()

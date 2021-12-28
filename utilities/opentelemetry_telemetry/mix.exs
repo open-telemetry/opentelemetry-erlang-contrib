@@ -55,9 +55,9 @@ defmodule OpentelemetryTelemetry.MixProject do
     end)
     |> Enum.concat([
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.25.3", only: :dev, runtime: false},
-      {:opentelemetry, "~> 1.0.0-rc.3", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0.0-rc.3", only: [:dev, :test]}
+      {:ex_doc, "~> 0.26.0", only: :dev, runtime: false},
+      {:opentelemetry, "~> 1.0.0-rc.4", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.0.0-rc.4", only: [:dev, :test]}
     ])
   end
 
@@ -65,7 +65,7 @@ defmodule OpentelemetryTelemetry.MixProject do
     [
       description: "Bridge library between Telemetry events and OpenTelemetry Erlang",
       build_tools: ["rebar3", "mix"],
-      files: ~w(lib mix.exs README.md LICENSE CODEOWNERS rebar.config rebar.lock VERSION src),
+      files: ~w(lib mix.exs README.md LICENSE rebar.config rebar.lock VERSION src),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" =>

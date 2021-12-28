@@ -27,8 +27,8 @@ defmodule BasicElixir.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry, "~> 1.0.0-rc.3"},
-      {:opentelemetry_exporter, "~> 1.0.0-rc.3"},
+      {:opentelemetry, "~> 1.0.0-rc.4"},
+      {:opentelemetry_exporter, "~> 1.0.0-rc.4"}
     ]
   end
 end

@@ -94,7 +94,7 @@ defmodule OpentelemetryTelemetry do
           tracer_id(),
           :opentelemetry.span_name(),
           :telemetry.event_metadata(),
-          OpenTelemetry.Tracer.start_opts()
+          OpenTelemetry.Span.start_opts()
         ) :: OpenTelemetry.span_ctx()
   defdelegate start_telemetry_span(tracer_id, span_name, event_metadata, start_opts),
     to: :otel_telemetry

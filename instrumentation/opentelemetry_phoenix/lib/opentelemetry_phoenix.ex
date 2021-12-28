@@ -27,7 +27,7 @@ defmodule OpentelemetryPhoenix do
   alias OpenTelemetry.Span
   alias OpentelemetryPhoenix.Reason
 
-  @tracer_id :opentelemetry_phoenix
+  @tracer_id __MODULE__
 
   @typedoc "Setup options"
   @type opts :: [endpoint_prefix()]
@@ -106,7 +106,7 @@ defmodule OpentelemetryPhoenix do
     user_agent = header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
-    attributes = [
+    attributes = %{
       "http.client_ip": client_ip(conn),
       "http.flavor": http_flavor(adapter),
       "http.host": conn.host,
@@ -119,7 +119,7 @@ defmodule OpentelemetryPhoenix do
       "net.peer.ip": to_string(:inet_parse.ntoa(peer_ip)),
       "net.peer.port": peer_data.port,
       "net.transport": :"IP.TCP"
-    ]
+    }
 
     # start the span with a default name. Route name isn't known until router dispatch
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
@@ -145,11 +145,11 @@ defmodule OpentelemetryPhoenix do
 
   @doc false
   def handle_router_dispatch_start(_event, _measurements, meta, _config) do
-    attributes = [
+    attributes = %{
       "phoenix.plug": meta.plug,
       "phoenix.action": meta.plug_opts,
       "http.route": meta.route
-    ]
+    }
 
     # Add more info that we now know about but don't close the span
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)

@@ -44,15 +44,15 @@ defmodule OpentelemetryObanTest do
                       status: :undefined
                     )}
 
-    assert [
+    assert %{
              "messaging.destination": "events",
-             "messaging.destination_kind": "queue",
+             "messaging.destination_kind": :queue,
              "messaging.oban.job_id": _job_id,
              "messaging.oban.max_attempts": 1,
              "messaging.oban.priority": 0,
              "messaging.oban.worker": "TestJob",
-             "messaging.system": "oban"
-           ] = List.keysort(attributes, 0)
+             "messaging.system": :oban
+           } = :otel_attributes.map(attributes)
   end
 
   test "job creation uses existing trace if present" do
@@ -104,8 +104,10 @@ defmodule OpentelemetryObanTest do
                       kind: :consumer,
                       status: :undefined,
                       trace_id: process_trace_id,
-                      links: [link(trace_id: ^send_trace_id, span_id: ^send_span_id)]
+                      links: links
                     )}
+
+    [link(trace_id: ^send_trace_id, span_id: ^send_span_id)] = :otel_links.list(links)
 
     # Process is ran asynchronously so we create a new trace, but still link
     # the traces together.
@@ -124,8 +126,10 @@ defmodule OpentelemetryObanTest do
                       kind: :consumer,
                       status: :undefined,
                       trace_id: _trace_id,
-                      links: []
+                      links: links
                     )}
+
+    assert [] == :otel_links.list(links)
   end
 
   test "records spans for successful Oban jobs" do
@@ -140,9 +144,9 @@ defmodule OpentelemetryObanTest do
                       status: :undefined
                     )}
 
-    assert [
+    assert %{
              "messaging.destination": "events",
-             "messaging.destination_kind": "queue",
+             "messaging.destination_kind": :queue,
              "messaging.oban.attempt": 1,
              "messaging.oban.inserted_at": _inserted_at,
              "messaging.oban.job_id": _job_id,
@@ -150,9 +154,9 @@ defmodule OpentelemetryObanTest do
              "messaging.oban.priority": 0,
              "messaging.oban.scheduled_at": _scheduled_at,
              "messaging.oban.worker": "TestJob",
-             "messaging.operation": "process",
-             "messaging.system": "oban"
-           ] = List.keysort(attributes, 0)
+             "messaging.operation": :process,
+             "messaging.system": :oban
+           } = :otel_attributes.map(attributes)
   end
 
   test "records spans for Oban jobs that stop with {:error, :something}" do
@@ -166,23 +170,13 @@ defmodule OpentelemetryObanTest do
                       name: "TestJobThatReturnsError process",
                       attributes: attributes,
                       kind: :consumer,
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.Oban.PerformError"},
-                            {"exception.message",
-                             "TestJobThatReturnsError failed with {:error, :something}"},
-                            {"exception.stacktrace", _stacktrace}
-                          ]
-                        )
-                      ],
+                      events: events,
                       status: ^expected_status
                     )}
 
-    assert [
+    assert %{
              "messaging.destination": "events",
-             "messaging.destination_kind": "queue",
+             "messaging.destination_kind": :queue,
              "messaging.oban.attempt": 1,
              "messaging.oban.inserted_at": _inserted_at,
              "messaging.oban.job_id": _job_id,
@@ -190,9 +184,19 @@ defmodule OpentelemetryObanTest do
              "messaging.oban.priority": 0,
              "messaging.oban.scheduled_at": _scheduled_at,
              "messaging.oban.worker": "TestJobThatReturnsError",
-             "messaging.operation": "process",
-             "messaging.system": "oban"
-           ] = List.keysort(attributes, 0)
+             "messaging.operation": :process,
+             "messaging.system": :oban
+           } = :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
   end
 
   test "records spans for each retry" do
@@ -215,16 +219,20 @@ defmodule OpentelemetryObanTest do
                       name: "TestJobThatReturnsError process",
                       status: ^expected_status,
                       trace_id: first_process_trace_id,
-                      links: [link(trace_id: ^send_trace_id, span_id: ^send_span_id)]
+                      links: job_1_links
                     )}
+
+    [link(trace_id: ^send_trace_id, span_id: ^send_span_id)] = :otel_links.list(job_1_links)
 
     assert_receive {:span,
                     span(
                       name: "TestJobThatReturnsError process",
                       status: ^expected_status,
                       trace_id: second_process_trace_id,
-                      links: [link(trace_id: ^send_trace_id, span_id: ^send_span_id)]
+                      links: job_2_links
                     )}
+
+    [link(trace_id: ^send_trace_id, span_id: ^send_span_id)] = :otel_links.list(job_2_links)
 
     assert first_process_trace_id != second_process_trace_id
   end
@@ -240,23 +248,13 @@ defmodule OpentelemetryObanTest do
                       name: "TestJobThatThrowsException process",
                       attributes: attributes,
                       kind: :consumer,
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.UndefinedFunctionError"},
-                            {"exception.message",
-                             "function Some.error/0 is undefined (module Some is not available)"},
-                            {"exception.stacktrace", _stacktrace}
-                          ]
-                        )
-                      ],
+                      events: events,
                       status: ^expected_status
                     )}
 
-    assert [
+    assert %{
              "messaging.destination": "events",
-             "messaging.destination_kind": "queue",
+             "messaging.destination_kind": :queue,
              "messaging.oban.attempt": 1,
              "messaging.oban.inserted_at": _inserted_at,
              "messaging.oban.job_id": _job_id,
@@ -264,9 +262,19 @@ defmodule OpentelemetryObanTest do
              "messaging.oban.priority": 0,
              "messaging.oban.scheduled_at": _scheduled_at,
              "messaging.oban.worker": "TestJobThatThrowsException",
-             "messaging.operation": "process",
-             "messaging.system": "oban"
-           ] = List.keysort(attributes, 0)
+             "messaging.operation": :process,
+             "messaging.system": :oban
+           } = :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
   end
 
   test "spans inside the job are associated with the job trace" do
@@ -310,18 +318,19 @@ defmodule OpentelemetryObanTest do
     assert_receive {:span,
                     span(
                       name: "TestJob send",
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.Ecto.InvalidChangesetError"},
-                            {"exception.message", _message},
-                            {"exception.stacktrace", _stacktrace}
-                          ]
-                        )
-                      ],
+                      events: events,
                       status: ^expected_status
                     )}
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
 
     refute_received {:span, span(name: "TestJob process")}
   end
@@ -336,7 +345,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "Oban bulk insert",
+                      name: :"Oban bulk insert",
                       attributes: _attributes,
                       trace_id: send_trace_id,
                       span_id: send_span_id,
@@ -351,8 +360,10 @@ defmodule OpentelemetryObanTest do
                       kind: :consumer,
                       status: :undefined,
                       trace_id: first_process_trace_id,
-                      links: [link(trace_id: ^send_trace_id, span_id: ^send_span_id)]
+                      links: job_1_links
                     )}
+
+    [link(trace_id: ^send_trace_id, span_id: ^send_span_id)] = :otel_links.list(job_1_links)
 
     assert_receive {:span,
                     span(
@@ -361,8 +372,10 @@ defmodule OpentelemetryObanTest do
                       kind: :consumer,
                       status: :undefined,
                       trace_id: second_process_trace_id,
-                      links: [link(trace_id: ^send_trace_id, span_id: ^send_span_id)]
+                      links: job_2_links
                     )}
+
+    [link(trace_id: ^send_trace_id, span_id: ^send_span_id)] = :otel_links.list(job_2_links)
 
     # Process is ran asynchronously so we create a new trace, but still link
     # the traces together.
