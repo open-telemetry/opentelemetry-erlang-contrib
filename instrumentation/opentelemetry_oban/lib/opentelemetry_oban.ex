@@ -21,8 +21,6 @@ defmodule OpentelemetryOban do
 
   require OpenTelemetry.Tracer
 
-  @tracer_id __MODULE__
-
   @doc """
   Initializes and configures telemetry handlers.
 
