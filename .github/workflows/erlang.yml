@@ -19,7 +19,7 @@ jobs:
       - name: Read file
         id: set-matrix
         run: |
-          matrixStringifiedObject="{\"otp_version\":[\"24.0.6\",\"23.3.4.7\",\"22.3.4.21\"],\"rebar3_version\":[\"3.16.1\"],\"os\":[\"ubuntu-18.04\"],\"include\":[{\"otp_version\":\"21.3.8.24\",\"rebar3_version\":\"3.15.2\"}]}"
+          matrixStringifiedObject="{\"otp_version\":[\"24.2\",\"23.3.4.10\",\"22.3.4.24\"],\"rebar3_version\":[\"3.16.1\"],\"os\":[\"ubuntu-18.04\"]}"
           echo "::set-output name=matrix::$matrixStringifiedObject"
   opentelemetry-cowboy:
     needs: [test-matrix]
@@ -44,8 +44,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'instrumentation/${{ env.app }}/rebar.lock')) }}
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('**/rebar.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: rebar3 get-deps
@@ -75,8 +75,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'utilities/${{ env.app }}/rebar.lock')) }}
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('**/rebar.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: rebar3 get-deps
