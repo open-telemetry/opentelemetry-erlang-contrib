@@ -44,8 +44,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ format('{0}', hashFiles('${{ github.workspace }}/instrumentation/${{ env.app }}/rebar.lock')) }}
+            instrumentation/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('instrumentation/${{ env.app }}/rebar.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: rebar3 get-deps
@@ -75,8 +75,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ format('{0}', hashFiles('${{ github.workspace }}/utilities/${{ env.app }}/rebar.lock')) }}
+            utilities/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('utilities/${{ env.app }}/rebar.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: rebar3 get-deps
