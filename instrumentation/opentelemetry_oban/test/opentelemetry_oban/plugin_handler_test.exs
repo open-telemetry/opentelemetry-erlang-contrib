@@ -95,18 +95,18 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     assert_receive {:span,
                     span(
                       name: "Elixir.Oban.Plugins.Stager process",
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.UndefinedFunctionError"},
-                            {"exception.message",
-                             "function Some.error/0 is undefined (module Some is not available)"},
-                            {"exception.stacktrace", _stacktrace}
-                          ]
-                        )
-                      ],
+                      events: events,
                       status: ^expected_status
                     )}
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
   end
 end
