@@ -133,9 +133,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            instrumentation/${{ env.app }}/deps
-            instrumentation/${{ env.app }}/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'instrumentation/${{ env.app }}/mix.lock')) }}
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
