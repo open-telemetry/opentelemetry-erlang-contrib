@@ -41,7 +41,7 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 
 OpenTelemetry requires OTP v21.3 and above.
 
-See [Elixir OTP Compatability](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
+See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
 
 ## Contributing
 
