@@ -56,6 +56,9 @@ opentelemetry_ecto:
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
 
+opentelemetry_redix:
+  - instrumentation/opentelemetry_redix/**/*
+
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
 

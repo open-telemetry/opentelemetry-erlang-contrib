@@ -105,6 +105,47 @@ jobs:
       - name: Test
         run: mix test
 
+  opentelemetry-redix:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_redix'))
+    env:
+      app: 'opentelemetry_redix'
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ubuntu-18.04
+    name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    services:
+      redis:
+        image: redis:alpine
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            instrumentation/${{ env.app }}/deps
+            instrumentation/${{ env.app }}/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles(format('{0}{1}', github.workspace, 'instrumentation/${{ env.app }}/mix.lock')) }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+      - name: Test
+        run: mix test
+
   opentelemetry-telemetry:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_telemetry'))
