@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
+## v0.2.0-beta.1
 
 ### Changed
 
-* Opentelemetry 1.0.0-rc.4 support
+* Opentelemetry 1.0 support
