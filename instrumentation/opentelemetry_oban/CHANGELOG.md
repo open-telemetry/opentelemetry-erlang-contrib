@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-rc.5
+
+### Changed
+
+* Opentelemetry 1.0 support
+
 ## 0.2.0-rc.4
 
 ### Changed
