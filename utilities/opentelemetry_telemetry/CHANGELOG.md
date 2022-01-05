@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+* Do not attempt to end a span with if the ctx is undefined.
+
 ## 1.0.0-beta.7
 
 ### Changes
