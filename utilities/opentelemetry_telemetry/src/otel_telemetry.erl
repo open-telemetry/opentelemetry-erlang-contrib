@@ -56,13 +56,13 @@ set_current_telemetry_span(TracerId, EventMetadata) ->
 
 -spec end_telemetry_span(atom(), telemetry:event_metadata()) -> ok.
 end_telemetry_span(TracerId, EventMetadata) ->
-    {ParentCtx, Ctx} = pop_ctx(TracerId, EventMetadata),
-    case Ctx =/= undefined of
-        true ->
-            otel_span:end_span(Ctx),
+    Ctx = pop_ctx(TracerId, EventMetadata),
+    case Ctx of
+        {ParentCtx, SpanCtx} ->
+            otel_span:end_span(SpanCtx),
             otel_tracer:set_current_span(ParentCtx),
             ok;
-        false ->
+        undefined ->
             ok
     end.
 
