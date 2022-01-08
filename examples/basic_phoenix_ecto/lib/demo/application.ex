@@ -7,6 +7,9 @@ defmodule Demo.Application do
 
   @impl true
   def start(_type, _args) do
+    OpentelemetryPhoenix.setup()
+    OpentelemetryEcto.setup([:demo, :repo])
+
     children = [
       # Start the Ecto repository
       Demo.Repo,
