@@ -27,6 +27,8 @@ attach_event_handlers() ->
              ],
     telemetry:attach_many(opentelemetry_cowboy_handlers, Events, fun ?MODULE:handle_event/4, #{}).
 
+
+handle_event([cowboy, request, start], _Measurements, #{req := #{headers := #{<<"connection">> := <<"Upgrade">>}}} = _Meta, _Config) -> ok;
 handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Config) ->
     Headers = maps:get(headers, Req),
     otel_propagator_text_map:extract(maps:to_list(Headers)),
@@ -48,6 +50,7 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
     otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, #{attributes => Attributes});
 
+handle_event([cowboy, request, stop], _Measurements, #{req := #{headers := #{<<"connection">> := <<"Upgrade">>}}} = _Meta, _Config) -> ok;
 handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
     Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
     Status = maps:get(resp_status, Meta),
