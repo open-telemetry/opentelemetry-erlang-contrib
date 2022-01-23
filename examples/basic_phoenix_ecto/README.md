@@ -35,6 +35,33 @@ Assuming you already have Docker and Docker Compose installed:
    look at the sample trace.
 6. Run `docker-compose down` to destroy the created resources.
 
+## Different ways to export traces
+
+In general, there are 2 ways you can export your OpenTelemetry traces.
+
+- Export to OpenTelemetry Collector, which can then be configured to export to
+  external services.
+
+  ```
+  Application --> OpenTelemetry Collector --> Zipkin
+                                      |-----> Jaeger
+  ```
+
+- Export directly to external services that accept OTLP protocol.
+
+  ```
+  Application --> External Service
+  ```
+
+For exporting to external services, be sure to checkout their
+documentation first. For example:
+
+- [OpenTelemetry | Honeycomb](https://docs.honeycomb.io/getting-data-in/opentelemetry/)
+- [OpenTelemetry Collector | Honeycomb](https://docs.honeycomb.io/getting-data-in/opentelemetry/otel-collector/)
+- [Send Telemetry Data via OTLP/HTTP | Lightstep Learning Portal](https://docs.lightstep.com/docs/send-otlp-over-http-to-lightstep)
+- [Already Using OpenTelemetry Collectors? | Lightstep Learning Portal](https://docs.lightstep.com/docs/already-using-collectors)
+- [OpenTelemetry quick start | New Relic Documentation](https://docs.newrelic.com/docs/more-integrations/open-source-telemetry-integrations/opentelemetry/opentelemetry-quick-start)
+
 [0]: https://hex.pm/packages/opentelemetry_phoenix
 [1]: https://hex.pm/packages/opentelemetry_ecto
 [2]: https://hex.pm/packages/opentelemetry_exporter
