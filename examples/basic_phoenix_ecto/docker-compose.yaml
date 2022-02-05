@@ -21,8 +21,7 @@ services:
     image: otel/opentelemetry-collector-contrib-dev:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
-      - '55681:55681'
-      - '55680:55680'
+      - '4318:4318'
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
 
