@@ -64,6 +64,7 @@ defmodule OpentelemetryEcto do
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
     database = repo.config()[:database]
+    adapter = repo.__adapter__()
 
     url =
       case repo.config()[:url] do
@@ -97,6 +98,7 @@ defmodule OpentelemetryEcto do
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
       "db.connection_string": url,
+      "db.ecto.adapter": to_string(adapter),
       "db.name": database,
       "db.sql.table": source,
       "db.statement": query,
