@@ -70,11 +70,11 @@ defmodule OpentelemetryEcto do
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.type": db_type,
+      "db.connection_string": url,
+      "db.name": database,
+      "db.sql.table": source,
       "db.statement": query,
-      source: source,
-      "db.instance": database,
-      "db.url": url,
+      "db.type": db_type,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
 
