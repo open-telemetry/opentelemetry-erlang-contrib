@@ -49,14 +49,12 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
+             "db.name": "opentelemetry_ecto_test",
+             "db.sql.table": "users",
              "db.system": :postgresql,
-             "db.instance": "opentelemetry_ecto_test",
-             "db.type": :sql,
-             "db.url": "ecto://localhost",
              decode_time_microseconds: _,
              query_time_microseconds: _,
              queue_time_microseconds: _,
-             source: "users",
              total_time_microseconds: _
            } = :otel_attributes.map(attributes)
   end
@@ -112,14 +110,14 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
+             "db.name": "opentelemetry_ecto_test",
+             "db.sql.table": "posts",
              "db.system": :postgresql,
-             "db.instance": "opentelemetry_ecto_test",
+             "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
              "db.type": :sql,
-             "db.url": "ecto://localhost",
              decode_time_milliseconds: _,
              query_time_milliseconds: _,
              queue_time_milliseconds: _,
-             source: "posts",
              total_time_milliseconds: _
            } = :otel_attributes.map(attributes)
   end
