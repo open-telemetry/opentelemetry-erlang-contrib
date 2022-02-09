@@ -47,6 +47,7 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.connection_string": "ecto://localhost",
+             "db.ecto.adapter": "Elixir.Ecto.Adapters.Postgres",
              "db.name": "opentelemetry_ecto_test",
              "db.sql.table": "users",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
@@ -71,6 +72,7 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.connection_string": "ecto://localhost",
+             "db.ecto.adapter": "Elixir.Ecto.Adapters.Postgres",
              "db.name": "opentelemetry_ecto_test",
              "db.sql.table": "posts",
              "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
