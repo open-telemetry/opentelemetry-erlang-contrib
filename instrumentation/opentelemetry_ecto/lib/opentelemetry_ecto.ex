@@ -44,16 +44,6 @@ defmodule OpentelemetryEcto do
     database = repo.config()[:database]
     adapter = repo.__adapter__()
 
-    url =
-      case repo.config()[:url] do
-        nil ->
-          # TODO: add port
-          URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
-
-        url ->
-          url
-      end
-
     span_name =
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
@@ -71,7 +61,6 @@ defmodule OpentelemetryEcto do
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.connection_string": url,
       "db.ecto.adapter": to_string(adapter),
       "db.name": database,
       "db.sql.table": source,
