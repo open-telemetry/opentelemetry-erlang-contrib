@@ -54,7 +54,7 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo},
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
@@ -78,12 +78,6 @@ defmodule OpentelemetryEcto do
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})
 
-    db_type =
-      case type do
-        :ecto_sql_query -> :sql
-        _ -> type
-      end
-
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
@@ -91,7 +85,6 @@ defmodule OpentelemetryEcto do
       "db.name": database,
       "db.sql.table": source,
       "db.statement": query,
-      "db.type": db_type,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
 
