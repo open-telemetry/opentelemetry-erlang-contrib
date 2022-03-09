@@ -103,7 +103,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config, opts) do
+  def handle_endpoint_start(_event, _measurements, %{conn: conn} = meta, _config, opts) do
     # TODO: maybe add config for what paths are traced? Via sampler?
     request_id_http_header = Keyword.fetch!(opts, :request_id_http_header)
 
@@ -117,7 +117,7 @@ defmodule OpentelemetryPhoenix do
 
     attributes = %{
       "http.client_ip": client_ip(conn),
-      "http.flavor": http_flavor(adapter),
+      "http.flavor": http_flavor(conn.adapter),
       "http.host": conn.host,
       "http.method": conn.method,
       "http.scheme": "#{conn.scheme}",
