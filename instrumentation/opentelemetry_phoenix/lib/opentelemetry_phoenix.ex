@@ -111,13 +111,8 @@ defmodule OpentelemetryPhoenix do
 
     peer_data = Plug.Conn.get_peer_data(conn)
 
-    request_id =
-      case Plug.Conn.get_resp_header(conn, request_id_http_header) do
-        [] -> ""
-        [value | _] -> value
-      end
-
-    user_agent = header_value(conn, "user-agent")
+    request_id = resp_header_value(conn, request_id_http_header)
+    user_agent = req_header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
     attributes = %{
@@ -209,7 +204,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   defp client_ip(%{remote_ip: remote_ip} = conn) do
-    case header_value(conn, "x-forwarded-for") do
+    case req_header_value(conn, "x-forwarded-for") do
       "" ->
         remote_ip
         |> :inet_parse.ntoa()
@@ -222,13 +217,18 @@ defmodule OpentelemetryPhoenix do
     end
   end
 
-  defp header_value(conn, header) do
-    case Plug.Conn.get_req_header(conn, header) do
-      [] ->
-        ""
-
-      [value | _] ->
-        value
-    end
+  defp req_header_value(conn, header) do
+    conn
+    |> Plug.Conn.get_req_header(header)
+    |> header_value()
   end
+
+  defp resp_header_value(conn, header) do
+    conn
+    |> Plug.Conn.get_resp_header(header)
+    |> header_value()
+  end
+
+  defp header_value([]), do: ""
+  defp header_value([value | _]), do: value
 end
