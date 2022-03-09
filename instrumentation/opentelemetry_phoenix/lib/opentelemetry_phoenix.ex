@@ -103,6 +103,12 @@ defmodule OpentelemetryPhoenix do
 
     peer_data = Plug.Conn.get_peer_data(conn)
 
+    request_id = 
+      case Plug.Conn.get_resp_header(conn, "x-request-id") do
+        [] -> ""
+        [value | _] -> value
+      end
+    
     user_agent = header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
@@ -114,6 +120,7 @@ defmodule OpentelemetryPhoenix do
       "http.scheme": "#{conn.scheme}",
       "http.target": conn.request_path,
       "http.user_agent": user_agent,
+      "http.request_id": request_id,
       "net.host.ip": to_string(:inet_parse.ntoa(conn.remote_ip)),
       "net.host.port": conn.port,
       "net.peer.ip": to_string(:inet_parse.ntoa(peer_ip)),
