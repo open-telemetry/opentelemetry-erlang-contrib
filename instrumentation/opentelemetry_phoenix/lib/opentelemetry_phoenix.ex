@@ -30,10 +30,13 @@ defmodule OpentelemetryPhoenix do
   @tracer_id __MODULE__
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix()]
+  @type opts :: [endpoint_prefix() | request_id_http_header()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
+
+  @typedoc "The name of the HTTP request header for request ids. Defaults to `\"x-request-id\"`"
+  @type request_id_http_header :: {:request_id_http_header, String.t()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -53,7 +56,10 @@ defmodule OpentelemetryPhoenix do
   defp ensure_opts(opts), do: Keyword.merge(default_opts(), opts)
 
   defp default_opts do
-    [endpoint_prefix: [:phoenix, :endpoint]]
+    [
+      endpoint_prefix: [:phoenix, :endpoint],
+      request_id_http_header: "x-request-id"
+    ]
   end
 
   @doc false
@@ -61,7 +67,7 @@ defmodule OpentelemetryPhoenix do
     :telemetry.attach(
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
-      &__MODULE__.handle_endpoint_start/4,
+      &__MODULE__.handle_endpoint_start(&1, &2, &3, &4, opts),
       %{}
     )
   end
@@ -97,18 +103,20 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config) do
+  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config, opts) do
     # TODO: maybe add config for what paths are traced? Via sampler?
+    request_id_http_header = Keyword.fetch!(opts, :request_id_http_header)
+
     :otel_propagator_text_map.extract(conn.req_headers)
 
     peer_data = Plug.Conn.get_peer_data(conn)
 
-    request_id = 
-      case Plug.Conn.get_resp_header(conn, "x-request-id") do
+    request_id =
+      case Plug.Conn.get_resp_header(conn, request_id_http_header) do
         [] -> ""
         [value | _] -> value
       end
-    
+
     user_agent = header_value(conn, "user-agent")
     peer_ip = Map.get(peer_data, :address)
 
