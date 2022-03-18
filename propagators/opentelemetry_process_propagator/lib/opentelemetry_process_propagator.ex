@@ -96,20 +96,20 @@ defmodule OpentelemetryProcessPropagator do
   defdelegate fetch_parent_ctx(), to: :opentelemetry_process_propagator
 
   @doc """
-  Attempt to find an otel context in the spawning process under a given
-  process dictionary key.
-
-  Processes spawned by `proc_lib` are stored under `:"$ancestors`. The
-  Elixir `Task` module uses the `:"$callers` key.
+  Attempt to find an otel context in a spawning process within `n` number of parent
+  processes
   """
-  @spec fetch_parent_ctx(atom()) :: OpenTelemetry.span_ctx() | :undefined
-  defdelegate fetch_parent_ctx(key), to: :opentelemetry_process_propagator
+  @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.span_ctx() | :undefined
+  defdelegate fetch_parent_ctx(depth), to: :opentelemetry_process_propagator
 
   @doc """
   Attempt to find an otel context under a given process dictionary key
   within `n` number of parent processes. The first context found will be
   returned.
+
+  Processes spawned by `proc_lib` are stored under `:"$ancestors`. The
+  Elixir `Task` module uses the `:"$callers` key.
   """
-  @spec fetch_parent_ctx(atom(), non_neg_integer()) :: OpenTelemetry.span_ctx() | :undefined
-  defdelegate fetch_parent_ctx(key, max_depth), to: :opentelemetry_process_propagator
+  @spec fetch_parent_ctx(non_neg_integer(), atom()) :: OpenTelemetry.span_ctx() | :undefined
+  defdelegate fetch_parent_ctx(max_depth, key), to: :opentelemetry_process_propagator
 end
