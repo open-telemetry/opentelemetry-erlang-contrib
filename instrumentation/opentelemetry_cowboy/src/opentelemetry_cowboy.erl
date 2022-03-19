@@ -67,11 +67,10 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
                 % do nothing first as I'm unsure how should we handle this
                 ok
             end;
-        Status when Status >= 400 ->
-            otel_span:set_attribute(Ctx, 'http.status', Status),
-            otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
-        Status when Status < 400 ->
-            otel_span:set_attribute(Ctx, 'http.status', Status)
+        StatusCode when StatusCode >= 400 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode);
+        StatusCode when StatusCode < 400 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode)
     end,
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
@@ -86,11 +85,11 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
      } = Meta,
     otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>)),
-    otel_span:set_attributes(Ctx, [
-                                   {'http.status_code', Status},
-                                   {'http.request_content_length', maps:get(req_body_length, Measurements)},
-                                   {'http.response_content_length', maps:get(resp_body_length, Measurements)}
-                                  ]),
+    otel_span:set_attributes(Ctx, #{
+                                   'http.status_code' => Status,
+                                   'http.request_content_length' => maps:get(req_body_length, Measurements),
+                                   'http.response_content_length' => maps:get(resp_body_length, Measurements)
+                                  }),
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
 

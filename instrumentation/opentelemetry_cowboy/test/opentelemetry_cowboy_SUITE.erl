@@ -9,8 +9,6 @@
 -include_lib("opentelemetry/include/otel_span.hrl").
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
 
--define(assertListsMatch(List1, List2), ?assertEqual(lists:sort(List1), lists:sort(List2))).
-
 all() ->
     [
      successful_request,
@@ -267,24 +265,25 @@ binary_status_code_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/binary_status_code", Headers}, [], []),
     receive
-        {span, #span{name=Name,events=[],attributes=Attributes,parent_span_id=ParentSpanId}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
             ?assertEqual(13235353014750950193, ParentSpanId),
-            ExpectedAttrs = [
-                             {'http.client_ip', <<"203.0.133.195">>},
-                             {'http.flavor', '1.1'},
-                             {'http.host', <<"localhost">>},
-                             {'http.host.port', 8080},
-                             {'http.method', <<"GET">>},
-                             {'http.scheme', <<"http">>},
-                             {'http.target', <<"/binary_status_code">>},
-                             {'http.user_agent', <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>},
-                             {'net.host.ip', <<"127.0.0.1">>},
-                             {'net.transport', 'IP.TCP'},
-                             {'http.status_code', 200},
-                             {'http.request_content_length', 0},
-                             {'http.response_content_length', 12}],
-            ?assertListsMatch(ExpectedAttrs, otel_attributes:map(Attributes))
+            ExpectedAttrs = #{
+                             'http.client_ip' => <<"203.0.133.195">>,
+                             'http.flavor' => '1.1',
+                             'http.host' => <<"localhost">>,
+                             'http.host.port' => 8080,
+                             'http.method' => <<"GET">>,
+                             'http.scheme' => <<"http">>,
+                             'http.target' => <<"/binary_status_code">>,
+                             'http.user_agent' => <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>,
+                             'net.host.ip' => <<"127.0.0.1">>,
+                             'net.transport' => 'IP.TCP',
+                             'http.status_code' => 200,
+                             'http.request_content_length' => 0,
+                             'http.response_content_length' => 12
+                            },
+            ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(binary_status_code_request)
     end.
