@@ -67,6 +67,9 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
                 % do nothing first as I'm unsure how should we handle this
                 ok
             end;
+        StatusCode when StatusCode >= 500 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode),
+            otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
         StatusCode when StatusCode >= 400 ->
             otel_span:set_attribute(Ctx, 'http.status_code', StatusCode);
         StatusCode when StatusCode < 400 ->
