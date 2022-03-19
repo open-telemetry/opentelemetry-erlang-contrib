@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.0-rc.7
+
+### Changed
+
+* Opentelemetry 1.0 support
+
+## 1.0.0-rc.6
+
+### Changed
+
+* Opentelemetry 1.0.0-rc.4 support
+
+### Fixes
+
+* pass attributes on span start for better sampling options
+* fix http status attribute to match spec
+
 ## 1.0.0-rc.4
 
 ### Changed

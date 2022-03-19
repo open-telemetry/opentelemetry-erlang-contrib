@@ -35,12 +35,13 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 
 - [opentelemetry-cowboy](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_cowboy)
 - [opentelemetry-phoenix](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix)
+- [opentelemetry-ecto](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto)
 
 ## Supported Runtimes
 
 OpenTelemetry requires OTP v21.3 and above.
 
-See [Elixir OTP Compatability](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
+See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
 
 ## Contributing
 
@@ -51,7 +52,8 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 ## Useful links
 
 - For more information on OpenTelemetry, visit: <https://opentelemetry.io/>
-- For help or feedback on this project, join us in [GitHub Discussions][dhttps://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions], `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slackin.herokuapp.com/)
+- For conventions used in OpenTelemetry traces, see the following [readme](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
+- For help or feedback on this project, join us in [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions), `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slackin.herokuapp.com/)
 - Erlang SIG [community page](https://github.com/open-telemetry/community#special-interest-groups)
 
 ## License

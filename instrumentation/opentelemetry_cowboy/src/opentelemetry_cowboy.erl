@@ -7,7 +7,7 @@
 
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
 
--define(TRACER_ID, opentelemetry_cowboy).
+-define(TRACER_ID, ?MODULE).
 
 -spec setup() -> ok.
 setup() ->
@@ -33,46 +33,45 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
     {RemoteIP, _Port} = maps:get(peer, Req),
     Method = maps:get(method, Req),
 
-    Attributes = [
-                  {'http.client_ip', client_ip(Headers, RemoteIP)},
-                  {'http.flavor', http_flavor(Req)},
-                  {'http.host', maps:get(host, Req)},
-                  {'http.host.port', maps:get(port, Req)},
-                  {'http.method', Method},
-                  {'http.scheme', maps:get(scheme, Req)},
-                  {'http.target', maps:get(path, Req)},
-                  {'http.user_agent', maps:get(<<"user-agent">>, Headers, <<"">>)},
-                  {'net.host.ip', iolist_to_binary(inet:ntoa(RemoteIP))},
-                  {'net.transport', 'IP.TCP'}
-                 ],
+    Attributes = #{
+                  'http.client_ip' => client_ip(Headers, RemoteIP),
+                  'http.flavor' => http_flavor(Req),
+                  'http.host' => maps:get(host, Req),
+                  'http.host.port' => maps:get(port, Req),
+                  'http.method' => Method,
+                  'http.scheme' => maps:get(scheme, Req),
+                  'http.target' => maps:get(path, Req),
+                  'http.user_agent' => maps:get(<<"user-agent">>, Headers, <<"">>),
+                  'net.host.ip' => iolist_to_binary(inet:ntoa(RemoteIP)),
+                  'net.transport' => 'IP.TCP'
+                 },
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
-    Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, #{}),
-    otel_span:set_attributes(Ctx, Attributes);
+    otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, #{attributes => Attributes});
 
 handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
     Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
     Status = maps:get(resp_status, Meta),
-    Attributes = [
-                  {'http.request_content_length', maps:get(req_body_length, Measurements)},
-                  {'http.response_content_length', maps:get(resp_body_length, Measurements)}
-                 ],
+    Attributes = #{
+                  'http.request_content_length' => maps:get(req_body_length, Measurements),
+                  'http.response_content_length' => maps:get(resp_body_length, Measurements)
+                 },
     otel_span:set_attributes(Ctx, Attributes),
     StatusCode = transform_status_to_code(Status),
     case StatusCode of
         undefined ->
-          case maps:get(error, Meta, undefined) of
-            {ErrorType, Error, Reason} ->
-              otel_span:add_event(Ctx, atom_to_binary(ErrorType, utf8), [{error, Error}, {reason, Reason}]),
-              otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
-            _ ->
-              % do nothing first as I'm unsure how should we handle this
-              ok
-          end;
-        StatusCode when StatusCode >= 400 ->
-            otel_span:set_attributes(Ctx, [{'http.status_code', StatusCode}]),
+            case maps:get(error, Meta, undefined) of
+              {ErrorType, Error, Reason} ->
+                otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
+                otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
+              _ ->
+                % do nothing first as I'm unsure how should we handle this
+                ok
+            end;
+        Status when Status >= 400 ->
+            otel_span:set_attribute(Ctx, 'http.status', Status),
             otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
-        StatusCode when StatusCode < 400 ->
-            otel_span:set_attributes(Ctx, [{'http.status_code', StatusCode}])
+        Status when Status < 400 ->
+            otel_span:set_attribute(Ctx, 'http.status', Status)
     end,
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
@@ -96,17 +95,16 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
     otel_ctx:clear();
 
 handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
-    Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{}),
     #{
       reason := {ErrorType, Error, Reason},
       resp_status := Status
      } = Meta,
-
-    otel_span:set_attributes(Ctx, [
-                                   {'http.status_code', Status},
-                                   {'http.response_content_length', maps:get(resp_body_length, Measurements)}
-                                  ]),
-    otel_span:add_event(Ctx, atom_to_binary(ErrorType, utf8), [{error, Error}, {reason, Reason}]),
+    Attributes = #{
+                   'http.status_code' => Status,
+                   'http.response_content_length' => maps:get(resp_body_length, Measurements)
+                  },
+    Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{attributes => Attributes}),
+    otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear().

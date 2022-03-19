@@ -67,39 +67,48 @@ defmodule OpentelemetryEcto do
         _ -> type
       end
 
-    result =
-      case query_result do
-        {:ok, _} -> []
-        _ -> [error: true]
-      end
-
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
-    base_attributes =
-      Keyword.merge(result,
-        "db.type": db_type,
-        "db.statement": query,
-        source: source,
-        "db.instance": database,
-        "db.url": url,
-        "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
-      )
+    base_attributes = %{
+      "db.type": db_type,
+      "db.statement": query,
+      source: source,
+      "db.instance": database,
+      "db.url": url,
+      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+    }
 
     attributes =
       measurements
-      |> Enum.into(%{})
-      |> Map.take(~w(decode_time query_time queue_time)a)
-      |> Enum.reject(&is_nil(elem(&1, 1)))
-      |> Enum.map(fn {k, v} ->
-        {String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit)}
+      |> Enum.reduce(%{}, fn
+        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
+
+        _, acc ->
+          acc
       end)
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: attributes ++ base_attributes
+        attributes: Map.merge(attributes, base_attributes),
+        kind: :client
       })
+
+    case query_result do
+      {:error, error} ->
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
+
+      {:ok, _} ->
+        :ok
+    end
 
     OpenTelemetry.Span.end_span(s)
   end
+
+  defp format_error(%{__exception__: true} = exception) do
+    Exception.message(exception)
+  end
+
+  defp format_error(_), do: ""
 end

@@ -54,18 +54,18 @@ defmodule OpentelemetryPhoenixTest do
     assert_receive {:span,
                     span(
                       name: "/users/:user_id",
-                      attributes: list,
+                      attributes: attributes,
                       parent_span_id: 13_235_353_014_750_950_193
                     )}
 
-    assert [
+    assert %{
              "http.client_ip": "10.211.55.2",
              "http.flavor": :"1.1",
              "http.host": "localhost",
              "http.method": "GET",
              "http.route": "/users/:user_id",
              "http.scheme": "http",
-             "http.status": 200,
+             "http.status_code": 200,
              "http.target": "/users/123",
              "http.user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
              "net.host.ip": "10.211.55.2",
@@ -75,7 +75,7 @@ defmodule OpentelemetryPhoenixTest do
              "net.transport": :"IP.TCP",
              "phoenix.action": :user,
              "phoenix.plug": Elixir.MyStoreWeb.PageController
-           ] == List.keysort(list, 0)
+           } == :otel_attributes.map(attributes)
   end
 
   test "parses x-forwarded-for with single value" do
@@ -83,9 +83,9 @@ defmodule OpentelemetryPhoenixTest do
 
     x_forwarded_for_request("203.0.113.195")
 
-    assert_receive {:span, span(attributes: list)}
+    assert_receive {:span, span(attributes: attributes)}
 
-    assert Keyword.fetch!(list, :"http.client_ip") == "203.0.113.195"
+    assert Map.fetch!(:otel_attributes.map(attributes), :"http.client_ip") == "203.0.113.195"
   end
 
   test "parses x-forwarded-for with multiple values" do
@@ -93,9 +93,9 @@ defmodule OpentelemetryPhoenixTest do
 
     x_forwarded_for_request("203.0.113.195, 70.41.3.18, 150.172.238.178")
 
-    assert_receive {:span, span(attributes: list)}
+    assert_receive {:span, span(attributes: attributes)}
 
-    assert Keyword.fetch!(list, :"http.client_ip") == "203.0.113.195"
+    assert Map.fetch!(:otel_attributes.map(attributes), :"http.client_ip") == "203.0.113.195"
   end
 
   test "records exceptions for Phoenix web requests" do
@@ -130,32 +130,21 @@ defmodule OpentelemetryPhoenixTest do
     assert_receive {:span,
                     span(
                       name: "/users/:user_id/exception",
-                      attributes: list,
+                      attributes: attributes,
                       kind: :server,
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.ErlangError"},
-                            {"exception.message", "Erlang error: :badkey"},
-                            {"exception.stacktrace", _stacktrace},
-                            {:key, :name},
-                            {:map, %{username: "rick"}}
-                          ]
-                        )
-                      ],
+                      events: events,
                       parent_span_id: 13_235_353_014_750_950_193,
                       status: ^expected_status
                     )}
 
-    assert [
+    assert %{
              "http.client_ip": "10.211.55.2",
              "http.flavor": :"1.1",
              "http.host": "localhost",
              "http.method": "GET",
              "http.route": "/users/:user_id/exception",
              "http.scheme": "http",
-             "http.status": 500,
+             "http.status_code": 500,
              "http.target": "/users/123/exception",
              "http.user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
              "net.host.ip": "10.211.55.2",
@@ -165,7 +154,55 @@ defmodule OpentelemetryPhoenixTest do
              "net.transport": :"IP.TCP",
              "phoenix.action": :code_exception,
              "phoenix.plug": MyStoreWeb.PageController
-           ] == List.keysort(list, 0)
+           } == :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:key, :map, "exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
+  end
+
+  test "records exceptions for nested Phoenix routers" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      Meta.endpoint_stop(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    assert_receive {:span, _}
+
+    assert [_ | _] = :telemetry.list_handlers([:phoenix, :router_dispatch, :exception])
   end
 
   test "records exceptions for Phoenix web requests with plug wrappers" do
@@ -200,30 +237,21 @@ defmodule OpentelemetryPhoenixTest do
     assert_receive {:span,
                     span(
                       name: "/users/:user_id/exception",
-                      attributes: list,
+                      attributes: attributes,
                       kind: :server,
-                      events: [
-                        event(
-                          name: "exception",
-                          attributes: [
-                            {"exception.type", "Elixir.ArithmeticError"},
-                            {"exception.message", "bad argument in arithmetic expression"},
-                            {"exception.stacktrace", _stacktrace}
-                          ]
-                        )
-                      ],
+                      events: events,
                       parent_span_id: 13_235_353_014_750_950_193,
                       status: ^expected_status
                     )}
 
-    assert [
+    assert %{
              "http.client_ip": "10.211.55.2",
              "http.flavor": :"1.1",
              "http.host": "localhost",
              "http.method": "GET",
              "http.route": "/users/:user_id/exception",
              "http.scheme": "http",
-             "http.status": 500,
+             "http.status_code": 500,
              "http.target": "/users/123/exception",
              "http.user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
              "net.host.ip": "10.211.55.2",
@@ -233,7 +261,17 @@ defmodule OpentelemetryPhoenixTest do
              "net.transport": :"IP.TCP",
              "phoenix.action": :code_exception,
              "phoenix.plug": MyStoreWeb.PageController
-           ] == List.keysort(list, 0)
+           } == :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+             Map.keys(:otel_attributes.map(event_attributes))
   end
 
   defp x_forwarded_for_request(x_forwarded_for) do

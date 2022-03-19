@@ -1,8 +1,10 @@
 defmodule OpentelemetryEctoTest do
+  use ExUnit.Case
+  import Ecto.Query
+  require OpenTelemetry.Tracer
+
   alias OpentelemetryEcto.TestRepo, as: Repo
   alias OpentelemetryEcto.TestModels.{User, Post}
-  require OpenTelemetry.Tracer
-  use ExUnit.Case
 
   @event_name [:opentelemetry_ecto, :test_repo]
 
@@ -39,10 +41,11 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       name: "opentelemetry_ecto.test_repo.query:users",
-                      attributes: list
+                      attributes: attributes,
+                      kind: :client
                     )}
 
-    assert [
+    assert %{
              "db.instance": "opentelemetry_ecto_test",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
              "db.type": :sql,
@@ -52,7 +55,7 @@ defmodule OpentelemetryEctoTest do
              queue_time_microseconds: _,
              source: "users",
              total_time_microseconds: _
-           ] = List.keysort(list, 0)
+           } = :otel_attributes.map(attributes)
   end
 
   test "changes the time unit" do
@@ -63,10 +66,10 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       name: "opentelemetry_ecto.test_repo.query:posts",
-                      attributes: list
+                      attributes: attributes
                     )}
 
-    assert [
+    assert %{
              "db.instance": "opentelemetry_ecto_test",
              "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
              "db.type": :sql,
@@ -76,7 +79,7 @@ defmodule OpentelemetryEctoTest do
              queue_time_milliseconds: _,
              source: "posts",
              total_time_milliseconds: _
-           ] = List.keysort(list, 0)
+           } = :otel_attributes.map(attributes)
   end
 
   test "changes the span name prefix" do
@@ -99,6 +102,24 @@ defmodule OpentelemetryEctoTest do
 
     assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:users")}
     assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:posts")}
+  end
+
+  test "sets error message on error" do
+    attach_handler()
+
+    try do
+      Repo.all(from u in "users", select: u.non_existant_field)
+    rescue
+      _ -> :ok
+    end
+
+    assert_receive {:span,
+                    span(
+                      name: "opentelemetry_ecto.test_repo.query:users",
+                      status: {:status, :error, message}
+                    )}
+
+    assert message =~ "non_existant_field does not exist"
   end
 
   def attach_handler(config \\ []) do
