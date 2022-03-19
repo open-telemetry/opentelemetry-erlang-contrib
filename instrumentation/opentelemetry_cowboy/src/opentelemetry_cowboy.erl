@@ -85,8 +85,9 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
      } = Meta,
     otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>)),
+    StatusCode = transform_status_to_code(Status),
     otel_span:set_attributes(Ctx, #{
-                                   'http.status_code' => Status,
+                                   'http.status_code' => StatusCode,
                                    'http.request_content_length' => maps:get(req_body_length, Measurements),
                                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                                   }),
@@ -98,8 +99,9 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
       reason := {ErrorType, Error, Reason},
       resp_status := Status
      } = Meta,
+    StatusCode = transform_status_to_code(Status),
     Attributes = #{
-                   'http.status_code' => Status,
+                   'http.status_code' => StatusCode,
                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                   },
     Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{attributes => Attributes}),
