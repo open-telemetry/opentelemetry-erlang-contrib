@@ -17,5 +17,5 @@ _build
 *.iml
 rebar3.crashdump
 *~
-docs
+doc
 edoc
