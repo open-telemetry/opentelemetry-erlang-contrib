@@ -71,8 +71,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/propagators/opentelemetry_process_propagator",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" =>
-          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -94,8 +93,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
   end
 
   defp load_app do
-    {:ok, [{:application, name, desc}]} =
-      :file.consult('src/opentelemetry_process_propagator.app.src')
+    {:ok, [{:application, name, desc}]} = :file.consult('src/opentelemetry_process_propagator.app.src')
 
     {name, desc}
   end
