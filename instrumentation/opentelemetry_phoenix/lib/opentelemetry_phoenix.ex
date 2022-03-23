@@ -164,21 +164,23 @@ defmodule OpentelemetryPhoenix do
         %{kind: kind, reason: reason, stacktrace: stacktrace} = meta,
         _config
       ) do
-    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+    if OpenTelemetry.Span.is_recording(OpenTelemetry.Tracer.current_span_ctx()) do
+      ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    {[reason: reason], attrs} =
-      Reason.normalize(reason)
-      |> Keyword.split([:reason])
+      {[reason: reason], attrs} =
+        Reason.normalize(reason)
+        |> Keyword.split([:reason])
 
-    # try to normalize all errors to Elixir exceptions
-    exception = Exception.normalize(kind, reason, stacktrace)
+      # try to normalize all errors to Elixir exceptions
+      exception = Exception.normalize(kind, reason, stacktrace)
 
-    # record exception and mark the span as errored
-    Span.record_exception(ctx, exception, stacktrace, attrs)
-    Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+      # record exception and mark the span as errored
+      Span.record_exception(ctx, exception, stacktrace, attrs)
+      Span.set_status(ctx, OpenTelemetry.status(:error, ""))
 
-    # do not close the span as endpoint stop will still be called with
-    # more info, including the status code, which is nil at this stage
+      # do not close the span as endpoint stop will still be called with
+      # more info, including the status code, which is nil at this stage
+    end
   end
 
   defp http_flavor({_adapter_name, meta}) do

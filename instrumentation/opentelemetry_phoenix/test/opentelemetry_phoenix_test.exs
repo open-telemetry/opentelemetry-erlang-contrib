@@ -167,6 +167,44 @@ defmodule OpentelemetryPhoenixTest do
              Map.keys(:otel_attributes.map(event_attributes))
   end
 
+  test "records exceptions for nested Phoenix routers" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      Meta.endpoint_stop(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    assert_receive {:span, _}
+
+    assert [_ | _] = :telemetry.list_handlers([:phoenix, :router_dispatch, :exception])
+  end
+
   test "records exceptions for Phoenix web requests with plug wrappers" do
     OpentelemetryPhoenix.setup()
 
