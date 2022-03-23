@@ -90,7 +90,7 @@ defmodule OpentelemetryProcessPropagator do
   @doc """
   Attempt to find an otel context in the spawning process.
 
-  This is equivalent to calling `fetch_parent_ctx(:"$ancestors", 1)`
+  This is equivalent to calling `fetch_parent_ctx(1, :"$ancestors")`
   """
   @spec fetch_parent_ctx() :: OpenTelemetry.span_ctx() | :undefined
   defdelegate fetch_parent_ctx(), to: :opentelemetry_process_propagator
