@@ -5,7 +5,7 @@ defmodule OpentelemetryProcessPropagator do
 
   ## Context Propagation
 
-  Erlang and Elxiir do not have a mechanism for transparently passing
+  Erlang and Elixir do not have a mechanism for transparently passing
   context between processes. This requires the user to explicitly
   pass data between processes. In order to continue a trace across
   processes, the user must start a new span and pass it to the
