@@ -1,6 +1,20 @@
 defmodule OpentelemetryEcto do
   @moduledoc """
-  Telemetry handler for creating OpenTelemetry Spans from Ecto query events.
+  Telemetry handler for creating OpenTelemetry Spans from Ecto query events. Any
+  relation preloads, which are executed in parallel in separate tasks, will be
+  linked to the span of the process that initiated the call. For example:
+
+      Tracer.with_span "parent span" do
+        Repo.all(Query.from(User, preload: [:posts, :comments]))
+      end
+
+  this will create a span called "parent span" with three child spans for each
+  query: users, posts, and comments.
+
+  > #### Note {: .neutral}
+  >
+  > Due to limitations with how Ecto emits its telemetry, nested preloads are not
+  > represented as nested spans within a trace.
   """
 
   require OpenTelemetry.Tracer
@@ -88,6 +102,12 @@ defmodule OpentelemetryEcto do
           acc
       end)
 
+    parent_context = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
+
+    if parent_context != :undefined do
+      OpenTelemetry.Ctx.attach(parent_context)
+    end
+
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
@@ -104,6 +124,10 @@ defmodule OpentelemetryEcto do
     end
 
     OpenTelemetry.Span.end_span(s)
+
+    if parent_context != :undefined do
+      OpenTelemetry.Ctx.detach(parent_context)
+    end
   end
 
   defp format_error(%{__exception__: true} = exception) do

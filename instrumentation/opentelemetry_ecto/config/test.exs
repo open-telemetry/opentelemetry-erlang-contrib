@@ -11,4 +11,4 @@ config :opentelemetry_ecto, OpentelemetryEcto.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :opentelemetry,
-  processors: [{:otel_simple_processor, %{}}]
+  processors: [{:otel_batch_processor, %{scheduled_delay_ms: 1}}]

@@ -4,7 +4,10 @@ defmodule OpentelemetryEctoTest do
   require OpenTelemetry.Tracer
 
   alias OpentelemetryEcto.TestRepo, as: Repo
-  alias OpentelemetryEcto.TestModels.{User, Post}
+  alias OpentelemetryEcto.TestModels.{Comment, User, Post}
+
+  require Ecto.Query, as: Query
+  require OpenTelemetry.Tracer, as: Tracer
 
   @event_name [:opentelemetry_ecto, :test_repo]
 
@@ -15,7 +18,16 @@ defmodule OpentelemetryEctoTest do
   end
 
   setup do
-    :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
+    :application.stop(:opentelemetry)
+    :application.set_env(:opentelemetry, :tracer, :otel_tracer_default)
+
+    :application.set_env(:opentelemetry, :processors, [
+      {:otel_batch_processor, %{scheduled_delay_ms: 1}}
+    ])
+
+    :application.start(:opentelemetry)
+
+    :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
 
     OpenTelemetry.Tracer.start_span("test")
 
@@ -111,6 +123,65 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert message =~ "non_existant_field does not exist"
+  end
+
+  test "preloads in sequence are tied to the parent span" do
+    user = Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+    Repo.insert!(%Post{body: "We got traced!", user: user})
+    Repo.insert!(%Comment{body: "We got traced!", user: user})
+
+    attach_handler()
+
+    Tracer.with_span "parent span" do
+      Repo.all(Query.from(User, preload: [:posts, :comments]), in_parallel: false)
+    end
+
+    assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+  end
+
+  test "preloads in parallel are tied to the parent span" do
+    user = Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+    Repo.insert!(%Post{body: "We got traced!", user: user})
+    Repo.insert!(%Comment{body: "We got traced!", user: user})
+
+    attach_handler()
+
+    Tracer.with_span "parent span" do
+      Repo.all(Query.from(User, preload: [:posts, :comments]))
+    end
+
+    assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+  end
+
+  test "nested query preloads are tied to the parent span" do
+    user = Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+    Repo.insert!(%Post{body: "We got traced!", user: user})
+    Repo.insert!(%Comment{body: "We got traced!", user: user})
+
+    attach_handler()
+
+    Tracer.with_span "parent span" do
+      users_query = from u in User, preload: [:posts, :comments]
+      comments_query = from c in Comment, preload: [user: ^users_query]
+      Repo.all(Query.from(User, preload: [:posts, comments: ^comments_query]))
+    end
+
+    assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
+    # root query
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    # comments preload
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+    # users preload
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    # preloads of user
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
+    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
   end
 
   def attach_handler(config \\ []) do
