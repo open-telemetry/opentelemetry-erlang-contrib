@@ -17,16 +17,8 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   setup do
-    :application.stop(:opentelemetry)
-    :application.set_env(:opentelemetry, :tracer, :otel_tracer_default)
+    :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
-    :application.set_env(:opentelemetry, :processors, [
-      {:otel_batch_processor, %{scheduled_delay_ms: 1}}
-    ])
-
-    :application.start(:opentelemetry)
-
-    :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
     :ok
   end
 
