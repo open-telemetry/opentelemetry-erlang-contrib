@@ -7,7 +7,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
 
     [
       app: app,
-      version: version(Keyword.fetch!(desc, :vsn)),
+      version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -17,7 +17,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/propagators/opentelemetry_process_propagator",
       docs: [
         markdown_processor: ExDoc.Markdown.Earmark,
-        main: "OpentelemetryTelemetry",
+        main: "OpentelemetryProcessPropagator",
         # logo: "path/to/logo.png",
         # erlang_docs()
         extras: []
@@ -28,16 +28,6 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       ],
       package: package()
     ]
-  end
-
-  defp version(version) when is_list(version) do
-    List.to_string(version)
-  end
-
-  defp version({:file, path}) do
-    path
-    |> File.read!()
-    |> String.trim()
   end
 
   # Run "mix help compile.app" to learn about applications.
@@ -55,7 +45,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
     end)
     |> Enum.concat([
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.26.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.28.3", only: :dev, runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
     ])
@@ -65,7 +55,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
     [
       description: "Tools for opentelemetry context propagation across process boundaries",
       build_tools: ["rebar3", "mix"],
-      files: ~w(lib mix.exs README.md LICENSE rebar.config rebar.lock VERSION src),
+      files: ~w(lib mix.exs README.md LICENSE rebar.config rebar.lock src),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" =>
