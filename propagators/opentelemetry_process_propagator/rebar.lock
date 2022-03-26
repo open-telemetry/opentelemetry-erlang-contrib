@@ -1,0 +1,8 @@
+{"1.2.0",
+[{<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.0.0-rc.4">>},0}]}.
+[
+{pkg_hash,[
+ {<<"opentelemetry_api">>, <<"13FB20B8800149CE52DAA8FB793C1A45B826CC4BD0D5BC7E8A00CAB46285CBE6">>}]},
+{pkg_hash_ext,[
+ {<<"opentelemetry_api">>, <<"29C5BF7D5C40C4B9816906277BEB2438E6737073721C75398465B1ACD1B56B06">>}]}
+].

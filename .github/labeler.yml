@@ -53,14 +53,17 @@ opentelemetry_cowboy:
 opentelemetry_ecto:
   - instrumentation/opentelemetry_ecto/**/*
 
+opentelemetry_oban:
+  - instrumentation/opentelemetry_oban/**/*
+
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
+
+opentelemetry_process_propagator:
+  - propagators/opentelemetry_process_propagator/**/*
 
 opentelemetry_redix:
   - instrumentation/opentelemetry_redix/**/*
 
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
-
-opentelemetry_oban:
-  - instrumentation/opentelemetry_oban/**/*

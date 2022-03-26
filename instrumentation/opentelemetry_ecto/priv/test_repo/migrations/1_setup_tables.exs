@@ -10,5 +10,10 @@ defmodule OpentelemetryEcto.TestRepo.Migrations.SetupTables do
       add :body, :text
       add :user_id, references(:users)
     end
+
+    create table(:comments) do
+      add :body, :text
+      add :user_id, references(:users)
+    end
   end
 end

@@ -56,16 +56,24 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
                   'http.response_content_length' => maps:get(resp_body_length, Measurements)
                  },
     otel_span:set_attributes(Ctx, Attributes),
-    case Status of
+    StatusCode = transform_status_to_code(Status),
+    case StatusCode of
         undefined ->
-            {ErrorType, Error, Reason} = maps:get(error, Meta),
-            otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
-            otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
-        Status when Status >= 400 ->
-            otel_span:set_attribute(Ctx, 'http.status', Status),
+            case maps:get(error, Meta, undefined) of
+              {ErrorType, Error, Reason} ->
+                otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
+                otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
+              _ ->
+                % do nothing first as I'm unsure how should we handle this
+                ok
+            end;
+        StatusCode when StatusCode >= 500 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode),
             otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>));
-        Status when Status < 400 ->
-            otel_span:set_attribute(Ctx, 'http.status', Status)
+        StatusCode when StatusCode >= 400 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode);
+        StatusCode when StatusCode < 400 ->
+            otel_span:set_attribute(Ctx, 'http.status_code', StatusCode)
     end,
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
@@ -80,8 +88,9 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
      } = Meta,
     otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>)),
+    StatusCode = transform_status_to_code(Status),
     otel_span:set_attributes(Ctx, #{
-                                   'http.status' => Status,
+                                   'http.status_code' => StatusCode,
                                    'http.request_content_length' => maps:get(req_body_length, Measurements),
                                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                                   }),
@@ -93,8 +102,9 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
       reason := {ErrorType, Error, Reason},
       resp_status := Status
      } = Meta,
+    StatusCode = transform_status_to_code(Status),
     Attributes = #{
-                   'http.status' => Status,
+                   'http.status_code' => StatusCode,
                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                   },
     Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{attributes => Attributes}),
@@ -102,6 +112,13 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear().
+
+transform_status_to_code(Status) when is_binary(Status) ->
+  [CodeString | _Message] = string:split(Status, " "),
+  {Code, _Rest} = string:to_integer(CodeString),
+  Code;
+transform_status_to_code(Status) ->
+  Status.
 
 http_flavor(Req) ->
     case maps:get(version, Req, undefined) of
