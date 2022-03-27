@@ -64,7 +64,7 @@ with a more descriptive name, whose parent will be the Span named `"HTTP
 ### Excluding Paths
 
 Not all paths are created equal. It is likely you don't want to Trace a health
-check endpoint or `/metrics` if using Prometheus to scrape metrics. So this
+check endpoint or `/metrics` if using Prometheus to scrape metrics. This
 library offers two ways to exclude requests from potentially creating Spans by
 filtering on the raw path in the URL.
 
