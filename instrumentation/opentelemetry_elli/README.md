@@ -76,8 +76,12 @@ be added to `sys.config` to exclude the URLs `/health` and `/metrics`:
 {opentelemetry_elli, [{excluded_urls, ["/health", "/metrics"]}]}
 ```
 
-An OS environment variable, `OTEL_ELLI_EXCLUDED_URLS`, is also read and is
-a comma separated list of paths.
+An OS environment variable, `OTEL_ELLI_EXCLUDED_URLS`, is also read and is a
+comma separated list of paths. Note that the URLs in the variable are split with
+a simple `string:split` call, so commas are not support in any URL. No escaping
+or quoting are recognized, if a comma in a URL's path is required it should be
+percent encoded as `%2C`, this is how the URL it is compared against will appear
+in Elli anyway.
 
 The lists from both are merged.
 
