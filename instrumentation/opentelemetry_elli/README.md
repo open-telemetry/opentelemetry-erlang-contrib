@@ -57,9 +57,8 @@ handle([<<"hello">>, Who], Req, _Args) ->
 Attributes set by the middleware can be found in the OpenTelemetry docs [Semantic
 conventions for HTTP spans](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-http.md).
 
-Note that it isn't required to update the Span name, that is just a suggestion
-for when it makes sense to do so. And another option is to create a child Span
-with this better name and its parent will be the Span named `"HTTP
+Updating the Span name is not required. Another option is to create a child Span
+with a more descriptive name, whose parent will be the Span named `"HTTP
 {METHOD_NAME}"`.
 
 ### Excluding Paths
