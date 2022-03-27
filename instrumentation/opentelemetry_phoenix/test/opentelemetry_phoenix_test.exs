@@ -17,16 +17,8 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   setup do
-    :application.stop(:opentelemetry)
-    :application.set_env(:opentelemetry, :tracer, :otel_tracer_default)
+    :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
-    :application.set_env(:opentelemetry, :processors, [
-      {:otel_batch_processor, %{scheduled_delay_ms: 1}}
-    ])
-
-    :application.start(:opentelemetry)
-
-    :otel_batch_processor.set_exporter(:otel_exporter_pid, self())
     :ok
   end
 
@@ -165,6 +157,44 @@ defmodule OpentelemetryPhoenixTest do
 
     assert [:key, :map, "exception.message", "exception.stacktrace", "exception.type"] ==
              Map.keys(:otel_attributes.map(event_attributes))
+  end
+
+  test "records exceptions for nested Phoenix routers" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      Meta.endpoint_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      Meta.endpoint_stop(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :exception],
+      %{duration: 222},
+      Meta.router_dispatch_exception(:normal)
+    )
+
+    assert_receive {:span, _}
+
+    assert [_ | _] = :telemetry.list_handlers([:phoenix, :router_dispatch, :exception])
   end
 
   test "records exceptions for Phoenix web requests with plug wrappers" do

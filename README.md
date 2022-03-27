@@ -1,7 +1,7 @@
 ---
 <p align="center">
   <strong>
-    <a href="https://github.com/open-telemetry/opentelemetry-erlang/blob/main/website_docs/getting-started.md">Getting Started<a/>
+    <a href="https://opentelemetry.io/docs/instrumentation/erlang/getting-started/">Getting Started<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="https://hexdocs.pm/opentelemetry_api/1.0.0-rc.2/OpenTelemetry.html">API Documentation<a/>
   </strong>
@@ -51,15 +51,14 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 
 ## Useful links
 
-- For more information on OpenTelemetry, visit: <https://opentelemetry.io/>
+- For more information on OpenTelemetry, see [opentelemetry.io](https://opentelemetry.io).
 - For conventions used in OpenTelemetry traces, see the following [readme](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
 - For help or feedback on this project, join us in [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions), `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slackin.herokuapp.com/)
 - Erlang SIG [community page](https://github.com/open-telemetry/community#special-interest-groups)
 
 ## License
 
-Apache 2.0 - See [LICENSE][license-url] for more information.
+Apache 2.0 - See [LICENSE](LICENSE) for more information.
 
 [discussions-url]: https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions
-[license-url]: https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/LICENSE
 [good-first-issues]: https://github.com/open-telemetry/openTelemetry-erlang-contrib/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22

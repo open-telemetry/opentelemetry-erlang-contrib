@@ -1,0 +1,16 @@
+{application, opentelemetry_elli,
+ [{description, "Elli middleware for tracing and stats with OpenTelemetry"},
+  {vsn, "git"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    opentelemetry_api,
+    elli
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache-2.0"]},
+  {links, [{"GitHub", "https://github.com/opentelemetry-beam/opentelemetry_elli"}]}
+ ]}.
