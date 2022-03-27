@@ -26,7 +26,8 @@ Or as a middleware in the chain interceptor:
 
 ### Client
 
-Example in `sys.config` for setting up a 
+Example in `sys.config` for setting up a [client
+channel](https://grpc.io/docs/what-is-grpc/core-concepts/#channels):
 
 ``` erlang
 {client, #{channels => [{default_channel, [{http, "localhost", 8080, []}], 
