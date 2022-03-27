@@ -68,7 +68,7 @@ check endpoint or `/metrics` if using Prometheus to scrape metrics. This
 library offers two ways to exclude requests from potentially creating Spans by
 filtering on the raw path in the URL.
 
-A Application environment variable is read in on Elli start, so the follow can
+An application environment variable is read in on Elli start, so the following can
 be added to `sys.config` to exclude the url `/exclude/me`:
 
 ``` erlang
