@@ -7,6 +7,8 @@ init(_, failure) ->
     error(failure);
 init(Req, success = Opts) ->
     {ok, cowboy_req:reply(200, #{}, <<"Hello world!">>, Req), Opts};
+init(Req, binary_status_code = Opts) ->
+    {ok, cowboy_req:reply(<<"200 OK">>, #{}, <<"Hello world!">>, Req), Opts};
 init(Req, slow = Opts) ->
     timer:sleep(200),
     {ok, cowboy_req:reply(200, #{}, <<"I'm slow">>, Req), Opts};

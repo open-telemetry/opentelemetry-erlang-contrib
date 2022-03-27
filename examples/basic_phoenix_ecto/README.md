@@ -10,7 +10,8 @@ Jaeger][5] respectively.
 Additionally, we also include the OpenTelemetry Collector and
 `opentelemetry_exporter` configuration to
 export the traces to external services like [Honeycomb](https://www.honeycomb.io/) and
-[Lightstep](https://lightstep.com/).
+[Lightstep](https://lightstep.com/). Do remember to update the `.env` file to
+include your crendentials if you're doing so.
 
 ## Getting Stated
 
