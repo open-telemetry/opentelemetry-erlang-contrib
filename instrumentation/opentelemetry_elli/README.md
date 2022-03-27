@@ -37,7 +37,7 @@ It is strongly recommended to set this environment variable so the attribute can
 The middleware takes care of extracting the parent Span from the requests
 headers, both the [W3C](https://w3c.github.io/trace-context/) and [B3](https://github.com/openzipkin/b3-propagation) formats are supported.
 
-Because Elli has no router there is not a way to get a very descriptive Span
+Because Elli has no router, there is no way to get a very descriptive Span
 name automatically. See the OpenTelemetry docs [Semantic conventions for HTTP spans](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-http.md#name) for
 why you don't want to set the Span name to the raw path of the request. Thus,
 the Span has the name `"HTTP {METHOD_NAME}"`.
