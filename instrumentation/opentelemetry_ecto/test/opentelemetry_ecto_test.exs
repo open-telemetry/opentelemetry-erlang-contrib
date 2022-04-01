@@ -3,6 +3,7 @@ defmodule OpentelemetryEctoTest do
   import Ecto.Query
   require OpenTelemetry.Tracer
 
+  alias OpentelemetryEcto.MariaDBTestRepo, as: MariaDBRepo
   alias OpentelemetryEcto.TestRepo, as: Repo
   alias OpentelemetryEcto.TestModels.{Comment, User, Post}
 
@@ -49,7 +50,8 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
-             "db.ecto.adapter": "Elixir.Ecto.Adapters.Postgres",
+             "ecto.db.adapter": "Elixir.Ecto.Adapters.Postgres",
+             "db.system": "postgresql",
              "db.name": "opentelemetry_ecto_test",
              "db.sql.table": "users",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
@@ -72,7 +74,8 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
-             "db.ecto.adapter": "Elixir.Ecto.Adapters.Postgres",
+             "ecto.db.adapter": "Elixir.Ecto.Adapters.Postgres",
+             "db.system": "postgresql",
              "db.name": "opentelemetry_ecto_test",
              "db.sql.table": "posts",
              "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
@@ -182,11 +185,45 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
   end
 
-  def attach_handler(config \\ []) do
+  test "changes the db system" do
+    attach_handler([db_system: "mariadb"], [:opentelemetry_ecto, :mariadb_test_repo])
+
+    MariaDBRepo.all(User)
+
+    assert_receive {:span,
+                    span(
+                      name: "opentelemetry_ecto.mariadb_test_repo.query:users",
+                      attributes: attributes
+                    )}
+
+    assert %{
+              "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
+              "db.system": "mariadb"
+            } = :otel_attributes.map(attributes)
+  end
+
+  test "fallbacks to default if it is not a well-known db systems" do
+    attach_handler([db_system: "maria_db"], [:opentelemetry_ecto, :mariadb_test_repo])
+
+    MariaDBRepo.all(User)
+
+    assert_receive {:span,
+                    span(
+                      name: "opentelemetry_ecto.mariadb_test_repo.query:users",
+                      attributes: attributes
+                    )}
+
+    assert %{
+              "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
+              "db.system": "other_sql"
+            } = :otel_attributes.map(attributes)
+  end
+
+  def attach_handler(config \\ [], event_name \\ @event_name) do
     # For now setup the handler manually in each test
     handler = {__MODULE__, self()}
 
-    :telemetry.attach(handler, @event_name ++ [:query], &OpentelemetryEcto.handle_event/4, config)
+    :telemetry.attach(handler, event_name ++ [:query], &OpentelemetryEcto.handle_event/4, config)
 
     on_exit(fn ->
       :telemetry.detach(handler)

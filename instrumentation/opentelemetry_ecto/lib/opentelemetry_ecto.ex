@@ -19,6 +19,56 @@ defmodule OpentelemetryEcto do
 
   require OpenTelemetry.Tracer
 
+  @db_systems [
+    "other_sql",
+    "mssql",
+    "mysql",
+    "oracle",
+    "db2",
+    "postgresql",
+    "redshift",
+    "hive",
+    "cloudscape",
+    "hsqldb",
+    "progress",
+    "maxdb",
+    "hanadb",
+    "ingres",
+    "firstsql",
+    "edb",
+    "cache",
+    "adabas",
+    "firebird",
+    "derby",
+    "filemaker",
+    "informix",
+    "instantdb",
+    "interbase",
+    "mariadb",
+    "netezza",
+    "pervasive",
+    "pointbase",
+    "sqlite",
+    "sybase",
+    "teradata",
+    "vertica",
+    "h2",
+    "coldfusion",
+    "cassandra",
+    "hbase",
+    "mongodb",
+    "redis",
+    "couchbase",
+    "couchdb",
+    "cosmosdb",
+    "dynamodb",
+    "neo4j",
+    "geode",
+    "elasticsearch",
+    "memcached",
+    "cockroachdb"
+  ]
+
   @doc """
   Attaches the OpentelemetryEcto handler to your repo events. This should be called
   from your application behaviour on startup.
@@ -36,6 +86,11 @@ defmodule OpentelemetryEcto do
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
+
+    * `:db_system` - The identifier for the database management system (DBMS).
+      defaults to the mapped value of the ecto adapter used.
+      Must follow the list of well-known db systems from semantic conventions.
+      See `https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md`
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -69,7 +124,8 @@ defmodule OpentelemetryEcto do
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.ecto.adapter": to_string(adapter),
+      "ecto.db.adapter": to_string(adapter),
+      "db.system": db_system(config[:db_system], adapter),
       "db.name": database,
       "db.sql.table": source,
       "db.statement": query,
@@ -119,4 +175,12 @@ defmodule OpentelemetryEcto do
   end
 
   defp format_error(_), do: ""
+
+  defp db_system(db_system) when db_system in @db_systems, do: db_system
+  defp db_system(_), do: "other_sql"
+
+  defp db_system(nil, Ecto.Adapters.Postgres), do: "postgresql"
+  defp db_system(nil, Ecto.Adapters.MyXQL), do: "mysql"
+  defp db_system(nil, Ecto.Adapters.Tds), do: "mssql"
+  defp db_system(db_system, _), do: db_system(db_system)
 end
