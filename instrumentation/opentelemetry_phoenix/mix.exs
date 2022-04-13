@@ -60,7 +60,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0.0-beta.7"},
-      {:telemetry, "~> 0.4 or ~> 1.0.0"},
+      {:telemetry, "~> 0.4 or ~> 1.0"},
       {:plug, ">= 1.11.0"},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
