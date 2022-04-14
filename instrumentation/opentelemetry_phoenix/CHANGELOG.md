@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0
+
+### Fixes
+
+* Prevent attempting to record an exception when no active span present
+* Only mark 5xx level status codes as errored
+
 ## 1.0.0-rc.7
 
 ### Changed
