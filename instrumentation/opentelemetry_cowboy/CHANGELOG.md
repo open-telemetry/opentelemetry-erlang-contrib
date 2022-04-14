@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.2.0
+
 ### Fixes
 
 * Handle binary resp_status from Cowboy
