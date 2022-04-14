@@ -112,10 +112,4 @@ defmodule OpentelemetryTelemetry do
   """
   @spec end_telemetry_span(tracer_id(), :telemetry.event_metadata()) :: :ok
   defdelegate end_telemetry_span(tracer_id, event_metadata), to: :otel_telemetry
-
-  @doc false
-  defdelegate trace_application(app), to: :otel_telemetry
-
-  @doc false
-  defdelegate trace_application(app, opts), to: :otel_telemetry
 end

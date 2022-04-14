@@ -7,7 +7,7 @@ defmodule OpentelemetryTelemetry.MixProject do
 
     [
       app: app,
-      version: version(Keyword.fetch!(desc, :vsn)),
+      version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -28,16 +28,6 @@ defmodule OpentelemetryTelemetry.MixProject do
       ],
       package: package()
     ]
-  end
-
-  defp version(version) when is_list(version) do
-    List.to_string(version)
-  end
-
-  defp version({:file, path}) do
-    path
-    |> File.read!()
-    |> String.trim()
   end
 
   # Run "mix help compile.app" to learn about applications.
@@ -65,7 +55,7 @@ defmodule OpentelemetryTelemetry.MixProject do
     [
       description: "Bridge library between Telemetry events and OpenTelemetry Erlang",
       build_tools: ["rebar3", "mix"],
-      files: ~w(lib mix.exs README.md LICENSE rebar.config rebar.lock VERSION src),
+      files: ~w(lib mix.exs README.md LICENSE rebar.config rebar.lock src),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" =>
