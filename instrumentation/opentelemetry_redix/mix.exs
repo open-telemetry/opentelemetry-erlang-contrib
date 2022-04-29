@@ -5,7 +5,7 @@ defmodule OpentelemetryRedix.MixProject do
     [
       app: :opentelemetry_redix,
       description: description(),
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -23,7 +23,7 @@ defmodule OpentelemetryRedix.MixProject do
   defp package do
     [
       files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
-      licenses: ["Apache-2"],
+      licenses: ["Apache-2.0"],
       links: %{
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_redix",
