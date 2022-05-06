@@ -102,11 +102,21 @@ defmodule OpentelemetryEcto do
           acc
       end)
 
-    parent_context = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
+    parent_context =
+      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
+        :undefined ->
+          OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
-    if parent_context != :undefined do
-      OpenTelemetry.Ctx.attach(parent_context)
-    end
+        ctx ->
+          ctx
+      end
+
+    parent_token =
+      if parent_context != :undefined do
+        OpenTelemetry.Ctx.attach(parent_context)
+      else
+        :undefined
+      end
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
@@ -125,8 +135,8 @@ defmodule OpentelemetryEcto do
 
     OpenTelemetry.Span.end_span(s)
 
-    if parent_context != :undefined do
-      OpenTelemetry.Ctx.detach(parent_context)
+    if parent_token != :undefined do
+      OpenTelemetry.Ctx.detach(parent_token)
     end
   end
 
