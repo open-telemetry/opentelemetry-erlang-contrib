@@ -60,7 +60,6 @@ defmodule OpentelemetryRedix do
       }
       |> Map.merge(net_attributes(connection))
       |> Map.merge(redix_attributes(meta))
-      |> Map.merge(error_attributes(meta))
 
     s =
       OpenTelemetry.Tracer.start_span(operation, %{
@@ -69,8 +68,8 @@ defmodule OpentelemetryRedix do
         attributes: attributes
       })
 
-    if meta[:reason] do
-      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, ""))
+    if meta[:kind] == :error do
+      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(meta.reason)))
     end
 
     OpenTelemetry.Span.end_span(s)
@@ -87,6 +86,6 @@ defmodule OpentelemetryRedix do
   defp redix_attributes(%{connection_name: name}), do: %{"db.redix.connection_name": name}
   defp redix_attributes(_), do: %{}
 
-  defp error_attributes(%{reason: reason}), do: %{"db.redix.error": inspect(reason)}
-  defp error_attributes(_), do: %{}
+  defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
+  defp format_error(reason), do: inspect(reason)
 end
