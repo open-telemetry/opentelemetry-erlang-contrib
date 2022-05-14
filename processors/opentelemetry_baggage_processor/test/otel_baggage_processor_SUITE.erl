@@ -2,7 +2,6 @@
 
 -compile(export_all).
 
--include_lib("common_test/include/ct.hrl").
 -include_lib("stdlib/include/assert.hrl").
 -include_lib("opentelemetry/include/otel_span.hrl").
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
