@@ -1,7 +1,8 @@
 defmodule OpentelemetryBaggageProcessor do
-  @moduledoc """
-  TODO: Add something here
-  """
+  @external_resource readme = Path.join([__DIR__, "../README.md"])
 
-  # TODO: Create an add_attribute_to_trace or something like that
+  @moduledoc readme
+             |> File.read!()
+             |> String.split("<!-- MDOC -->")
+             |> Enum.fetch!(1)
 end
