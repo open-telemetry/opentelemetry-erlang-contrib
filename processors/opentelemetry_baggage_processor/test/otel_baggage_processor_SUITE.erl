@@ -36,14 +36,14 @@ baggage_handling(_Config) ->
   Ctx = otel_ctx:get_current(),
   Ctx2 = otel_baggage:set(Ctx, <<"key">>, <<"value">>),
   _Token = otel_ctx:attach(Ctx2),
-  SpanCtx2 = ?start_span(<<"span-2">>),
+  SpanCtx2 = ?start_span(<<"span-2">>, #{attributes => #{<<"existing-attribute">> => true}}),
   ?end_span(),
   ?set_current_span(SpanCtx2),
   ?end_span(),
   Attributes = get_span_attributes(<<"span-1">>),
   ?assertEqual(Attributes, #{}),
   Attributes2 = get_span_attributes(<<"span-2">>),
-  ?assertEqual(Attributes2, #{<<"key">> => <<"value">>}),
+  ?assertEqual(Attributes2, #{<<"key">> => <<"value">>, <<"existing-attribute">> => true}),
   ok.
 
 get_span_attributes(Name) ->
