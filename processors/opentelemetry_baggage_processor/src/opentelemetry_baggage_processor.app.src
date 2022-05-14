@@ -5,8 +5,7 @@
   {applications,
    [kernel,
     stdlib,
-    opentelemetry,
-    opentelemetry_api
+    opentelemetry
    ]},
   {env,[]},
   {modules, []},
