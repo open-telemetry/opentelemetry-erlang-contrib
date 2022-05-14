@@ -1,0 +1,17 @@
+{application, opentelemetry_baggage_processor,
+ [{description, "Library that defines a Span Processor which takes attributes from the Baggage and insert into the Span as attributes"},
+  {vsn, "0.0.1"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    opentelemetry,
+    opentelemetry_api
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["Apache-2.0"]},
+  {links, [{"GitHub", "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/processors/opentelemetry_baggage_processor"}]}
+ ]}.
+
