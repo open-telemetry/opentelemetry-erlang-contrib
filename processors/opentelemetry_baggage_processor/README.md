@@ -1,4 +1,4 @@
-# OpentelemetryBaggageProcessor
+# opentelemetry_baggage_processor
 
 A Span Processor that takes attributes from the Baggage and insert into the Span.
 
@@ -29,7 +29,7 @@ be found at [https://hexdocs.pm/opentelemetry_baggage_processor](https://hexdocs
 
 <!-- MDOC -->
 
-`OpentelemetryBaggageProcessor` provides a [Span Processor](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor)
+`opentelemetry_baggage_processor` provides a [Span Processor](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#span-processor)
 that takes attributes from the [Baggage](https://hexdocs.pm/opentelemetry_api/otel_baggage.html)
 and insert into the Span, once it starts.
 
