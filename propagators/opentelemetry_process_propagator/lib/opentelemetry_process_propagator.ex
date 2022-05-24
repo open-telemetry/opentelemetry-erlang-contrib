@@ -40,6 +40,23 @@ defmodule OpentelemetryProcessPropagator do
   span results in orphan spans. To correctly connect these spans we must
   find the otel context which spawned the process.
 
+  > #### Spawning Processes {: .warning}
+  >
+  > Processes spawned using `:erlang.spawn/1` and related functions _do not_
+  > include ancestor information in the spawned process.
+  >
+  > Processes spawned by `:proc_lib.spawn/1` and related functions _do_ propagate
+  > the pid of the spawning process to the spawned process. These pids are stored
+  > under the `:"$ancestors` key.
+  >
+  > If there is a possibility you may need to reverse propagate from a spawned process,
+  > prefer using `:proc_lib` over `:erlang`.
+
+  > #### Elixir Task {: .info}
+  >
+  > The Elixir `Task` module uses the `:"$callers` key.
+
+
   ## Usage
 
   Example of using `fetch_parent_ctx/1` to find a parent context.
@@ -82,9 +99,9 @@ defmodule OpentelemetryProcessPropagator do
   """
 
   @doc """
-  Attempt to fetch an otel context from a give pid.
+  Attempt to fetch an otel context from a given pid.
   """
-  @spec fetch_ctx(pid) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_ctx(pid) :: OpenTelemetry.span_ctx() | %{}
   defdelegate fetch_ctx(pid), to: :opentelemetry_process_propagator
 
   @doc """
@@ -92,24 +109,50 @@ defmodule OpentelemetryProcessPropagator do
 
   This is equivalent to calling `fetch_parent_ctx(1, :"$ancestors")`
   """
-  @spec fetch_parent_ctx() :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx() :: OpenTelemetry.span_ctx() | %{}
   defdelegate fetch_parent_ctx(), to: :opentelemetry_process_propagator
 
   @doc """
   Attempt to find an otel context in a spawning process within `n` number of parent
   processes
   """
-  @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.span_ctx() | %{}
   defdelegate fetch_parent_ctx(depth), to: :opentelemetry_process_propagator
 
   @doc """
   Attempt to find an otel context under a given process dictionary key
   within `n` number of parent processes. The first context found will be
   returned.
-
-  Processes spawned by `proc_lib` are stored under `:"$ancestors`. The
-  Elixir `Task` module uses the `:"$callers` key.
   """
-  @spec fetch_parent_ctx(non_neg_integer(), atom()) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx(non_neg_integer(), atom()) :: OpenTelemetry.span_ctx() | %{}
   defdelegate fetch_parent_ctx(max_depth, key), to: :opentelemetry_process_propagator
+
+  @doc """
+  Attempt to get an otel context starting with the current process before attempting to
+  check parent processes.
+
+  See `fetch_parent_ctx/0` for more information.
+  """
+  @spec get_ctx() :: OpenTelemetry.span_ctx() | %{}
+  defdelegate get_ctx(), to: :opentelemetry_process_propagator
+
+  @doc """
+  Attempt to get an otel context starting with the current process before attempting to
+  check in a spawning process within `n` number of parent processes. The first context found
+  will be returned.
+
+  See `fetch_parent_ctx/1` for more information.
+  """
+  @spec get_ctx(non_neg_integer()) :: OpenTelemetry.span_ctx() | %{}
+  defdelegate get_ctx(depth), to: :opentelemetry_process_propagator
+
+  @doc """
+  Attempt to get an otel context starting with the current process before attempting to
+  check in a spawning process within `n` number of parent processes. The first context found
+  will be returned.
+
+  See `fetch_parent_ctx/2` for more information.
+  """
+  @spec get_ctx(non_neg_integer(), atom()) :: OpenTelemetry.span_ctx() | %{}
+  defdelegate get_ctx(max_depth, key), to: :opentelemetry_process_propagator
 end
