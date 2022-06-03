@@ -20,3 +20,4 @@
 /instrumentation/opentelemetry_phoenix @bryannaegele @tsloughter
 /instrumentation/opentelemetry_redix   @andrewhr
 /utilities/opentelemetry_telemetry     @bryannaegele @tsloughter
+/instrumentation/opentelemetry_tesla   @ricardoccpaiva
