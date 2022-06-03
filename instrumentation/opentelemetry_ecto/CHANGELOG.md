@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0
+
+### Changed
+
+* Add idle time as an attribute
+
+### Fixes
+
+* Fix Ecto preload spans not being linked to the root parent query
+
 ## 1.0.0-rc.5
 
 ### Changed
