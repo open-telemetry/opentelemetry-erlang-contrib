@@ -23,7 +23,7 @@ by adding `opentelemetry_ecto` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:opentelemetry_ecto, "~> 1.0.0-rc.4"}
+    {:opentelemetry_ecto, "~> 1.0"}
   ]
 end
 ```
@@ -38,6 +38,7 @@ end
 | v1.0.0-rc.2               | v1.0.0-rc.2  |       |
 | v1.0.0-rc.3               | v1.0.0-rc.3  |       |
 | v1.0.0-rc.4               | v1.0.0-rc.4  |       |
+| v1.0                      | v1.0         |       |
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can

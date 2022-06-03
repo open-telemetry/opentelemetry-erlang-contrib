@@ -27,14 +27,14 @@ by adding `opentelemetry_telemetry` to your list of dependencies:
 
 ```erlang
 {deps, [
-  {opentelemetry_telemetry, "~> 1.0.0-beta.6"}
+  {opentelemetry_telemetry, "~> 1.0"}
 ]}.
 ```
 
 ```elixir
 def deps do
   [
-    {:opentelemetry_telemetry, "~> 1.0.0-beta.6"}
+    {:opentelemetry_telemetry, "~> 1.0"}
   ]
 end
 ```

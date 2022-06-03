@@ -135,7 +135,7 @@ defmodule OpentelemetryPhoenix do
 
     Span.set_attribute(ctx, :"http.status_code", conn.status)
 
-    if conn.status >= 400 do
+    if conn.status >= 500 do
       Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     end
 
