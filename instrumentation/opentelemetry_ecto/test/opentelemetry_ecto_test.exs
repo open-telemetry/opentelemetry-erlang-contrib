@@ -119,10 +119,39 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       name: "opentelemetry_ecto.test_repo.query:users",
+                      attributes: attributes,
+                      events: events,
                       status: {:status, :error, message}
                     )}
 
     assert message =~ "non_existant_field does not exist"
+
+    assert %{
+             "db.instance": "opentelemetry_ecto_test",
+             "db.statement": "SELECT u0.\"non_existant_field\" FROM \"users\" AS u0",
+             "db.type": :sql,
+             "db.url": "ecto://localhost",
+             query_time_microseconds: _,
+             queue_time_microseconds: _,
+             total_time_microseconds: _,
+             source: "users"
+           } = :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert %{
+             "exception.message" =>
+               ~s[ERROR 42703 (undefined_column) column u0.non_existant_field does not exist\n\n    query: SELECT u0."non_existant_field" FROM "users" AS u0],
+             "exception.stacktrace" => stacktrace,
+             "exception.type" => "Elixir.Postgrex.Error"
+           } = :otel_attributes.map(event_attributes)
+
+    assert stacktrace =~ "Ecto.Repo.Queryable.all/3"
   end
 
   test "preloads in sequence are tied to the parent span" do

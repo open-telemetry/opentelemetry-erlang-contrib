@@ -117,6 +117,7 @@ defmodule OpentelemetryEcto do
 
     case query_result do
       {:error, error} ->
+        OpenTelemetry.Span.record_exception(s, Exception.normalize(:error, error))
         OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
 
       {:ok, _} ->
