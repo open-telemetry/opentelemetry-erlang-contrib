@@ -116,9 +116,13 @@ defmodule OpentelemetryEcto do
       })
 
     case query_result do
+      {:error, %{__exception__: true} = exception} ->
+        OpenTelemetry.Span.record_exception(s, Exception.normalize(:error, exception))
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, Exception.message(exception)))
+
       {:error, error} ->
-        OpenTelemetry.Span.record_exception(s, Exception.normalize(:error, error))
-        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
+        status = if utf8?(error), do: error, else: ""
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, status))
 
       {:ok, _} ->
         :ok
@@ -131,9 +135,7 @@ defmodule OpentelemetryEcto do
     end
   end
 
-  defp format_error(%{__exception__: true} = exception) do
-    Exception.message(exception)
-  end
-
-  defp format_error(_), do: ""
+  defp utf8?(<<_::utf8, rest::binary>>), do: utf8?(rest)
+  defp utf8?(<<>>), do: true
+  defp utf8?(_), do: false
 end
