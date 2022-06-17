@@ -22,7 +22,7 @@ may be supplied.
 ```elixir
 def deps do
   [
-    {:opentelemetry_phoenix, "~> 1.0.0-rc.6"}
+    {:opentelemetry_phoenix, "~> 1.0"}
   ]
 end
 ```
@@ -38,6 +38,7 @@ end
 | v1.0.0-rc.4                  | v1.0.0-rc.2  | Otel rc.3 will be a breaking change |
 | v1.0.0-rc.5                  | v1.0.0-rc.3  |       |
 | v1.0.0-rc.6                  | v1.0.0-rc.4  |       |
+| v1.0                         | v1.0         |       |
 
 ## Note on phoenix integration
 
