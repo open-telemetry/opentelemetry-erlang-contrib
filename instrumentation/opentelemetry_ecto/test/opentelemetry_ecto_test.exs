@@ -111,7 +111,7 @@ defmodule OpentelemetryEctoTest do
     attach_handler()
 
     try do
-      Repo.all(from u in "users", select: u.non_existant_field)
+      Repo.all((from u in "users", select: u.non_existant_field), [stacktrace: true])
     rescue
       _ -> :ok
     end
@@ -151,7 +151,7 @@ defmodule OpentelemetryEctoTest do
              "exception.type" => "Elixir.Postgrex.Error"
            } = :otel_attributes.map(event_attributes)
 
-    assert stacktrace =~ "Ecto.Repo.Queryable.all/3"
+    assert stacktrace =~ ~s[OpentelemetryEctoTest."test sets error message on error"/1]
   end
 
   test "preloads in sequence are tied to the parent span" do
