@@ -67,3 +67,6 @@ opentelemetry_redix:
 
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
+
+opentelemetry_xray:
+  - utilities/opentelemetry_xray/**/*
