@@ -61,6 +61,14 @@ defmodule OpentelemetryEctoTest do
            } = :otel_attributes.map(attributes)
   end
 
+  test "include additionaL_attributes" do
+    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"config.attribute": "special value", "db.instance": "my_instance"} = :otel_attributes.map(attributes)
+  end
+
   test "changes the time unit" do
     attach_handler(time_unit: :millisecond)
 
