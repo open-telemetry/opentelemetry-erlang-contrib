@@ -82,3 +82,34 @@ jobs:
         run: rebar3 get-deps
       - name: Test
         run: rebar3 ct
+
+  opentelemetry-aws-xray:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_aws_xray'))
+    env:
+      app: 'opentelemetry_aws_xray'
+    defaults:
+      run:
+        working-directory: utilities/${{ env.app }}
+    runs-on: ubuntu-18.04
+    name: Opentelemetry AWS X-Ray test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('**/rebar.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: rebar3 get-deps
+      - name: Test
+        run: rebar3 ct
