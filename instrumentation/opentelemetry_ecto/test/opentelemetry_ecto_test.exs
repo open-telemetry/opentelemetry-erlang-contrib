@@ -49,14 +49,19 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
+             "db.connection_string": "ecto://localhost/opentelemetry_ecto_test",
              "db.instance": "opentelemetry_ecto_test",
+             "db.name": "opentelemetry_ecto_test",
+             "db.sql.table": "users",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
+             "db.system": "postgresql",
              "db.type": :sql,
-             "db.url": "ecto://postgres@localhost/opentelemetry_ecto_test",
+             "db.user": "postgres",
              decode_time_microseconds: _,
+             "net.peer.name": "localhost",
+             "net.transport": "IP.TCP",
              query_time_microseconds: _,
              queue_time_microseconds: _,
-             source: "users",
              total_time_microseconds: _
            } = :otel_attributes.map(attributes)
   end
@@ -76,11 +81,11 @@ defmodule OpentelemetryEctoTest do
              "db.instance": "opentelemetry_ecto_test",
              "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
              "db.type": :sql,
-             "db.url": "ecto://postgres@localhost/opentelemetry_ecto_test",
+             "db.connection_string": "ecto://localhost/opentelemetry_ecto_test",
              decode_time_milliseconds: _,
              query_time_milliseconds: _,
              queue_time_milliseconds: _,
-             source: "posts",
+             "db.sql.table": "posts",
              total_time_milliseconds: _
            } = :otel_attributes.map(attributes)
   end

@@ -6,7 +6,7 @@ defmodule OpentelemetryEcto.MixProject do
       app: :opentelemetry_ecto,
       description: description(),
       version: "1.0.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -54,7 +54,7 @@ defmodule OpentelemetryEcto.MixProject do
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.28.0", only: [:dev], runtime: false},
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
-      {:postgrex, ">= 0.15.0", only: [:dev, :test]},
+      {:postgrex, "~> 0.15.0", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:opentelemetry_process_propagator, "~> 0.1.0"},
       {:ecto, ">= 0.15.0"}

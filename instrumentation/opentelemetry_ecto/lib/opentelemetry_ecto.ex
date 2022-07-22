@@ -51,7 +51,6 @@ defmodule OpentelemetryEcto do
       ) do
     # Doing all this even if the span isn't sampled so the sampler
     # could technically use the attributes to decide if it should sample or not
-
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
@@ -69,7 +68,7 @@ defmodule OpentelemetryEcto do
       |> Enum.into(%{})
 
     url =
-      "ecto://#{username}@#{hostname}:#{port}/#{database}"
+      "ecto://#{hostname}:#{port}/#{database}"
       |> URI.parse()
       |> URI.to_string()
 
@@ -86,17 +85,22 @@ defmodule OpentelemetryEcto do
       %{
         "db.type": if(type == :ecto_sql_query, do: :sql, else: type),
         "db.statement": query,
+        "db.system": db_system(repo.__adapter__()),
         "db.instance": database,
-        "db.url": url,
+        "db.connection_string": url,
+        "db.user": username,
+        "db.name": database,
+        "net.peer.name": hostname,
+        "net.transport": "IP.TCP",
         "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
       }
-      |> maybe_add(:source, source)
+      |> maybe_add(:"db.sql.table", source)
       |> maybe_add("net.peer.port", port)
-      |> maybe_add_peer_name(hostname)
+      |> maybe_add_peer_addr(hostname)
 
     attributes =
       measurements
-      |> Map.take([:decode_time, :query_time, :queue_time, :idle_time])
+      |> Stream.take_while(fn {k, _} -> k in [:decode_time, :query_time, :queue_time, :idle_time] end)
       |> Stream.map(fn {k, v} -> {:"#{k}_#{time_unit}s", System.convert_time_unit(v, :native, time_unit)} end)
       |> Enum.into(%{})
 
@@ -139,9 +143,16 @@ defmodule OpentelemetryEcto do
   defp maybe_append_source(name, nil), do: name
   defp maybe_append_source(name, source), do: "#{name}:#{source}"
 
-  defp maybe_add_peer_name(map, peer_name) do
-    if ip?(peer_name), do: map, else: maybe_add(map, "net.peer.name", peer_name)
+  defp maybe_add_peer_addr(map, peer_name) do
+    if ip?(peer_name), do: map, else: maybe_add(map, "net.sock.peer.addr", peer_name)
   end
+
+  defp db_system(Ecto.Adapters.Postgres), do: "postgresql"
+  defp db_system(Ecto.Adapters.MyXQL), do: "mysql"
+  defp db_system(Ecto.Adapters.Tds), do: "mssql"
+  defp db_system(other) when is_atom(other), do: other |> Atom.to_string() |> String.downcase()
+  defp db_system(other) when is_binary(other), do: other |> String.downcase()
+  defp db_system(_), do: "unknown"
 
   defp ip?(address) when is_binary(address), do: address |> to_charlist() |> ip?()
 
