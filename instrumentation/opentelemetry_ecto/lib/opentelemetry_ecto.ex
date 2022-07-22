@@ -55,58 +55,54 @@ defmodule OpentelemetryEcto do
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
-    database = repo.config()[:database]
+
+    %{
+      hostname: hostname,
+      username: username,
+      database: database,
+      port: port
+    } =
+      [hostname: nil, username: nil, database: nil, port: nil]
+      |> Keyword.merge(repo.config())
+      |> Keyword.merge(Ecto.Repo.Supervisor.parse_url(repo.config()[:url] || ""))
+      |> Keyword.take([:hostname, :username, :database, :port])
+      |> Enum.into(%{})
 
     url =
-      case repo.config()[:url] do
-        nil ->
-          # TODO: add port
-          URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
-
-        url ->
-          url
-      end
+      "ecto://#{username}@#{hostname}:#{port}/#{database}"
+      |> URI.parse()
+      |> URI.to_string()
 
     span_name =
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
-      end <> if source != nil, do: ":#{source}", else: ""
+      end
+      |> then(&maybe_append_source(&1, source))
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
 
-    db_type =
-      case type do
-        :ecto_sql_query -> :sql
-        _ -> type
-      end
-
-    # TODO: need connection information to complete the required attributes
-    # net.peer.name or net.peer.ip and net.peer.port
-    base_attributes = %{
-      "db.type": db_type,
-      "db.statement": query,
-      source: source,
-      "db.instance": database,
-      "db.url": url,
-      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
-    }
+    base_attributes =
+      %{
+        "db.type": if(type == :ecto_sql_query, do: :sql, else: type),
+        "db.statement": query,
+        "net.peer.name": hostname,
+        "db.instance": database,
+        "db.url": url,
+        "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+      }
+      |> maybe_add(:source, source)
+      |> maybe_add("net.peer.port", port)
 
     attributes =
       measurements
-      |> Enum.reduce(%{}, fn
-        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
-          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
-
-        _, acc ->
-          acc
-      end)
+      |> Map.take([:decode_time, :query_time, :queue_time, :idle_time])
+      |> Stream.map(fn {k, v} -> {:"#{k}_#{time_unit}s", System.convert_time_unit(v, :native, time_unit)} end)
+      |> Enum.into(%{})
 
     parent_context = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
-    if parent_context != :undefined do
-      OpenTelemetry.Ctx.attach(parent_context)
-    end
+    if ctx?(parent_context), do: OpenTelemetry.Ctx.attach(parent_context)
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
@@ -125,9 +121,7 @@ defmodule OpentelemetryEcto do
 
     OpenTelemetry.Span.end_span(s)
 
-    if parent_context != :undefined do
-      OpenTelemetry.Ctx.detach(parent_context)
-    end
+    if ctx?(parent_context), do: OpenTelemetry.Ctx.detach(parent_context)
   end
 
   defp format_error(%{__exception__: true} = exception) do
@@ -135,4 +129,13 @@ defmodule OpentelemetryEcto do
   end
 
   defp format_error(_), do: ""
+
+  defp ctx?(:undefined), do: false
+  defp ctx?(_), do: true
+
+  defp maybe_add(map, _, nil), do: map
+  defp maybe_add(map, key, value) when is_map(map), do: Map.put(map, key, value)
+
+  defp maybe_append_source(name, nil), do: name
+  defp maybe_append_source(name, source), do: "#{name}:#{source}"
 end
