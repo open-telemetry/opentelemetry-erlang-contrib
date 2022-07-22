@@ -78,7 +78,7 @@ defmodule OpentelemetryEcto do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
       end
-      |> then(&maybe_append_source(&1, source))
+      |> maybe_append_source(source)
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
 
@@ -86,13 +86,13 @@ defmodule OpentelemetryEcto do
       %{
         "db.type": if(type == :ecto_sql_query, do: :sql, else: type),
         "db.statement": query,
-        "net.peer.name": hostname,
         "db.instance": database,
         "db.url": url,
         "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
       }
       |> maybe_add(:source, source)
       |> maybe_add("net.peer.port", port)
+      |> maybe_add_peer_name(hostname)
 
     attributes =
       measurements
@@ -138,4 +138,19 @@ defmodule OpentelemetryEcto do
 
   defp maybe_append_source(name, nil), do: name
   defp maybe_append_source(name, source), do: "#{name}:#{source}"
+
+  defp maybe_add_peer_name(map, peer_name) do
+    if ip?(peer_name), do: map, else: maybe_add(map, "net.peer.name", peer_name)
+  end
+
+  defp ip?(address) when is_binary(address), do: address |> to_charlist() |> ip?()
+
+  defp ip?(address) when is_list(address) do
+    case :inet.parse_address(address) do
+      {:ok, _} -> true
+      _ -> false
+    end
+  end
+
+  defp ip?(_), do: false
 end
