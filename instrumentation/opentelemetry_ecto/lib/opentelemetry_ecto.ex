@@ -95,7 +95,7 @@ defmodule OpentelemetryEcto do
         "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
       }
       |> maybe_add(:"db.sql.table", source)
-      |> maybe_add("net.peer.port", port)
+      |> maybe_add(:"net.peer.port", port)
       |> maybe_add_peer_addr(hostname)
 
     attributes =
@@ -144,7 +144,7 @@ defmodule OpentelemetryEcto do
   defp maybe_append_source(name, source), do: "#{name}:#{source}"
 
   defp maybe_add_peer_addr(map, peer_name) do
-    if ip?(peer_name), do: map, else: maybe_add(map, "net.sock.peer.addr", peer_name)
+    if ip?(peer_name), do: maybe_add(map, :"net.sock.peer.addr", peer_name), else: map
   end
 
   defp db_system(Ecto.Adapters.Postgres), do: "postgresql"
