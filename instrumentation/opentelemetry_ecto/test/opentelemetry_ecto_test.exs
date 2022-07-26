@@ -184,6 +184,29 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
   end
 
+  test "nested query within Task does not skip parent span" do
+    user = Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+    Repo.insert!(%Post{body: "We got traced!", user: user})
+    Repo.insert!(%Comment{body: "We got traced!", user: user})
+
+    attach_handler()
+
+    Tracer.with_span "root span" do
+      task =
+        Task.async(fn ->
+          Tracer.with_span "parent span" do
+            Repo.all(User)
+          end
+        end)
+
+      Task.await(task)
+    end
+
+    assert_receive {:span, span(span_id: _root_span_id, name: "root span")}
+    assert_receive {:span, span(span_id: parent_span_id, name: "parent span")}
+    assert_receive {:span, span(parent_span_id: ^parent_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+  end
+
   def attach_handler(config \\ []) do
     # For now setup the handler manually in each test
     handler = {__MODULE__, self()}
