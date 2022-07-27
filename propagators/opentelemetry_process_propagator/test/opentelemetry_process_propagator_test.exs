@@ -12,8 +12,8 @@ defmodule OpentelemetryProcessPropagatorTest do
   end
 
   describe "fetch_ctx/1" do
-    test "returns undefined if no context found" do
-      assert :undefined == fetch_ctx(self())
+    test "returns an empty map if no context found" do
+      assert %{} === fetch_ctx(self())
     end
 
     test "returns the ctx if there is one" do
@@ -23,6 +23,43 @@ defmodule OpentelemetryProcessPropagatorTest do
       ctx = Ctx.get_current()
 
       assert ctx == fetch_ctx(self())
+    end
+  end
+
+  describe "get_ctx/0" do
+    test "will find the parent ctx when present" do
+      span_ctx = Tracer.start_span("test")
+      Tracer.set_current_span(span_ctx)
+
+      OpenTelemetry.Baggage.set(%{test: "value"})
+
+      ctx = Ctx.get_current()
+
+      pid = self()
+
+      :proc_lib.spawn(fn ->
+        send(pid, get_ctx())
+      end)
+
+      assert_receive ^ctx
+    end
+
+    test "will find the current process ctx when present" do
+      span_ctx = Tracer.start_span("test")
+
+      Tracer.set_current_span(span_ctx)
+
+      assert Ctx.get_current() == get_ctx()
+    end
+
+    test "will return a blank map when no ctx present in current or spawning process" do
+      pid = self()
+
+      :proc_lib.spawn(fn ->
+        send(pid, get_ctx())
+      end)
+
+      assert_receive %{}
     end
   end
 
@@ -37,7 +74,7 @@ defmodule OpentelemetryProcessPropagatorTest do
         send(pid, fetch_parent_ctx())
       end)
 
-      assert_receive :undefined
+      assert_receive %{}
     end
 
     test "fetches the parent ctx when spawned by proclib" do
@@ -70,7 +107,7 @@ defmodule OpentelemetryProcessPropagatorTest do
         end)
       end)
 
-      assert_receive :undefined
+      assert_receive %{}
     end
 
     test "fetches the parent ctx when within max depth" do
