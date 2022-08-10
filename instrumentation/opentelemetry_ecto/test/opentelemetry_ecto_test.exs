@@ -184,6 +184,48 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
   end
 
+  test "if there's already a context for the current task, it uses it" do
+    Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+
+    attach_handler()
+
+    Tracer.with_span "outside task" do
+      t =
+        Task.async(fn ->
+          Tracer.with_span "inside task" do
+            Repo.all(Query.from(User))
+          end
+        end)
+
+      Task.await(t)
+    end
+
+    assert_receive {:span, span(span_id: inside_task_span_id, name: "inside task")}
+    assert_receive {:span, span(parent_span_id: ^inside_task_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+  end
+
+  test "context is not modified after query" do
+    Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+
+    attach_handler()
+
+    Tracer.with_span "outside task" do
+      t =
+        Task.async(fn ->
+          Tracer.with_span "inside task" do
+            Repo.all(Query.from(User))
+            Tracer.set_attribute(:test_attr, "after query")
+          end
+        end)
+
+      Task.await(t)
+    end
+
+    assert_receive {:span, span(span_id: inside_task_span_id, name: "inside task", attributes: attributes)}
+    assert %{test_attr: "after query"} = :otel_attributes.map(attributes)
+    assert_receive {:span, span(parent_span_id: ^inside_task_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+  end
+
   def attach_handler(config \\ []) do
     # For now setup the handler manually in each test
     handler = {__MODULE__, self()}
