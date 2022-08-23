@@ -108,7 +108,7 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert_all(name \\ __MODULE__, multi, multi_name, changesets_or_wrapper) do
+  def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper) do
     Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
   end
 
