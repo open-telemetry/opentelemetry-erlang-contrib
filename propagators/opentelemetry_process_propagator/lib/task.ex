@@ -15,10 +15,10 @@ defmodule OpentelemetryProcessPropagator.Task do
   * `*_with_span` - propagates the current context and starts a new child span.
   * `*_with_linked_span` - propagates the current context and starts a new linked span.
 
-  #### Module Redefinement {: :info}
-
-  This module does not redefine the `Task` module, instead providing a wrapper of the module,
-  so this functionality will not globally modify the default behavior of the `Task` module.
+  > #### Module Redefinement {: .info}
+  >
+  > This module does not redefine the `Task` module, instead providing a wrapper of the module,
+  > so this functionality will not globally modify the default behavior of the `Task` module.
 
   ## Usage
 
