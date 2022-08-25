@@ -9,7 +9,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       app: app,
       version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(Keyword.fetch!(config, :deps)),
       name: "Opentelemetry Process Propagator",

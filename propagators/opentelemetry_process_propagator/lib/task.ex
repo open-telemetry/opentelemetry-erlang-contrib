@@ -536,9 +536,13 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   defdelegate child_spec(arg), to: Task
 
-  defdelegate completed(result), to: Task
+  if Kernel.function_exported?(Task, :completed, 1) do
+    defdelegate completed(result), to: Task
+  end
 
-  defdelegate ignore(task), to: Task
+  if Kernel.function_exported?(Task, :ignore, 1) do
+    defdelegate ignore(task), to: Task
+  end
 
   defdelegate shutdown(task), to: Task
   defdelegate shutdown(task, timeout), to: Task
