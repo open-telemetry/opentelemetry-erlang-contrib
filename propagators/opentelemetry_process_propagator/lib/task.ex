@@ -6,12 +6,19 @@ defmodule OpentelemetryProcessPropagator.Task do
   than a replacement of Elixir's module, this library can be aliased
   into a file without concern for creating spans where you do not want them.
 
-  Each Task function is replicated with three variants: `*_with_ctx`, `*_with_span`,
+  Each `Task` function is replicated with two variants: `*_with_span`
   and `*_with_linked_span`. Each of these variations has a specific use case.
+  The original implementation for each function automatically propagates the
+  current context.
 
-  * `*_with_ctx` - propagates the current context without starting a new child span.
+  * `*` - propagates the current context
   * `*_with_span` - propagates the current context and starts a new child span.
   * `*_with_linked_span` - propagates the current context and starts a new linked span.
+
+  #### Module Redefinement {: :info}
+
+  This module does not redefine the `Task` module, instead providing a wrapper of the module,
+  so this functionality will not globally modify the default behavior of the `Task` module.
 
   ## Usage
 
@@ -47,8 +54,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.async_stream/3` for more information.
   """
-  @spec async_stream_with_ctx(Enumerable.t(), (term() -> term()), keyword()) :: Enumerable.t()
-  def async_stream_with_ctx(enumerable, fun, opts \\ []) do
+  @spec async_stream(Enumerable.t(), (term() -> term()), keyword()) :: Enumerable.t()
+  def async_stream(enumerable, fun, opts \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.async_stream(
@@ -69,14 +76,14 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.async_stream/5` for more information.
   """
-  @spec async_stream_with_ctx(
+  @spec async_stream(
           Enumerable.t(),
           module(),
           atom(),
           [term()],
           keyword()
         ) :: Enumerable.t()
-  def async_stream_with_ctx(enumerable, module, function_name, args, opts \\ []) do
+  def async_stream(enumerable, module, function_name, args, opts \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.async_stream(enumerable, Wrapper, :with_ctx, [ctx, {module, function_name, args}], opts)
@@ -193,8 +200,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.async/1` for more information.
   """
-  @spec async_with_ctx((() -> any())) :: Task.t()
-  def async_with_ctx(fun) do
+  @spec async((() -> any())) :: Task.t()
+  def async(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.async(fn ->
@@ -209,8 +216,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.async/3` for more information.
   """
-  @spec async_with_ctx(module(), atom(), [term()]) :: Task.t()
-  def async_with_ctx(module, function_name, args) do
+  @spec async(module(), atom(), [term()]) :: Task.t()
+  def async(module, function_name, args) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.async(Wrapper, :with_ctx, [ctx, {module, function_name, args}])
@@ -301,8 +308,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start/1` for more information.
   """
-  @spec start_with_ctx((() -> any())) :: {:ok, pid()}
-  def start_with_ctx(fun) do
+  @spec start((() -> any())) :: {:ok, pid()}
+  def start(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.start(fn ->
@@ -317,8 +324,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start/3` for more information.
   """
-  @spec start_with_ctx(module(), atom(), [term()]) :: {:ok, pid()}
-  def start_with_ctx(module, function_name, args) do
+  @spec start(module(), atom(), [term()]) :: {:ok, pid()}
+  def start(module, function_name, args) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.start(Wrapper, :with_ctx, [ctx, {module, function_name, args}])
@@ -410,8 +417,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start_link/1` for more information.
   """
-  @spec start_link_with_ctx((() -> any())) :: {:ok, pid()}
-  def start_link_with_ctx(fun) do
+  @spec start_link((() -> any())) :: {:ok, pid()}
+  def start_link(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.start_link(fn ->
@@ -428,8 +435,8 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start_link/3` for more information.
   """
-  @spec start_link_with_ctx(module(), atom(), [term()]) :: {:ok, pid()}
-  def start_link_with_ctx(module, function_name, args) do
+  @spec start_link(module(), atom(), [term()]) :: {:ok, pid()}
+  def start_link(module, function_name, args) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.start_link(Wrapper, :with_ctx, [ctx, {module, function_name, args}])
@@ -519,15 +526,6 @@ defmodule OpentelemetryProcessPropagator.Task do
     Task.start_link(Wrapper, :with_linked_span, [name, start_opts, parent, {module, function_name, args}])
   end
 
-  defdelegate async(fun), to: Task
-  defdelegate async(module, fun, args), to: Task
-
-  defdelegate async_stream(enumerable, fun), to: Task
-  defdelegate async_stream(enumerable, fun, options), to: Task
-
-  defdelegate async_stream(enumerable, module, function_name, args), to: Task
-  defdelegate async_stream(enumerable, module, function_name, args, options), to: Task
-
   defdelegate await(task), to: Task
   defdelegate await(task, timeout), to: Task
 
@@ -546,12 +544,6 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   defdelegate shutdown(task), to: Task
   defdelegate shutdown(task, timeout), to: Task
-
-  defdelegate start_link(fun), to: Task
-  defdelegate start_link(module, function, args), to: Task
-
-  defdelegate start(fun), to: Task
-  defdelegate start(module, function, args), to: Task
 
   defdelegate yield_many(tasks), to: Task
   defdelegate yield_many(tasks, timeout), to: Task

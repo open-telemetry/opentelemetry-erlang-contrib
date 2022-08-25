@@ -39,9 +39,9 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
   end
 
   describe "async_stream" do
-    test "async_stream_with_ctx/3" do
+    test "async_stream/3" do
       Tracer.with_span "parent span" do
-        Task.async_stream_with_ctx(["a", "b"], fn value ->
+        Task.async_stream(["a", "b"], fn value ->
           OtherAppModule.fun_with_span(value)
         end)
         |> Stream.run()
@@ -59,10 +59,10 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
       assert ["a", "b"] == Enum.sort([val1, val2])
     end
 
-    test "async_stream_with_ctx/5" do
+    test "async_stream/5" do
       Tracer.with_span "parent span" do
-        Task.async_stream_with_ctx(["a", "b"], __MODULE__, :stream_ctx_test_function, [
-          :async_stream_with_ctx
+        Task.async_stream(["a", "b"], __MODULE__, :stream_ctx_test_function, [
+          :async_stream
         ])
         |> Stream.run()
       end
@@ -175,10 +175,10 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
   end
 
   describe "async" do
-    test "async_with_ctx/1" do
+    test "async/1" do
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.async_with_ctx(fn ->
-          Tracer.set_attribute(:value, :async_with_ctx)
+        Task.async(fn ->
+          Tracer.set_attribute(:value, :async)
 
           :ok
         end)
@@ -186,12 +186,12 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
       end
 
       assert_receive {:span, span(name: "parent span", attributes: attrs)}
-      assert %{a: 1, value: :async_with_ctx} == attributes(attrs)
+      assert %{a: 1, value: :async} == attributes(attrs)
     end
 
-    test "async_with_ctx/3" do
+    test "async/3" do
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.async_with_ctx(__MODULE__, :ctx_test_function, [:async_with_ctx])
+        Task.async(__MODULE__, :ctx_test_function, [:async])
         |> Task.await()
       end
 
@@ -199,7 +199,7 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(parent_span_id: ^root_span_id, name: "already traced fun", attributes: attrs)}
-      assert %{value: :async_with_ctx} == attributes(attrs)
+      assert %{value: :async} == attributes(attrs)
     end
 
     test "async_with_span/3" do
@@ -274,10 +274,10 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
   end
 
   describe "start" do
-    test "start_with_ctx/3" do
+    test "start/3" do
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.start_with_ctx(fn ->
-          ctx_test_function(:start_with_ctx)
+        Task.start(fn ->
+          ctx_test_function(:start)
         end)
       end
 
@@ -285,19 +285,19 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(name: "already traced fun", parent_span_id: ^root_span_id, attributes: attrs)}
-      assert %{value: :start_with_ctx} == attributes(attrs)
+      assert %{value: :start} == attributes(attrs)
     end
 
-    test "start_with_ctx/5" do
+    test "start/5" do
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.start_with_ctx(__MODULE__, :ctx_test_function, [:start_with_ctx])
+        Task.start(__MODULE__, :ctx_test_function, [:start])
       end
 
       assert_receive {:span, span(name: "parent span", span_id: root_span_id, attributes: attrs)}
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(name: "already traced fun", parent_span_id: ^root_span_id, attributes: attrs)}
-      assert %{value: :start_with_ctx} == attributes(attrs)
+      assert %{value: :start} == attributes(attrs)
     end
 
     test "start_with_span/3" do
@@ -360,10 +360,10 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
     end
   end
 
-  test "start_link_with_ctx" do
+  test "start_link" do
     Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-      Task.start_link_with_ctx(fn ->
-        ctx_test_function(:start_link_with_ctx)
+      Task.start_link(fn ->
+        ctx_test_function(:start_link)
 
         :ok
       end)
@@ -373,19 +373,19 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
     assert %{a: 1} == attributes(attrs)
 
     assert_receive {:span, span(name: "already traced fun", parent_span_id: ^root_span_id, attributes: attrs)}
-    assert %{value: :start_link_with_ctx} == attributes(attrs)
+    assert %{value: :start_link} == attributes(attrs)
   end
 
-  test "start_link_with_ctx_mfa" do
+  test "start_link_mfa" do
     Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-      Task.start_link_with_ctx(__MODULE__, :ctx_test_function, [:start_link_with_ctx])
+      Task.start_link(__MODULE__, :ctx_test_function, [:start_link])
     end
 
     assert_receive {:span, span(name: "parent span", span_id: root_span_id, attributes: attrs)}
     assert %{a: 1} == attributes(attrs)
 
     assert_receive {:span, span(parent_span_id: ^root_span_id, attributes: attrs, name: "already traced fun")}
-    assert %{value: :start_link_with_ctx} == attributes(attrs)
+    assert %{value: :start_link} == attributes(attrs)
   end
 
   test "start_link_with_span" do

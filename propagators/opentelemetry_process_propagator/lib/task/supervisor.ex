@@ -6,12 +6,19 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
   than a replacement of Elixir's module, this library can be aliased
   into a file without concern for creating spans where you do not want them.
 
-  Each Task function is replicated with three variants: `*_with_ctx`, `*_with_span`,
+  Each `Task.Supervisor` function is replicated with two variants: `*_with_span`
   and `*_with_linked_span`. Each of these variations has a specific use case.
+  The original implementation for each function automatically propagates the
+  current context.
 
-  * `*_with_ctx` - propagates the current context without starting a new child span.
+  * `*` - propagates the current context
   * `*_with_span` - propagates the current context and starts a new child span.
   * `*_with_linked_span` - propagates the current context and starts a new linked span.
+
+  #### Module Redefinement {: :info}
+
+  This module does not redefine the `Task.Supervisor` module, instead providing a wrapper of the module,
+  so this functionality will not globally modify the default behavior of the `Task` module.
   """
 
   alias OpentelemetryProcessPropagator.Task.Wrapper
@@ -25,8 +32,8 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async/3` for more information.
   """
-  @spec async_with_ctx(Supervisor.supervisor(), (() -> any())) :: Task.t()
-  def async_with_ctx(supervisor, fun, options \\ []) do
+  @spec async(Supervisor.supervisor(), (() -> any())) :: Task.t()
+  def async(supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async(
@@ -45,8 +52,8 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async/5` for more information.
   """
-  @spec async_with_ctx(Supervisor.supervisor(), module(), atom(), [term()]) :: Task.t()
-  def async_with_ctx(supervisor, module, function_name, args, options \\ []) do
+  @spec async(Supervisor.supervisor(), module(), atom(), [term()]) :: Task.t()
+  def async(supervisor, module, function_name, args, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async(supervisor, Wrapper, :with_ctx, [ctx, {module, function_name, args}], options)
@@ -161,8 +168,8 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_nolink/3` for more information.
   """
-  @spec async_nolink_with_ctx(Supervisor.supervisor(), (() -> any())) :: Task.t()
-  def async_nolink_with_ctx(supervisor, fun, options \\ []) do
+  @spec async_nolink(Supervisor.supervisor(), (() -> any())) :: Task.t()
+  def async_nolink(supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_nolink(
@@ -181,8 +188,8 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_nolink/5` for more information.
   """
-  @spec async_nolink_with_ctx(Supervisor.supervisor(), module(), atom(), [term()]) :: Task.t()
-  def async_nolink_with_ctx(supervisor, module, function_name, args, options \\ []) do
+  @spec async_nolink(Supervisor.supervisor(), module(), atom(), [term()]) :: Task.t()
+  def async_nolink(supervisor, module, function_name, args, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_nolink(supervisor, Wrapper, :with_ctx, [ctx, {module, function_name, args}], options)
@@ -299,13 +306,13 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_stream/4` for more information.
   """
-  @spec async_stream_with_ctx(
+  @spec async_stream(
           Supervisor.supervisor(),
           Enumerable.t(),
           (term() -> term()),
           keyword()
         ) :: Enumerable.t()
-  def async_stream_with_ctx(supervisor, enumerable, fun, options \\ []) do
+  def async_stream(supervisor, enumerable, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_stream(
@@ -327,7 +334,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_stream/6` for more information.
   """
-  @spec async_stream_with_ctx(
+  @spec async_stream(
           Supervisor.supervisor(),
           Enumerable.t(),
           module(),
@@ -335,7 +342,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           [term()],
           keyword()
         ) :: Enumerable.t()
-  def async_stream_with_ctx(supervisor, enumerable, module, function_name, args, options \\ []) do
+  def async_stream(supervisor, enumerable, module, function_name, args, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_stream(
@@ -484,13 +491,13 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_stream_nolink/4` for more information.
   """
-  @spec async_stream_nolink_with_ctx(
+  @spec async_stream_nolink(
           Supervisor.supervisor(),
           Enumerable.t(),
           (term() -> term()),
           keyword()
         ) :: Enumerable.t()
-  def async_stream_nolink_with_ctx(supervisor, enumerable, fun, options \\ []) do
+  def async_stream_nolink(supervisor, enumerable, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_stream_nolink(
@@ -512,7 +519,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_stream_nolink/6` for more information.
   """
-  @spec async_stream_nolink_with_ctx(
+  @spec async_stream_nolink(
           Supervisor.supervisor(),
           Enumerable.t(),
           module(),
@@ -520,7 +527,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           [term()],
           keyword()
         ) :: Enumerable.t()
-  def async_stream_nolink_with_ctx(supervisor, enumerable, module, function_name, args, options \\ []) do
+  def async_stream_nolink(supervisor, enumerable, module, function_name, args, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.async_stream_nolink(
@@ -677,12 +684,12 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.start_child/3` for more information.
   """
-  @spec start_child_with_ctx(
+  @spec start_child(
           Supervisor.supervisor(),
           (() -> any()),
           keyword()
         ) :: DynamicSupervisor.on_start_child()
-  def start_child_with_ctx(supervisor, fun, options \\ []) do
+  def start_child(supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.start_child(
@@ -702,14 +709,14 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.start_child/5` for more information.
   """
-  @spec start_child_with_ctx(
+  @spec start_child(
           Supervisor.supervisor(),
           module(),
           atom(),
           [term()],
           keyword()
         ) :: DynamicSupervisor.on_start_child()
-  def start_child_with_ctx(supervisor, module, function_name, args, options \\ []) do
+  def start_child(supervisor, module, function_name, args, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     Task.Supervisor.start_child(supervisor, Wrapper, :with_ctx, [ctx, {module, function_name, args}], options)
@@ -823,51 +830,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
     )
   end
 
-  defdelegate async(supervisor, fun), to: Task.Supervisor
-  @doc false
-  defdelegate async(supervisor, fun, options), to: Task.Supervisor
-
-  defdelegate async(supervisor, module, fun, args), to: Task.Supervisor
-  @doc false
-  defdelegate async(supervisor, module, fun, args, options), to: Task.Supervisor
-
-  defdelegate async_nolink(supervisor, fun), to: Task.Supervisor
-  @doc false
-  defdelegate async_nolink(supervisor, fun, options), to: Task.Supervisor
-
-  defdelegate async_nolink(supervisor, module, fun, args), to: Task.Supervisor
-  @doc false
-  defdelegate async_nolink(supervisor, module, fun, args, options), to: Task.Supervisor
-
-  defdelegate async_stream(supervisor, enumerable, fun), to: Task.Supervisor
-  @doc false
-  defdelegate async_stream(supervisor, enumerable, fun, options), to: Task.Supervisor
-
-  defdelegate async_stream(supervisor, enumerable, module, function, args), to: Task.Supervisor
-  @doc false
-  defdelegate async_stream(supervisor, enumerable, module, function, args, options), to: Task.Supervisor
-
-  defdelegate async_stream_nolink(supervisor, enumerable, fun), to: Task.Supervisor
-  @doc false
-  defdelegate async_stream_nolink(supervisor, enumerable, fun, options), to: Task.Supervisor
-
-  defdelegate async_stream_nolink(supervisor, enumerable, module, function, args), to: Task.Supervisor
-  @doc false
-  defdelegate async_stream_nolink(supervisor, enumerable, module, function, args, options), to: Task.Supervisor
-
   defdelegate children(supervisor), to: Task.Supervisor
-
-  defdelegate start_child(supervisor, fun), to: Task.Supervisor
-  @doc false
-  defdelegate start_child(supervisor, fun, options), to: Task.Supervisor
-
-  defdelegate start_child(supervisor, module, fun, args), to: Task.Supervisor
-  @doc false
-  defdelegate start_child(supervisor, module, fun, args, options), to: Task.Supervisor
-
   defdelegate start_link(), to: Task.Supervisor
-  @doc false
-  defdelegate start_link(options), to: Task.Supervisor
-
   defdelegate terminate_child(supervisor, pid), to: Task.Supervisor
 end

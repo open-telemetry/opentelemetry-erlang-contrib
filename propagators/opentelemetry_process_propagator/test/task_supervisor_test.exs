@@ -39,11 +39,11 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
   end
 
   describe "async_stream" do
-    test "async_stream_with_ctx" do
+    test "async_stream" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span" do
-        Task.Supervisor.async_stream_with_ctx(Test.TaskSupervisor, ["a", "b"], fn value ->
+        Task.Supervisor.async_stream(Test.TaskSupervisor, ["a", "b"], fn value ->
           OtherAppModule.fun_with_span(value)
         end)
         |> Stream.run()
@@ -57,12 +57,12 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       assert [%{value: "a"}, %{value: "b"}] == Enum.sort([attributes(attrs1), attributes(attrs2)])
     end
 
-    test "async_stream_with_ctx/5" do
+    test "async_stream/5" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span" do
-        Task.Supervisor.async_stream_with_ctx(Test.TaskSupervisor, ["a", "b"], __MODULE__, :stream_ctx_test_function, [
-          :async_stream_with_ctx
+        Task.Supervisor.async_stream(Test.TaskSupervisor, ["a", "b"], __MODULE__, :stream_ctx_test_function, [
+          :async_stream
         ])
         |> Stream.run()
       end
@@ -191,11 +191,11 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
   end
 
   describe "async_stream_nolink" do
-    test "async_stream_nolink_with_ctx" do
+    test "async_stream_nolink" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span" do
-        Task.Supervisor.async_stream_nolink_with_ctx(Test.TaskSupervisor, ["a", "b"], fn value ->
+        Task.Supervisor.async_stream_nolink(Test.TaskSupervisor, ["a", "b"], fn value ->
           OtherAppModule.fun_with_span(value)
         end)
         |> Stream.run()
@@ -209,17 +209,17 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       assert [%{value: "a"}, %{value: "b"}] == Enum.sort([attributes(attrs1), attributes(attrs2)])
     end
 
-    test "async_stream_nolink_with_ctx/5" do
+    test "async_stream_nolink/5" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span" do
-        Task.Supervisor.async_stream_nolink_with_ctx(
+        Task.Supervisor.async_stream_nolink(
           Test.TaskSupervisor,
           ["a", "b"],
           __MODULE__,
           :stream_ctx_test_function,
           [
-            :async_stream_nolink_with_ctx
+            :async_stream_nolink
           ]
         )
         |> Stream.run()
@@ -349,12 +349,12 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
   end
 
   describe "async" do
-    test "async_with_ctx" do
+    test "async" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.async_with_ctx(Test.TaskSupervisor, fn ->
-          Tracer.set_attribute(:value, :async_with_ctx)
+        Task.Supervisor.async(Test.TaskSupervisor, fn ->
+          Tracer.set_attribute(:value, :async)
 
           :ok
         end)
@@ -362,19 +362,19 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       end
 
       assert_receive {:span, span(name: "parent span", attributes: attrs)}
-      assert %{a: 1, value: :async_with_ctx} == attributes(attrs)
+      assert %{a: 1, value: :async} == attributes(attrs)
     end
 
-    test "async_with_ctx_mfa" do
+    test "async_mfa" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.async_with_ctx(Test.TaskSupervisor, __MODULE__, :test_function, [:async_with_ctx])
+        Task.Supervisor.async(Test.TaskSupervisor, __MODULE__, :test_function, [:async])
         |> Task.await()
       end
 
       assert_receive {:span, span(name: "parent span", attributes: attrs)}
-      assert %{a: 1, value: :async_with_ctx} == attributes(attrs)
+      assert %{a: 1, value: :async} == attributes(attrs)
     end
 
     test "async_with_span" do
@@ -471,12 +471,12 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
   end
 
   describe "async_nolink" do
-    test "async_nolink_with_ctx" do
+    test "async_nolink" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.async_nolink_with_ctx(Test.TaskSupervisor, fn ->
-          Tracer.set_attribute(:value, :async_nolink_with_ctx)
+        Task.Supervisor.async_nolink(Test.TaskSupervisor, fn ->
+          Tracer.set_attribute(:value, :async_nolink)
 
           :ok
         end)
@@ -484,15 +484,15 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       end
 
       assert_receive {:span, span(name: "parent span", attributes: attrs)}
-      assert %{a: 1, value: :async_nolink_with_ctx} == attributes(attrs)
+      assert %{a: 1, value: :async_nolink} == attributes(attrs)
     end
 
-    test "async_nolink_with_ctx_mfa" do
+    test "async_nolink_mfa" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.async_nolink_with_ctx(Test.TaskSupervisor, __MODULE__, :ctx_test_function, [
-          :async_nolink_with_ctx
+        Task.Supervisor.async_nolink(Test.TaskSupervisor, __MODULE__, :ctx_test_function, [
+          :async_nolink
         ])
         |> Task.await()
       end
@@ -501,7 +501,7 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(parent_span_id: ^root_span_id, name: "already traced fun", attributes: attrs)}
-      assert %{value: :async_nolink_with_ctx} == attributes(attrs)
+      assert %{value: :async_nolink} == attributes(attrs)
     end
 
     test "async_nolink_with_span" do
@@ -603,12 +603,12 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
   end
 
   describe "start_child" do
-    test "start_child_with_ctx" do
+    test "start_child" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.start_child_with_ctx(Test.TaskSupervisor, fn ->
-          ctx_test_function(:start_child_with_ctx)
+        Task.Supervisor.start_child(Test.TaskSupervisor, fn ->
+          ctx_test_function(:start_child)
         end)
       end
 
@@ -616,15 +616,15 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(name: "already traced fun", parent_span_id: ^root_span_id, attributes: attrs)}
-      assert %{value: :start_child_with_ctx} == attributes(attrs)
+      assert %{value: :start_child} == attributes(attrs)
     end
 
-    test "start_child_with_ctx_mfa" do
+    test "start_child_mfa" do
       start_supervised!({Task.Supervisor, name: Test.TaskSupervisor})
 
       Tracer.with_span "parent span", %{attributes: %{a: 1}} do
-        Task.Supervisor.start_child_with_ctx(Test.TaskSupervisor, __MODULE__, :ctx_test_function, [
-          :start_child_with_ctx
+        Task.Supervisor.start_child(Test.TaskSupervisor, __MODULE__, :ctx_test_function, [
+          :start_child
         ])
       end
 
@@ -632,7 +632,7 @@ defmodule OpentelemetryProcessPropagator.TaskSupervisorTest do
       assert %{a: 1} == attributes(attrs)
 
       assert_receive {:span, span(parent_span_id: ^root_span_id, name: "already traced fun", attributes: attrs)}
-      assert %{value: :start_child_with_ctx} == attributes(attrs)
+      assert %{value: :start_child} == attributes(attrs)
     end
 
     test "start_child_with_span" do
