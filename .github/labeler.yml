@@ -70,3 +70,6 @@ opentelemetry_telemetry:
 
 opentelemetry_tesla:
   - instrumentation/opentelemetry_tesla/**/*
+
+opentelemetry_xray:
+  - utilities/opentelemetry_xray/**/*
