@@ -4,7 +4,7 @@ defmodule OpentelemetryOban.MixProject do
   def project do
     [
       app: :opentelemetry_oban,
-      version: "0.2.0-rc.5",
+      version: "0.2.0-rc.6",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
