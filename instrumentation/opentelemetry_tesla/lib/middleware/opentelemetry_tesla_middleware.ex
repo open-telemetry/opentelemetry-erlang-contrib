@@ -1,4 +1,18 @@
 defmodule Tesla.Middleware.OpenTelemetry do
+  @moduledoc """
+  Creates OpenTelemetry spans and injects tracing headers into HTTP requests
+
+  When used with `Tesla.Middleware.PathParams`, the span name will be created
+  based on the provided path. Without it, the span name follow OpenTelemetry
+  standards and use just the method name, if not being overriden by opts.
+
+  NOTE: This middleware needs to come before `Tesla.Middleware.PathParams`
+
+  ## Options
+
+    - `:span_name` - override span name
+
+  """
   require OpenTelemetry.Tracer
   @behaviour Tesla.Middleware
 
