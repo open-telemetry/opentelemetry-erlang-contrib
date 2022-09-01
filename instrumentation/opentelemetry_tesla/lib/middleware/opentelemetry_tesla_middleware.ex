@@ -2,8 +2,8 @@ defmodule Tesla.Middleware.OpenTelemetry do
   require OpenTelemetry.Tracer
   @behaviour Tesla.Middleware
 
-  def call(env, next, _options) do
-    span_name = get_span_name(env)
+  def call(env, next, opts) do
+    span_name = Keyword.get(opts, :span_name, get_span_name(env))
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
