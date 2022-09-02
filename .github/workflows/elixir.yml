@@ -266,7 +266,7 @@ jobs:
       - name: Test
         run: mix test
 
- opentelemetry-tesla:
+  opentelemetry-tesla:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_tesla'))
     env:
