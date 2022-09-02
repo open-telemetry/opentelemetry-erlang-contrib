@@ -10,14 +10,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   ## Options
 
-    - `:span_name` - override span name
+    - `:span_name` - override span name. Can be a `String` for a static span name,
+    or a function that takes the `Tesla.Env` and returns a `String`
 
   """
   require OpenTelemetry.Tracer
   @behaviour Tesla.Middleware
 
   def call(env, next, opts) do
-    span_name = Keyword.get(opts, :span_name, get_span_name(env))
+    span_name = get_span_name(env, Keyword.get(opts, :span_name))
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
@@ -28,7 +29,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
     end
   end
 
-  defp get_span_name(env) do
+  defp get_span_name(_env, span_name) when is_binary(span_name) do
+    span_name
+  end
+
+  defp get_span_name(env, span_name_fun) when is_function(span_name_fun, 1) do
+    span_name_fun.(env)
+  end
+
+  defp get_span_name(env, _) do
     case env.opts[:path_params] do
       nil -> "HTTP #{http_method(env.method)}"
       _ -> URI.parse(env.url).path

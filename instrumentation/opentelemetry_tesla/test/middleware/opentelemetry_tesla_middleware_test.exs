@@ -124,6 +124,42 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       assert_receive {:span, span(name: "POST :my-high-cardinality-url", attributes: _attributes)}
     end
+
+    test "uses custom span name function when passed in middleware opts",
+        %{
+          bypass: bypass
+        } do
+      defmodule TestClient do
+        def get(client) do
+          params = [id: '3']
+
+          Tesla.get(client, "/users/:id", opts: [path_params: params])
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            {Tesla.Middleware.OpenTelemetry, span_name: fn env ->
+              "#{String.upcase(to_string(env.method))} potato"
+            end},
+            Tesla.Middleware.PathParams
+          ]
+
+          Tesla.client(middleware)
+        end
+      end
+
+      Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
+
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(name: "GET potato", attributes: _attributes)}
+    end
   end
 
   test "Records spans for Tesla HTTP client", %{bypass: bypass} do
