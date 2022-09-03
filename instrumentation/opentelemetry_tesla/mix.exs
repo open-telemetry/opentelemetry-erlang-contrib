@@ -37,7 +37,6 @@ defmodule OpentelemetryTesla.MixProject do
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
-    ]
   end
 
   # Run "mix help compile.app" to learn about applications.
@@ -50,8 +49,8 @@ defmodule OpentelemetryTesla.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry, "~> 1.0.0", only: :test},
-      {:opentelemetry_api, "~> 1.0.0"},
+      {:opentelemetry, "~> 1.0", only: :test},
+      {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0.0"},
       {:tesla, "~> 1.4"},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
