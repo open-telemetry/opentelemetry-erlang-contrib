@@ -36,6 +36,9 @@ defmodule OpentelemetryEcto do
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
+    * `:additional_attributes` - additional attributes to include in the span. If there
+      are conflits with default provided attributes, the ones provided with
+      this config will have precedence.
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -74,6 +77,7 @@ defmodule OpentelemetryEcto do
       end <> if source != nil, do: ":#{source}", else: ""
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
+    additional_attributes = Keyword.get(config, :additional_attributes, %{})
 
     db_type =
       case type do
@@ -101,6 +105,8 @@ defmodule OpentelemetryEcto do
         _, acc ->
           acc
       end)
+      |> Map.merge(base_attributes)
+      |> Map.merge(additional_attributes)
 
     parent_context = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
@@ -111,7 +117,7 @@ defmodule OpentelemetryEcto do
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: Map.merge(attributes, base_attributes),
+        attributes: attributes,
         kind: :client
       })
 
