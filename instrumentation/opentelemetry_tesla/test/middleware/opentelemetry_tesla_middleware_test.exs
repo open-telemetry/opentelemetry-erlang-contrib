@@ -296,27 +296,32 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert response_size == byte_size(response)
   end
 
-  test "Injects distributed tracing headers" do
-    OpentelemetryTelemetry.start_telemetry_span(
-      "tracer_id",
-      "my_label",
-      %{},
-      %{kind: :client}
-    )
+  describe "trace propagation" do
+    test "injects distributed tracing headers by default" do
+      {:ok, env} = Tesla.get(client(), "/propagate-traces")
 
-    assert {:ok,
-            %Tesla.Env{
-              headers: [
-                {"traceparent", traceparent}
-              ]
-            }} =
-             Tesla.Middleware.OpenTelemetry.call(
-               %Tesla.Env{url: ""},
-               [],
-               "http://example.com"
-             )
+      assert traceparent = Tesla.get_header(env, "traceparent")
+      assert is_binary(traceparent)
 
-    assert is_binary(traceparent)
+      assert_receive {:span, span(name: _name, attributes: attributes)}
+      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+    end
+
+    test "optionally disable propagation but keep span report" do
+      {:ok, env} = Tesla.get(client(propagate: false), "/propagate-traces")
+
+      refute Tesla.get_header(env, "traceparent")
+
+      assert_receive {:span, span(name: _name, attributes: attributes)}
+      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+    end
+  end
+
+  defp client(opts \\ []) do
+    [
+      {Tesla.Middleware.OpenTelemetry, opts},
+    ]
+    |> Tesla.client(fn env -> {:ok, env} end)
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}/"
