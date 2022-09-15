@@ -47,7 +47,7 @@ defmodule OpentelemetryPhoenixLiveview do
       %{kind: :server}
     )
 
-    OT.Monitor.monitor(OpenTelemetry.Tracer.current_span_ctx())
+    OpentelemetryMonitor.monitor(OpenTelemetry.Tracer.current_span_ctx())
 
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,

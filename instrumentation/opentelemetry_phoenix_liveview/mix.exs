@@ -40,6 +40,7 @@ defmodule OpentelemetryPhoenixLiveview.MixProject do
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
+      {:opentelemetry_monitor, "~> 0.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"}
     ]
   end
