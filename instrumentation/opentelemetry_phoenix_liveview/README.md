@@ -1,6 +1,12 @@
 # OpentelemetryPhoenixLiveview
 
-**TODO: Add description**
+This library provides integration with Phoenix Liveview and opentelemetry.
+
+To use this library, add the following line to your `application.ex` start function:
+
+```elixir
+:ok = OpentelemetryPhoenixLiveview.setup()
+```
 
 ## Installation
 
