@@ -47,13 +47,17 @@ defmodule OpentelemetryPhoenix do
     attach_router_start_handler()
     attach_router_dispatch_exception_handler()
 
+    if opts[:liveview] do
+      attach_liveview_handlers()
+    end
+
     :ok
   end
 
   defp ensure_opts(opts), do: Keyword.merge(default_opts(), opts)
 
   defp default_opts do
-    [endpoint_prefix: [:phoenix, :endpoint]]
+    [endpoint_prefix: [:phoenix, :endpoint], liveview: true]
   end
 
   @doc false
@@ -96,8 +100,37 @@ defmodule OpentelemetryPhoenix do
     )
   end
 
+  def attach_liveview_handlers do
+    :telemetry.attach_many(
+      {__MODULE__, :live_view},
+      [
+        [:phoenix, :live_view, :mount, :start],
+        [:phoenix, :live_view, :mount, :stop],
+        [:phoenix, :live_view, :mount, :exception],
+        [:phoenix, :live_view, :handle_params, :start],
+        [:phoenix, :live_view, :handle_params, :stop],
+        [:phoenix, :live_view, :handle_params, :exception],
+        [:phoenix, :live_view, :handle_event, :start],
+        [:phoenix, :live_view, :handle_event, :stop],
+        [:phoenix, :live_view, :handle_event, :exception],
+        [:phoenix, :live_component, :handle_event, :start],
+        [:phoenix, :live_component, :handle_event, :stop],
+        [:phoenix, :live_component, :handle_event, :exception]
+      ],
+      &__MODULE__.handle_liveview_event/4,
+      %{}
+    )
+
+    :ok
+  end
+
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config) do
+  def handle_endpoint_start(
+        _event,
+        _measurements,
+        %{conn: %{adapter: adapter} = conn} = meta,
+        _config
+      ) do
     # TODO: maybe add config for what paths are traced? Via sampler?
     :otel_propagator_text_map.extract(conn.req_headers)
 
@@ -181,6 +214,103 @@ defmodule OpentelemetryPhoenix do
       # do not close the span as endpoint stop will still be called with
       # more info, including the status code, which is nil at this stage
     end
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :mount, :start],
+        _measurements,
+        meta,
+        _handler_configuration
+      ) do
+    %{socket: socket} = meta
+
+    %{view: live_view} = socket
+
+    attributes = []
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      inspect(live_view),
+      meta,
+      %{kind: :server}
+    )
+
+    # TODO monitor the process so that if it crashes, we don't lose our span
+    # OpentelemetryMonitor.monitor(OpenTelemetry.Tracer.current_span_ctx())
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(live_view)}.mount",
+      meta,
+      %{kind: :server}
+    )
+    |> Span.set_attributes(attributes)
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :handle_params, :start],
+        _measurements,
+        meta,
+        _handler_configuration
+      ) do
+    %{socket: socket} = meta
+
+    %{view: live_view} = socket
+
+    attributes = []
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(live_view)}.handle_params",
+      meta,
+      %{kind: :server}
+    )
+    |> Span.set_attributes(attributes)
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :handle_event, :start],
+        _measurements,
+        meta,
+        _handler_configuration
+      ) do
+    %{socket: socket, event: event, params: _params} = meta
+
+    %{view: live_view} = socket
+
+    attributes = [event: event]
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(live_view)}.handle_event##{event}",
+      meta,
+      %{kind: :server}
+    )
+    |> Span.set_attributes(attributes)
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, _event, :stop],
+        _measurements,
+        meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, _action, :exception],
+        _,
+        %{kind: kind, reason: reason, stacktrace: stacktrace} = meta,
+        _
+      ) do
+    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+
+    exception = Exception.normalize(kind, reason, stacktrace)
+
+    Span.record_exception(ctx, exception, stacktrace, [])
+    Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
   end
 
   defp http_flavor({_adapter_name, meta}) do
