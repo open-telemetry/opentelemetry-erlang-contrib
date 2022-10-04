@@ -25,38 +25,141 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     {:ok, bypass: bypass}
   end
 
-  test "it records a generic span name if opentelemetry middleware is configured before path params middleware",
-       %{
-         bypass: bypass
-       } do
-    defmodule TestClient do
-      def get(client) do
-        params = [id: '3']
+  describe "span name" do
+    test "uses generic route name when opentelemetry middleware is configured before path params middleware",
+        %{
+          bypass: bypass
+        } do
+      defmodule TestClient do
+        def get(client) do
+          params = [id: '3']
 
-        Tesla.get(client, "/users/:id", opts: [path_params: params])
+          Tesla.get(client, "/users/:id", opts: [path_params: params])
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            Tesla.Middleware.OpenTelemetry,
+            Tesla.Middleware.PathParams
+          ]
+
+          Tesla.client(middleware)
+        end
       end
 
-      def client(url) do
-        middleware = [
-          {Tesla.Middleware.BaseUrl, url},
-          Tesla.Middleware.OpenTelemetry,
-          Tesla.Middleware.PathParams
-        ]
+      Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
 
-        Tesla.client(middleware)
-      end
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(name: "/users/:id", attributes: _attributes)}
     end
 
-    Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
-      Plug.Conn.resp(conn, 204, "")
-    end)
+    test "uses low-cardinality method name when path params middleware is not used",
+        %{
+          bypass: bypass
+        } do
+      defmodule TestClient do
+        def get(client) do
+          Tesla.get(client, "/users/")
+        end
 
-    bypass.port
-    |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            Tesla.Middleware.OpenTelemetry
+          ]
 
-    assert_receive {:span, span(name: "/users/:id", attributes: _attributes)}
+          Tesla.client(middleware)
+        end
+      end
+
+      Bypass.expect_once(bypass, "GET", "/users/", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
+
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
+    end
+
+    test "uses custom span name when passed in middleware opts",
+        %{
+          bypass: bypass
+        } do
+      defmodule TestClient do
+        def get(client) do
+          params = [id: '3']
+
+          Tesla.get(client, "/users/:id", opts: [path_params: params])
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            {Tesla.Middleware.OpenTelemetry, span_name: "POST :my-high-cardinality-url"},
+            Tesla.Middleware.PathParams
+          ]
+
+          Tesla.client(middleware)
+        end
+      end
+
+      Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
+
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(name: "POST :my-high-cardinality-url", attributes: _attributes)}
+    end
+
+    test "uses custom span name function when passed in middleware opts",
+        %{
+          bypass: bypass
+        } do
+      defmodule TestClient do
+        def get(client) do
+          params = [id: '3']
+
+          Tesla.get(client, "/users/:id", opts: [path_params: params])
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            {Tesla.Middleware.OpenTelemetry, span_name: fn env ->
+              "#{String.upcase(to_string(env.method))} potato"
+            end},
+            Tesla.Middleware.PathParams
+          ]
+
+          Tesla.client(middleware)
+        end
+      end
+
+      Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
+
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(name: "GET potato", attributes: _attributes)}
+    end
   end
 
   test "Records spans for Tesla HTTP client", %{bypass: bypass} do
@@ -311,9 +414,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
               ]
             }} =
              Tesla.Middleware.OpenTelemetry.call(
-               %Tesla.Env{url: ""},
-               [],
-               "http://example.com"
+               _env = %Tesla.Env{url: ""},
+               _next = [],
+               _opts = []
              )
 
     assert is_binary(traceparent)
