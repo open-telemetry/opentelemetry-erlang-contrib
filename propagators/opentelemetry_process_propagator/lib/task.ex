@@ -27,15 +27,23 @@ defmodule OpentelemetryProcessPropagator.Task do
     require OpenTelemetry.Tracer
     alias OpentelemetryProcessPropagator.Task
 
-    def untraced_task do
+    def traced_task_with_existing_span do
       Task.async(fn ->
         :ok
       end)
       |> Task.await()
     end
 
-    def traced_task do
+    def traced_task_with_new_span do
       Task.async_with_span(:span_name, %{attributes: %{a: "b"}}, fn ->
+        Tracer.set_attribute(:c, "d")
+        :ok
+      end)
+      |> Task.await()
+    end
+
+    def traced_task_with_new_linked_span do
+      Task.async_with_linked_span(:span_name, %{attributes: %{a: "b"}}, fn ->
         Tracer.set_attribute(:c, "d")
         :ok
       end)
