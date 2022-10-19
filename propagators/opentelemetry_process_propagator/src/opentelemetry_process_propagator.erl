@@ -5,15 +5,15 @@
          fetch_parent_ctx/1,
          fetch_parent_ctx/2]).
 
--spec fetch_parent_ctx() -> opentelemetry:span_ctx() | undefined.
+-spec fetch_parent_ctx() -> otel_ctx:t() | undefined.
 fetch_parent_ctx() ->
     fetch_parent_ctx(1, '$ancestors').
 
--spec fetch_parent_ctx(non_neg_integer()) -> opentelemetry:span_ctx() | undefined.
+-spec fetch_parent_ctx(non_neg_integer()) -> otel_ctx:t() | undefined.
 fetch_parent_ctx(MaxDepth) ->
     fetch_parent_ctx(MaxDepth, '$ancestors').
 
--spec fetch_parent_ctx(non_neg_integer(), atom()) -> opentelemetry:span_ctx() | undefined.
+-spec fetch_parent_ctx(non_neg_integer(), atom()) -> otel_ctx:t() | undefined.
 fetch_parent_ctx(MaxDepth, Key) ->
     Pids = pids(Key, pdict(self())),
     inspect_parent(undefined, lists:sublist(Pids, MaxDepth)).
@@ -30,7 +30,7 @@ inspect_parent(_Ctx, [Pid | Rest]) ->
             inspect_parent(OtelCtx, [])
     end.
 
--spec fetch_ctx(pid()) -> opentelemetry:span_ctx() | undefined.
+-spec fetch_ctx(pid()) -> otel_ctx:t() | undefined.
 fetch_ctx(Pid) ->
     case pdict(Pid) of
         undefined ->
@@ -48,7 +48,7 @@ pdict(Pid) ->
             undefined
     end.
 
--spec otel_ctx([{term(), term()}]) -> opentelemetry:span_ctx() | undefined.
+-spec otel_ctx([{term(), term()}]) -> otel_ctx:t() | undefined.
 otel_ctx(Dictionary) ->
     case lists:keyfind('$__current_otel_ctx', 1, Dictionary) of
         false ->
