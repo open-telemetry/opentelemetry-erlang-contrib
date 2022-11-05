@@ -45,17 +45,20 @@ defmodule OpentelemetryFinch do
         _ -> 0
       end
 
+    url = build_url(meta.request.scheme, meta.request.host, meta.request.port, meta.request.path)
+
     attributes = %{
+      "http.url": url,
       "http.scheme": meta.request.scheme,
-      "http.host": meta.request.host,
-      "http.port": meta.request.port,
-      "http.path": meta.request.path,
+      "net.peer.name": meta.request.host,
+      "net.peer.port": meta.request.port,
+      "http.target": meta.request.path,
       "http.method": meta.request.method,
-      "http.status": status,
+      "http.status_code": status,
     }
 
     s =
-      OpenTelemetry.Tracer.start_span("client http", %{
+      OpenTelemetry.Tracer.start_span("HTTP #{meta.request.method}", %{
         start_time: start_time,
         attributes: attributes,
         kind: :client
@@ -67,6 +70,8 @@ defmodule OpentelemetryFinch do
 
     OpenTelemetry.Span.end_span(s)
   end
+
+  defp build_url(scheme, host, port, path), do: "#{scheme}://#{host}:#{port}#{path}"
 
   defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
   defp format_error(reason), do: inspect(reason)

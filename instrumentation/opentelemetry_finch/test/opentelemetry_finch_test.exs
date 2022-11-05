@@ -37,17 +37,17 @@ defmodule OpentelemetryFinchTest do
 
     assert_receive {:span,
                       span(
-                        name: "client http",
+                        name: "HTTP GET",
                         kind: :client,
                         attributes: attributes
                       )}
 
     assert %{
-      "http.host": "localhost",
+      "net.peer.name": "localhost",
       "http.method": "GET",
-      "http.path": "/",
+      "http.target": "/",
       "http.scheme": :http,
-      "http.status": 200
+      "http.status_code": 200
     } = :otel_attributes.map(attributes)
   end
 
@@ -60,18 +60,18 @@ defmodule OpentelemetryFinchTest do
 
     assert_receive {:span,
                       span(
-                        name: "client http",
+                        name: "HTTP GET",
                         kind: :client,
                         status: {:status, :error, "connection refused"},
                         attributes: attributes
                       )}
 
     assert %{
-      "http.host": "localhost",
+      "net.peer.name": "localhost",
       "http.method": "GET",
-      "http.path": "/",
+      "http.target": "/",
       "http.scheme": :http,
-      "http.status": 0
+      "http.status_code": 0
     } = :otel_attributes.map(attributes)
   end
 

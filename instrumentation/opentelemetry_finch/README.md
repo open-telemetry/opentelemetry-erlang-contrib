@@ -28,7 +28,7 @@ In your application start:
 
 ## Compatibility Matrix
 
-| OpentelemetryRedix Version | Otel Version | Notes |
+| OpentelemetryFinch Version | Otel Version | Notes |
 | :------------------------- | :----------- | :---- |
 |                            |              |       |
 | v0.1.0                     | v1.0.0       |       |
