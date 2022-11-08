@@ -26,6 +26,21 @@ In your application start:
   end
 ```
 
+*Since this instrumentation is based on telemetry, it is not possible to automatically propagate the context in the http headers. If you need to perform context propagation, you should opt for manual instrumentation. Something like this:*
+
+```elixir
+    require OpenTelemetry.Tracer, as: Tracer
+
+    Tracer.with_span "HTTP #{url}" do
+      headers = :otel_propagator_text_map.inject([])
+
+      case Finch.build(:get, url, headers) |> Finch.request(HttpFinch) do
+        {:ok, %Finch.Response{body: body}} -> {:ok, body}
+        error -> error
+      end
+    end
+```
+
 ## Compatibility Matrix
 
 | OpentelemetryFinch Version | Otel Version | Notes |
