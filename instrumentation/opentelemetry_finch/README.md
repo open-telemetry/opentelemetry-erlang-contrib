@@ -34,9 +34,18 @@ In your application start:
     Tracer.with_span "HTTP #{url}" do
       headers = :otel_propagator_text_map.inject([])
 
-      case Finch.build(:get, url, headers) |> Finch.request(HttpFinch) do
-        {:ok, %Finch.Response{body: body}} -> {:ok, body}
-        error -> error
+      with request <- Finch.build(:get, url, headers),
+           {:ok, response} <- Finch.request(request, HttpFinch) do
+
+        Tracer.set_attributes([
+          {"http.url", url},
+          {"http.method", request.method},
+          {"http.status_code", response.status}])
+        {:ok, response}
+      else
+        {:error, %{__exception__: true} = error} ->
+          Tracer.set_status(:error, Exception.message(error))
+          {:error, error}
       end
     end
 ```
