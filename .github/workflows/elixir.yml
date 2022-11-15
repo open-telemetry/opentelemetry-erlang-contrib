@@ -20,7 +20,7 @@ jobs:
         id: set-matrix
         run: |
           matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.18\",\"22.3.4.26\"],\"elixir_version\":[\"1.14.2\",\"1.13.4\",\"1.12.3\",\"1.11.4\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}"
-          echo "{matrix}={$matrixStringifiedObject}" >> $GITHUB_OUTPUT
+          echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
