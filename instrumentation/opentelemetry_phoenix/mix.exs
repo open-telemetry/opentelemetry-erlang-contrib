@@ -46,7 +46,8 @@ defmodule OpentelemetryPhoenix.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_phoenix",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -60,6 +61,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
+      {:opentelemetry_semantic_conventions, "~> 0.1.0"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:plug, ">= 1.11.0"},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
