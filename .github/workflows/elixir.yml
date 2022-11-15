@@ -312,7 +312,7 @@ jobs:
       run:
         working-directory: instrumentation/${{ env.app }}
     runs-on: ubuntu-18.04
-    name: Opentelemetry Test test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
