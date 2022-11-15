@@ -1,3 +1,9 @@
 [
-  inputs: ["{mix,.formatter}.exs", "{examples,instrumentation,propagators,test}/**/*.{ex,exs}"]
+  inputs: ["{mix,.formatter}.exs"],
+  subdirectories: [
+    "examples/*",
+    "instrumentation/*",
+    "propagators/*",
+    "utilities/*"
+  ]
 ]
