@@ -27,9 +27,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
   describe "span name" do
     test "uses generic route name when opentelemetry middleware is configured before path params middleware",
-        %{
-          bypass: bypass
-        } do
+         %{
+           bypass: bypass
+         } do
       defmodule TestClient do
         def get(client) do
           params = [id: '3']
@@ -61,9 +61,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
 
     test "uses low-cardinality method name when path params middleware is not used",
-        %{
-          bypass: bypass
-        } do
+         %{
+           bypass: bypass
+         } do
       defmodule TestClient do
         def get(client) do
           Tesla.get(client, "/users/")
@@ -92,9 +92,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
 
     test "uses custom span name when passed in middleware opts",
-        %{
-          bypass: bypass
-        } do
+         %{
+           bypass: bypass
+         } do
       defmodule TestClient do
         def get(client) do
           params = [id: '3']
@@ -126,9 +126,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
 
     test "uses custom span name function when passed in middleware opts",
-        %{
-          bypass: bypass
-        } do
+         %{
+           bypass: bypass
+         } do
       defmodule TestClient do
         def get(client) do
           params = [id: '3']
@@ -139,9 +139,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
         def client(url) do
           middleware = [
             {Tesla.Middleware.BaseUrl, url},
-            {Tesla.Middleware.OpenTelemetry, span_name: fn env ->
-              "#{String.upcase(to_string(env.method))} potato"
-            end},
+            {Tesla.Middleware.OpenTelemetry,
+             span_name: fn env ->
+               "#{String.upcase(to_string(env.method))} potato"
+             end},
             Tesla.Middleware.PathParams
           ]
 
