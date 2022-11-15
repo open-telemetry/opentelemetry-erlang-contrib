@@ -5,9 +5,14 @@ on:
     branches:
       - 'main'
     types: [opened, reopened, synchronize, labeled]
+
   push:
     branches:
       - 'main'
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   test-matrix:
@@ -15,12 +20,12 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Read file
         id: set-matrix
         run: |
-          matrixStringifiedObject="{\"otp_version\":[\"24.2\",\"23.3.4.10\",\"22.3.4.24\"],\"rebar3_version\":[\"3.16.1\"],\"os\":[\"ubuntu-18.04\"]}"
-          echo "::set-output name=matrix::$matrixStringifiedObject"
+          matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.10\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}"
+          echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   opentelemetry-cowboy:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_cowboy'))
@@ -29,19 +34,19 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Cowboy test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/_build
@@ -60,19 +65,19 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Telemetry test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/_build
@@ -91,19 +96,19 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry AWS X-Ray test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/_build
