@@ -14,7 +14,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
     or a function that takes the `Tesla.Env` and returns a `String`
 
   """
+
+  alias OpenTelemetry.SemanticConventions.Trace
+
   require OpenTelemetry.Tracer
+  require Trace
+
   @behaviour Tesla.Middleware
 
   def call(env, next, opts) do
@@ -87,12 +92,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
     uri = URI.parse(url)
 
     attrs = %{
-      "http.method": http_method(method),
-      "http.url": url,
-      "http.target": uri.path,
-      "http.host": uri.host,
-      "http.scheme": uri.scheme,
-      "http.status_code": status_code
+      Trace.http_method() => http_method(method),
+      Trace.http_url() => url,
+      Trace.http_target() => uri.path,
+      Trace.net_host_name() => uri.host,
+      Trace.http_scheme() => uri.scheme,
+      Trace.http_status_code() => status_code
     }
 
     maybe_append_content_length(attrs, headers)
@@ -104,7 +109,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
         attrs
 
       {_key, content_length} ->
-        Map.put(attrs, :"http.response_content_length", content_length)
+        Map.put(attrs, Trace.http_response_content_length(), content_length)
     end
   end
 
