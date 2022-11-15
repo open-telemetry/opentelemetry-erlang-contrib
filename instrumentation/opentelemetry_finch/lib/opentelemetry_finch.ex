@@ -54,7 +54,7 @@ defmodule OpentelemetryFinch do
       "net.peer.port": meta.request.port,
       "http.target": meta.request.path,
       "http.method": meta.request.method,
-      "http.status_code": status,
+      "http.status_code": status
     }
 
     s =
@@ -65,7 +65,10 @@ defmodule OpentelemetryFinch do
       })
 
     if meta.result |> elem(0) == :error do
-      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(meta.result |> elem(1))))
+      OpenTelemetry.Span.set_status(
+        s,
+        OpenTelemetry.status(:error, format_error(meta.result |> elem(1)))
+      )
     end
 
     OpenTelemetry.Span.end_span(s)

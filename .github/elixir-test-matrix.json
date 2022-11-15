@@ -15,5 +15,15 @@
   ],
   "os": [
     "ubuntu-20.04"
+  ],
+  "exclude": [
+    {
+      "elixir_version": "1.11.4",
+      "erlang_version": "25.1.2"
+    },
+    {
+      "elixir_version": "1.12.3",
+      "erlang_version": "25.1.2"
+    }
   ]
 }

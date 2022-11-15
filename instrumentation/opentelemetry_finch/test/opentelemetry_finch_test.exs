@@ -36,19 +36,19 @@ defmodule OpentelemetryFinchTest do
     {:ok, _} = Finch.build(:get, endpoint_url(bypass.port)) |> Finch.request(HttpFinch)
 
     assert_receive {:span,
-                      span(
-                        name: "HTTP GET",
-                        kind: :client,
-                        attributes: attributes
-                      )}
+                    span(
+                      name: "HTTP GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
 
     assert %{
-      "net.peer.name": "localhost",
-      "http.method": "GET",
-      "http.target": "/",
-      "http.scheme": :http,
-      "http.status_code": 200
-    } = :otel_attributes.map(attributes)
+             "net.peer.name": "localhost",
+             "http.method": "GET",
+             "http.target": "/",
+             "http.scheme": :http,
+             "http.status_code": 200
+           } = :otel_attributes.map(attributes)
   end
 
   test "records span on requests failed", %{bypass: _} do
@@ -59,20 +59,20 @@ defmodule OpentelemetryFinchTest do
     {:error, _} = Finch.build(:get, endpoint_url(3333)) |> Finch.request(HttpFinch)
 
     assert_receive {:span,
-                      span(
-                        name: "HTTP GET",
-                        kind: :client,
-                        status: {:status, :error, "connection refused"},
-                        attributes: attributes
-                      )}
+                    span(
+                      name: "HTTP GET",
+                      kind: :client,
+                      status: {:status, :error, "connection refused"},
+                      attributes: attributes
+                    )}
 
     assert %{
-      "net.peer.name": "localhost",
-      "http.method": "GET",
-      "http.target": "/",
-      "http.scheme": :http,
-      "http.status_code": 0
-    } = :otel_attributes.map(attributes)
+             "net.peer.name": "localhost",
+             "http.method": "GET",
+             "http.target": "/",
+             "http.scheme": :http,
+             "http.status_code": 0
+           } = :otel_attributes.map(attributes)
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}/"
