@@ -24,9 +24,9 @@ jobs:
       - name: Read file
         id: set-matrix
         run: |
-          matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.18\"],\"elixir_version\":[\"1.14.2\",\"1.13.4\",\"1.12.3\",\"1.11.4\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}"
+          matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.18\"],\"elixir_version\":[\"1.14.2\",\"1.13.4\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
-          echo "matrix-exclude=\"[{\"elixir_version\":\"1.11.4\",\"erlang_version\":\"25.1.2\"},{\"elixir_version\":\"1.12.3\",\"erlang_version\":\"25.1.2\"}]\"" >> $GITHUB_OUTPUT
+          echo "matrix_exclude="
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
@@ -39,9 +39,7 @@ jobs:
     name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
         image: circleci/postgres:13.3-ram
@@ -88,9 +86,7 @@ jobs:
     name: Opentelemetry Phoenix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -127,9 +123,7 @@ jobs:
     name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       redis:
         image: redis:alpine
@@ -170,9 +164,7 @@ jobs:
     name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -209,9 +201,7 @@ jobs:
     name: Opentelemetry Telemetry test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -248,9 +238,7 @@ jobs:
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
         image: circleci/postgres:13.3-ram
@@ -296,9 +284,7 @@ jobs:
     name: Opentelemetry Process Propagator test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -335,9 +321,7 @@ jobs:
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix-exclude) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
