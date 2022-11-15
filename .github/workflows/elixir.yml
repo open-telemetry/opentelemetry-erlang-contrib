@@ -5,9 +5,14 @@ on:
     branches:
       - 'main'
     types: [opened, reopened, synchronize, labeled]
+
   push:
     branches:
       - 'main'
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   test-matrix:
@@ -15,12 +20,13 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Read file
         id: set-matrix
         run: |
-          matrixStringifiedObject="{\"otp_version\":[\"24.2\",\"23.3.4.10\",\"22.3.4.24\"],\"elixir_version\":[\"1.13.1\",\"1.12.3\",\"1.11.4\"],\"rebar3_version\":[\"3.16.1\"],\"os\":[\"ubuntu-18.04\"]}"
-          echo "::set-output name=matrix::$matrixStringifiedObject"
+          matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.18\"],\"elixir_version\":[\"1.14.2\",\"1.13.4\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}"
+          echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+          echo "matrix_exclude="
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
@@ -29,7 +35,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -45,14 +51,14 @@ jobs:
           POSTGRES_DB: opentelemetry_ecto_test
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -76,20 +82,20 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Phoenix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -113,7 +119,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -123,14 +129,14 @@ jobs:
         image: redis:alpine
         ports: ['6379:6379']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -154,20 +160,20 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -191,20 +197,20 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Telemetry test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -228,7 +234,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -243,14 +249,14 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_oban_test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -274,20 +280,20 @@ jobs:
     defaults:
       run:
         working-directory: propagators/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Process Propagator test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
@@ -311,20 +317,20 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/deps
