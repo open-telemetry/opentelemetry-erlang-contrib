@@ -9,25 +9,27 @@
 
 -define(TRACER_ID, ?MODULE).
 
+-type opts() :: [{start_attributes_fun, fun((map()) -> map()) | {module(), atom()}}].
+
 -spec setup() -> ok.
 setup() ->
     setup([]).
 
--spec setup([]) -> ok.
-setup(_Opts) ->
-    attach_event_handlers(),
+-spec setup(opts()) -> ok.
+setup(Opts) ->
+    attach_event_handlers(Opts),
     ok.
 
-attach_event_handlers() ->
+attach_event_handlers(Opts) ->
     Events = [
               [cowboy, request, early_error],
               [cowboy, request, start],
               [cowboy, request, stop],
               [cowboy, request, exception]
              ],
-    telemetry:attach_many(opentelemetry_cowboy_handlers, Events, fun ?MODULE:handle_event/4, #{}).
+    telemetry:attach_many(opentelemetry_cowboy_handlers, Events, fun ?MODULE:handle_event/4, Opts).
 
-handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Config) ->
+handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, Config) ->
     Headers = maps:get(headers, Req),
     otel_propagator_text_map:extract(maps:to_list(Headers)),
     {RemoteIP, _Port} = maps:get(peer, Req),
@@ -45,8 +47,9 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
                   'net.host.ip' => iolist_to_binary(inet:ntoa(RemoteIP)),
                   'net.transport' => 'IP.TCP'
                  },
+    AttributesMerged = maps:merge(user_attributes(Config, Meta), Attributes),
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
-    Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
+    Opts = #{attributes => AttributesMerged, kind => ?SPAN_KIND_SERVER},
     otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, Opts);
 
 handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
@@ -98,7 +101,7 @@ handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
 
-handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
+handle_event([cowboy, request, early_error], Measurements, Meta, Config) ->
     #{
       reason := {ErrorType, Error, Reason},
       resp_status := Status
@@ -108,7 +111,8 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
                    'http.status_code' => StatusCode,
                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                   },
-    Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
+    AttributesMerged = maps:merge(user_attributes(Config, Meta), Attributes),
+    Opts = #{attributes => AttributesMerged, kind => ?SPAN_KIND_SERVER},
     Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, Opts),
     otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
@@ -138,4 +142,11 @@ client_ip(Headers, RemoteIP) ->
           iolist_to_binary(inet:ntoa(RemoteIP));
       Addresses ->
           hd(binary:split(Addresses, <<",">>))
+  end.
+
+user_attributes(Opts, Meta) ->
+  case lists:keyfind(start_attributes_fun, 1, Opts) of
+    {start_attributes_fun, {Module, Function}} -> Module:Function(Meta);
+    {start_attributes_fun, Fun} when is_function(Fun) -> Fun(Meta);
+    false -> #{}
   end.
