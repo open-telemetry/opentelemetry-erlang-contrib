@@ -9,11 +9,13 @@
 
 -define(TRACER_ID, ?MODULE).
 
--type opts() :: [{start_attributes_fun, fun((map()) -> map()) | {module(), atom()}}].
+-type opts() :: #{
+    start_attributes_fun => fun((map()) -> map()) | {module(), atom()}
+}.
 
 -spec setup() -> ok.
 setup() ->
-    setup([]).
+    setup(#{}).
 
 -spec setup(opts()) -> ok.
 setup(Opts) ->
@@ -145,8 +147,8 @@ client_ip(Headers, RemoteIP) ->
   end.
 
 user_attributes(Opts, Meta) ->
-  case lists:keyfind(start_attributes_fun, 1, Opts) of
-    {start_attributes_fun, {Module, Function}} -> Module:Function(Meta);
-    {start_attributes_fun, Fun} when is_function(Fun) -> Fun(Meta);
-    false -> #{}
+  case maps:get(start_attributes_fun, Opts, undefined) of
+    {Module, Function} -> Module:Function(Meta);
+    Fun when is_function(Fun) -> Fun(Meta);
+    undefined -> #{}
   end.

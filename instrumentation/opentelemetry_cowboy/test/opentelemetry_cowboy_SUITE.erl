@@ -60,7 +60,7 @@ init_per_testcase(TestCase, Config) ->
             StartAttsFun = fun(#{req := #{headers := Headers}}) ->
                 #{'user.attr' => maps:get(<<"user-attr">>, Headers, <<"">>)}
             end,
-            opentelemetry_cowboy:setup([{start_attributes_fun, StartAttsFun}]);
+            opentelemetry_cowboy:setup(#{start_attributes_fun => StartAttsFun});
         
         _ ->
             opentelemetry_cowboy:setup()
