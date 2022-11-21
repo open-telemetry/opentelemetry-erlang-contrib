@@ -22,6 +22,8 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
+  require Logger
+  require OpenTelemetry.Tracer
   alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Span
   alias OpentelemetryPhoenix.Reason
@@ -30,6 +32,7 @@ defmodule OpentelemetryPhoenix do
   require OpenTelemetry.Tracer
 
   @tracer_id __MODULE__
+  @cowboy2_tracer_id :opentelemetry_cowboy
 
   @typedoc "Setup options"
   @type opts :: [endpoint_prefix()]
@@ -42,7 +45,11 @@ defmodule OpentelemetryPhoenix do
   """
   @spec setup(opts()) :: :ok
   def setup(opts \\ []) do
-    opts = ensure_opts(opts)
+    Logger.error("loaded")
+
+    opts = NimbleOptions.validate!(opts, opts_schema())
+
+    Logger.error("#{inspect(opts)}")
 
     attach_endpoint_start_handler(opts)
     attach_endpoint_stop_handler(opts)
@@ -52,19 +59,13 @@ defmodule OpentelemetryPhoenix do
     :ok
   end
 
-  defp ensure_opts(opts), do: Keyword.merge(default_opts(), opts)
-
-  defp default_opts do
-    [endpoint_prefix: [:phoenix, :endpoint]]
-  end
-
   @doc false
   def attach_endpoint_start_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
-      %{}
+      %{adapter: opts[:adapter]}
     )
   end
 
@@ -74,7 +75,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_stop},
       opts[:endpoint_prefix] ++ [:stop],
       &__MODULE__.handle_endpoint_stop/4,
-      %{}
+      %{adapter: opts[:adapter]}
     )
   end
 
@@ -99,8 +100,28 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_start(_event, _measurements, %{conn: %{adapter: adapter} = conn} = meta, _config) do
+  def handle_endpoint_start(_event, _measurements, meta, config) do
+    Process.put({:otel_phoenix, :adapter}, config.adapter)
     # TODO: maybe add config for what paths are traced? Via sampler?
+    case adapter() do
+      :cowboy2 ->
+        cowboy2_start()
+
+      _ ->
+        default_start(meta)
+    end
+  end
+
+  defp cowboy2_start do
+    Logger.warn("cowboy2 start called")
+
+    OpentelemetryProcessPropagator.fetch_parent_ctx()
+    |> IO.inspect()
+    |> OpenTelemetry.Ctx.attach()
+  end
+
+  defp default_start(meta) do
+    %{conn: conn} = meta
     :otel_propagator_text_map.extract(conn.req_headers)
 
     peer_data = Plug.Conn.get_peer_data(conn)
@@ -110,7 +131,7 @@ defmodule OpentelemetryPhoenix do
 
     attributes = %{
       SemanticConventions.Trace.http_client_ip() => client_ip(conn),
-      SemanticConventions.Trace.http_flavor() => http_flavor(adapter),
+      SemanticConventions.Trace.http_flavor() => http_flavor(conn.adapter),
       SemanticConventions.Trace.http_method() => conn.method,
       SemanticConventions.Trace.http_scheme() => "#{conn.scheme}",
       SemanticConventions.Trace.http_target() => conn.request_path,
@@ -131,9 +152,21 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_stop(_event, _measurements, %{conn: conn} = meta, _config) do
+  def handle_endpoint_stop(_event, _measurements, meta, _config) do
+    case adapter() do
+      :cowboy2 ->
+        :ok
+
+      _ ->
+        default_stop(meta)
+    end
+  end
+
+  defp default_stop(meta) do
+    %{conn: conn} = meta
+
     # ensure the correct span is current and update the status
-    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+    ctx = set_ctx(meta)
 
     Span.set_attribute(ctx, SemanticConventions.Trace.http_status_code(), conn.status)
 
@@ -154,7 +187,8 @@ defmodule OpentelemetryPhoenix do
     }
 
     # Add more info that we now know about but don't close the span
-    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+    ctx = set_ctx(meta)
+
     Span.update_name(ctx, "#{meta.route}")
     Span.set_attributes(ctx, attributes)
   end
@@ -167,7 +201,7 @@ defmodule OpentelemetryPhoenix do
         _config
       ) do
     if OpenTelemetry.Span.is_recording(OpenTelemetry.Tracer.current_span_ctx()) do
-      ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+      ctx = set_ctx(meta)
 
       {[reason: reason], attrs} =
         Reason.normalize(reason)
@@ -182,6 +216,16 @@ defmodule OpentelemetryPhoenix do
 
       # do not close the span as endpoint stop will still be called with
       # more info, including the status code, which is nil at this stage
+    end
+  end
+
+  defp set_ctx(meta) do
+    case adapter() do
+      :cowboy2 ->
+        OpentelemetryTelemetry.set_current_telemetry_span(@cowboy2_tracer_id, meta)
+
+      _ ->
+        OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
     end
   end
 
@@ -219,5 +263,22 @@ defmodule OpentelemetryPhoenix do
       [value | _] ->
         value
     end
+  end
+
+  defp adapter do
+    Process.get({:otel_phoenix, :adapter})
+  end
+
+  defp opts_schema do
+    NimbleOptions.new!(
+      endpoint_prefix: [
+        type: {:list, :atom},
+        default: [:phoenix, :endpoint]
+      ],
+      adapter: [
+        type: {:in, [:cowboy2, nil]},
+        default: nil
+      ]
+    )
   end
 end
