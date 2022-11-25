@@ -72,3 +72,14 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :opentelemetry,
+       :processors,
+       otel_batch_processor: %{
+         # Using `localhost` here since we are starting outside docker-compose where
+         # otel would refer to the hostname of the OpenCollector,
+         #
+         # If you are running in docker compose, kindly change it to the correct
+         # hostname: `otel`
+         exporter: {:opentelemetry_exporter, %{endpoints: [{:http, "localhost", 4318, []}]}}
+       }

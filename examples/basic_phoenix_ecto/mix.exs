@@ -7,7 +7,7 @@ defmodule Demo.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -49,9 +49,12 @@ defmodule Demo.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:opentelemetry_phoenix, "~> 1.0.0-rc.7"},
-      {:opentelemetry_ecto, "~> 1.0.0-rc.5"},
-      {:opentelemetry_exporter, "~> 1.0.0"}
+      {:opentelemetry_exporter, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.1"},
+      {:opentelemetry, "~> 1.1"},
+      {:opentelemetry_cowboy, "~> 0.2"},
+      {:opentelemetry_phoenix, path: "../../instrumentation/opentelemetry_phoenix"},
+      {:opentelemetry_ecto, "~> 1.1"}
     ]
   end
 
