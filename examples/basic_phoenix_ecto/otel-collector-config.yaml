@@ -5,8 +5,6 @@ receivers:
       http:
 processors:
   batch:
-    send_batch_size: 1024
-    timeout: 5s
 exporters:
   otlp:
     # Uncomment below for using Honeycomb
@@ -25,7 +23,8 @@ exporters:
     tls:
       insecure: true
 extensions:
-  zpages: {}
+  zpages:
+    endpoint: :55679
 service:
   extensions: [zpages]
   pipelines:

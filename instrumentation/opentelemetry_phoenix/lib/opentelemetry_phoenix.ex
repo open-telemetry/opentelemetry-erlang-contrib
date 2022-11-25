@@ -1,15 +1,41 @@
 defmodule OpentelemetryPhoenix do
+  @options_schema NimbleOptions.new!(
+                    endpoint_prefix: [
+                      type: {:list, :atom},
+                      default: [:phoenix, :endpoint],
+                      doc: "The endpoint prefix in your endpoint."
+                    ],
+                    adapter: [
+                      type: {:in, [:cowboy2, nil]},
+                      default: nil,
+                      doc: "The phoenix server adapter being used.",
+                      type_doc: ":atom"
+                    ]
+                  )
+
   @moduledoc """
   OpentelemetryPhoenix uses [telemetry](https://hexdocs.pm/telemetry/) handlers to create `OpenTelemetry` spans.
 
   Current events which are supported include endpoint start/stop, router start/stop,
   and router exceptions.
 
+  ### Supported options
+  #{NimbleOptions.docs(@options_schema)}
+
+  If you are using PlugCowboy as your adapter you can add `:opentelemetry_cowboy` to your project
+  and pass the `:adapter` option when calling setup. Setting this option will prevent a new
+  span from being started and the existing cowboy span to be continued. This is the recommended
+  setup for measuring accurate latencies.
+
+  `Bandit.PhoenixAdapter` is not currently supported.
+
   ## Usage
 
   In your application start:
 
       def start(_type, _args) do
+        :opentelemetry_cowboy.setup()
+        OpentelemetryPhoenix.setup(adapter: :cowboy2)
         OpentelemetryPhoenix.setup()
 
         children = [
@@ -25,31 +51,29 @@ defmodule OpentelemetryPhoenix do
   require Logger
   require OpenTelemetry.Tracer
   alias OpenTelemetry.SemanticConventions
-  alias OpenTelemetry.Span
+  alias OpenTelemetry.Tracer
   alias OpentelemetryPhoenix.Reason
 
   require SemanticConventions.Trace
   require OpenTelemetry.Tracer
 
   @tracer_id __MODULE__
-  @cowboy2_tracer_id :opentelemetry_cowboy
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix()]
+  @type opts :: [endpoint_prefix() | adapter()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
+
+  @typedoc "The phoenix server adapter being used. Optional"
+  @type adapter :: {:adapter, :cowboy2 | term()}
 
   @doc """
   Initializes and configures the telemetry handlers.
   """
   @spec setup(opts()) :: :ok
   def setup(opts \\ []) do
-    Logger.error("loaded")
-
-    opts = NimbleOptions.validate!(opts, opts_schema())
-
-    Logger.error("#{inspect(opts)}")
+    opts = NimbleOptions.validate!(opts, @options_schema)
 
     attach_endpoint_start_handler(opts)
     attach_endpoint_stop_handler(opts)
@@ -113,10 +137,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   defp cowboy2_start do
-    Logger.warn("cowboy2 start called")
-
     OpentelemetryProcessPropagator.fetch_parent_ctx()
-    |> IO.inspect()
     |> OpenTelemetry.Ctx.attach()
   end
 
@@ -166,12 +187,12 @@ defmodule OpentelemetryPhoenix do
     %{conn: conn} = meta
 
     # ensure the correct span is current and update the status
-    ctx = set_ctx(meta)
+    OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    Span.set_attribute(ctx, SemanticConventions.Trace.http_status_code(), conn.status)
+    Tracer.set_attribute(SemanticConventions.Trace.http_status_code(), conn.status)
 
     if conn.status >= 500 do
-      Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+      Tracer.set_status(OpenTelemetry.status(:error, ""))
     end
 
     # end the Phoenix span
@@ -186,23 +207,18 @@ defmodule OpentelemetryPhoenix do
       SemanticConventions.Trace.http_route() => meta.route
     }
 
-    # Add more info that we now know about but don't close the span
-    ctx = set_ctx(meta)
-
-    Span.update_name(ctx, "#{meta.route}")
-    Span.set_attributes(ctx, attributes)
+    Tracer.update_name("#{meta.route}")
+    Tracer.set_attributes(attributes)
   end
 
   @doc false
   def handle_router_dispatch_exception(
         _event,
         _measurements,
-        %{kind: kind, reason: reason, stacktrace: stacktrace} = meta,
+        %{kind: kind, reason: reason, stacktrace: stacktrace},
         _config
       ) do
     if OpenTelemetry.Span.is_recording(OpenTelemetry.Tracer.current_span_ctx()) do
-      ctx = set_ctx(meta)
-
       {[reason: reason], attrs} =
         Reason.normalize(reason)
         |> Keyword.split([:reason])
@@ -211,21 +227,11 @@ defmodule OpentelemetryPhoenix do
       exception = Exception.normalize(kind, reason, stacktrace)
 
       # record exception and mark the span as errored
-      Span.record_exception(ctx, exception, stacktrace, attrs)
-      Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+      Tracer.record_exception(exception, stacktrace, attrs)
+      Tracer.set_status(OpenTelemetry.status(:error, ""))
 
       # do not close the span as endpoint stop will still be called with
       # more info, including the status code, which is nil at this stage
-    end
-  end
-
-  defp set_ctx(meta) do
-    case adapter() do
-      :cowboy2 ->
-        OpentelemetryTelemetry.set_current_telemetry_span(@cowboy2_tracer_id, meta)
-
-      _ ->
-        OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
     end
   end
 
@@ -267,18 +273,5 @@ defmodule OpentelemetryPhoenix do
 
   defp adapter do
     Process.get({:otel_phoenix, :adapter})
-  end
-
-  defp opts_schema do
-    NimbleOptions.new!(
-      endpoint_prefix: [
-        type: {:list, :atom},
-        default: [:phoenix, :endpoint]
-      ],
-      adapter: [
-        type: {:in, [:cowboy2, nil]},
-        default: nil
-      ]
-    )
   end
 end

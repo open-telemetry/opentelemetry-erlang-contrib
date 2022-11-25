@@ -10,18 +10,14 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: demo_dev
 
-  phoenix:
-    env_file: .env
-    build: .
-    ports:
-      - 4000:4000
-
-
   otel:
     image: otel/opentelemetry-collector-contrib-dev:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - '4318:4318'
+      - '55681:55681'
+      - '55680:55680'
+      - "55679:55679"
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
 
