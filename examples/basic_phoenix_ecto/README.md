@@ -22,9 +22,9 @@ Assuming you already have Docker and Docker Compose installed:
 
 1. Run `docker compose up -d` to start the Phoenix application, PostgreSQL,
    OpenTelemetry Collector, Zipkin and Jaeger.
-2. Run ecto setup:
+2. Run deps get and ecto setup:
    ```
-   mix ecto.setup
+   mix deps.get, ecto.setup
    ```
 3. Start phoenix `OTEL_SERVICE_NAME=demo iex -S mix phx.server`
 
