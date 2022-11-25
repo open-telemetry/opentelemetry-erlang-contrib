@@ -11,7 +11,7 @@ on:
       - 'main'
 
 concurrency:
-  group: ci-${{ github.head_ref || github.run_id }}
+  group: ci-${{ github.head_ref || github.run_id }}-erlang
   cancel-in-progress: true
 
 jobs:
