@@ -52,9 +52,9 @@ defmodule Demo.MixProject do
       {:opentelemetry_exporter, "~> 1.0"},
       {:opentelemetry_api, "~> 1.1"},
       {:opentelemetry, "~> 1.1"},
-      {:opentelemetry_cowboy, "~> 0.2"},
+      {:opentelemetry_cowboy, path: "../../instrumentation/opentelemetry_cowboy"},
       {:opentelemetry_phoenix, path: "../../instrumentation/opentelemetry_phoenix"},
-      {:opentelemetry_ecto, "~> 1.1"}
+      {:opentelemetry_ecto, path: "../../instrumentation/opentelemetry_ecto"}
     ]
   end
 
