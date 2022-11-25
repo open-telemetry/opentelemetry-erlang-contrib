@@ -58,7 +58,6 @@ defmodule OpentelemetryPhoenix do
   require OpenTelemetry.Tracer
 
   @tracer_id __MODULE__
-  @cowboy2_tracer_id :opentelemetry_cowboy
 
   @typedoc "Setup options"
   @type opts :: [endpoint_prefix() | adapter()]
@@ -233,16 +232,6 @@ defmodule OpentelemetryPhoenix do
 
       # do not close the span as endpoint stop will still be called with
       # more info, including the status code, which is nil at this stage
-    end
-  end
-
-  defp set_ctx(meta) do
-    case adapter() do
-      :cowboy2 ->
-        OpentelemetryTelemetry.set_current_telemetry_span(@cowboy2_tracer_id, meta)
-
-      _ ->
-        OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
     end
   end
 
