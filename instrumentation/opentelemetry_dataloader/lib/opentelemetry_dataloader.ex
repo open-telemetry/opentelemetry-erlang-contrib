@@ -45,6 +45,12 @@ defmodule OpentelemetryDataloader do
   def handle_event(event, measurements, metadata, config)
 
   def handle_event(@run_start, _measurements, metadata, config) do
+    parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+
+    if parent_ctx != :undefined do
+      OpenTelemetry.Ctx.attach(parent_ctx)
+    end
+
     OpentelemetryTelemetry.start_telemetry_span(
       config.tracer_id,
       "dataloader.run",
@@ -56,12 +62,6 @@ defmodule OpentelemetryDataloader do
   end
 
   def handle_event(@run_stop, _measurements, metadata, config) do
-    parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
-
-    if parent_ctx != :undefined do
-      OpenTelemetry.Ctx.attach(parent_ctx)
-    end
-
     OpentelemetryTelemetry.set_current_telemetry_span(config.tracer_id, metadata)
 
     OpentelemetryTelemetry.end_telemetry_span(config.tracer_id, metadata)
