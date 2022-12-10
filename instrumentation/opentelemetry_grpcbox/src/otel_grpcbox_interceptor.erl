@@ -30,13 +30,18 @@
          recv_msg/3]).
 
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
+-include_lib("opentelemetry_api/include/opentelemetry.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/trace.hrl").
+
+-define(RPC_SYSTEM_GRPC, 'grpc').
 
 unary_client(Ctx, _Channel, Handler, FullMethod, Input, _Def, _Options) ->
     Metadata = otel_propagator_text_map:inject(opentelemetry:get_text_map_injector(),
                                                #{},
                                                fun set_metadata/3),
     Ctx1 = grpcbox_metadata:append_to_outgoing_ctx(Ctx, Metadata),
-    ?with_span(FullMethod, #{}, fun(_) ->
+    ?with_span(FullMethod, #{kind => ?SPAN_KIND_CLIENT,
+                             attributes => #{?RPC_SYSTEM => ?RPC_SYSTEM_GRPC}}, fun(_) ->
                                         Handler(Ctx1, Input)
                                 end).
 
@@ -52,14 +57,16 @@ recv_msg(#{client_stream := ClientStream}, Streamer, Input) ->
 
 unary(Ctx, Message, _ServerInfo=#{full_method := FullMethod}, Handler) ->
     otel_ctx_from_ctx(Ctx),
-    ?with_span(FullMethod, #{}, fun(_) ->
+    ?with_span(FullMethod, #{kind => ?SPAN_KIND_SERVER,
+                             attributes => #{?RPC_SYSTEM => ?RPC_SYSTEM_GRPC}}, fun(_) ->
                                         Handler(Ctx, Message)
                                 end).
 
 stream(Ref, Stream, _ServerInfo=#{full_method := FullMethod}, Handler) ->
     Ctx = grpcbox_stream:ctx(Stream),
     otel_ctx_from_ctx(Ctx),
-    ?with_span(FullMethod, #{}, fun(_) ->
+    ?with_span(FullMethod, #{kind => ?SPAN_KIND_SERVER,
+                             attributes => #{?RPC_SYSTEM => ?RPC_SYSTEM_GRPC}}, fun(_) ->
                                         Handler(Ref, Stream)
                                 end).
 
