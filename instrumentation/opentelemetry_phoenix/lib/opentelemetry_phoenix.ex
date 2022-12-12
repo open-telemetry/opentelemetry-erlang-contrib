@@ -50,8 +50,12 @@ defmodule OpentelemetryPhoenix do
   """
   require Logger
   require OpenTelemetry.Tracer
+  alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Tracer
   alias OpentelemetryPhoenix.Reason
+
+  require SemanticConventions.Trace
+  require OpenTelemetry.Tracer
 
   @tracer_id __MODULE__
 
@@ -147,18 +151,18 @@ defmodule OpentelemetryPhoenix do
     peer_ip = Map.get(peer_data, :address)
 
     attributes = %{
-      "http.client_ip": client_ip(conn),
-      "http.flavor": http_flavor(conn.adapter),
-      "http.host": conn.host,
-      "http.method": conn.method,
-      "http.scheme": "#{conn.scheme}",
-      "http.target": conn.request_path,
-      "http.user_agent": user_agent,
-      "net.host.ip": to_string(:inet_parse.ntoa(conn.remote_ip)),
-      "net.host.port": conn.port,
-      "net.peer.ip": to_string(:inet_parse.ntoa(peer_ip)),
-      "net.peer.port": peer_data.port,
-      "net.transport": :"IP.TCP"
+      SemanticConventions.Trace.http_client_ip() => client_ip(conn),
+      SemanticConventions.Trace.http_flavor() => http_flavor(adapter),
+      SemanticConventions.Trace.http_method() => conn.method,
+      SemanticConventions.Trace.http_scheme() => "#{conn.scheme}",
+      SemanticConventions.Trace.http_target() => conn.request_path,
+      SemanticConventions.Trace.http_user_agent() => user_agent,
+      SemanticConventions.Trace.net_host_name() => conn.host,
+      SemanticConventions.Trace.net_sock_host_addr() => to_string(:inet_parse.ntoa(conn.remote_ip)),
+      SemanticConventions.Trace.net_host_port() => conn.port,
+      SemanticConventions.Trace.net_sock_peer_addr() => to_string(:inet_parse.ntoa(peer_ip)),
+      SemanticConventions.Trace.net_peer_port() => peer_data.port,
+      SemanticConventions.Trace.net_transport() => :"IP.TCP"
     }
 
     # start the span with a default name. Route name isn't known until router dispatch
@@ -185,7 +189,7 @@ defmodule OpentelemetryPhoenix do
     # ensure the correct span is current and update the status
     OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    Tracer.set_attribute(:"http.status_code", conn.status)
+    Tracer.set_attribute(SemanticConventions.Trace.http_status_code(), conn.status)
 
     if conn.status >= 500 do
       Tracer.set_status(OpenTelemetry.status(:error, ""))
@@ -198,9 +202,9 @@ defmodule OpentelemetryPhoenix do
   @doc false
   def handle_router_dispatch_start(_event, _measurements, meta, _config) do
     attributes = %{
-      "phoenix.plug": meta.plug,
-      "phoenix.action": meta.plug_opts,
-      "http.route": meta.route
+      :"phoenix.plug" => meta.plug,
+      :"phoenix.action" => meta.plug_opts,
+      SemanticConventions.Trace.http_route() => meta.route
     }
 
     Tracer.update_name("#{meta.route}")
