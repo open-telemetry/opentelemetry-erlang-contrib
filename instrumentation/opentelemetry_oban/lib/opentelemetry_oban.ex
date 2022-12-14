@@ -18,7 +18,9 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
+  alias OpenTelemetry.SemanticConventions.Trace
 
+  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -128,10 +130,10 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker, "unknown")
 
     %{
-      "messaging.system": :oban,
-      "messaging.destination": queue,
-      "messaging.destination_kind": :queue,
-      "messaging.oban.worker": worker
+      Trace.messaging_system() => :oban,
+      Trace.messaging_destination() => queue,
+      Trace.messaging_destination_kind() => :queue,
+      :"messaging.oban.worker" => worker
     }
   end
 
