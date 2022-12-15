@@ -15,6 +15,9 @@ defmodule OpentelemetryFinch do
 
   """
 
+  alias OpenTelemetry.SemanticConventions.Trace
+
+  require Trace
   require OpenTelemetry.Tracer
 
   @typedoc "Setup options"
@@ -48,13 +51,13 @@ defmodule OpentelemetryFinch do
     url = build_url(meta.request.scheme, meta.request.host, meta.request.port, meta.request.path)
 
     attributes = %{
-      "http.url": url,
-      "http.scheme": meta.request.scheme,
-      "net.peer.name": meta.request.host,
-      "net.peer.port": meta.request.port,
-      "http.target": meta.request.path,
-      "http.method": meta.request.method,
-      "http.status_code": status
+      Trace.http_url() => url,
+      Trace.http_scheme() => meta.request.scheme,
+      Trace.net_peer_name() => meta.request.host,
+      Trace.net_peer_port() => meta.request.port,
+      Trace.http_target() => meta.request.path,
+      Trace.http_method() => meta.request.method,
+      Trace.http_status_code() => status
     }
 
     s =
