@@ -54,7 +54,7 @@ defmodule OpentelemetryEctoTest do
              "db.name": "opentelemetry_ecto_test",
              "db.sql.table": "users",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
-             "db.system": "postgresql",
+             "db.system": :postgresql,
              "db.type": :sql,
              "db.user": "postgres",
              decode_time_microseconds: _,
