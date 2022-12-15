@@ -21,7 +21,8 @@ TestRepo.query("TRUNCATE oban_jobs", [])
 Oban.start_link(
   repo: TestRepo,
   plugins: [Oban.Plugins.Pruner],
-  queues: [default: 10, events: 50]
+  notifier: Oban.Notifiers.PG,
+  testing: :manual
 )
 
 defmodule TestJob do

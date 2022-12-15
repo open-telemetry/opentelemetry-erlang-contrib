@@ -15,9 +15,11 @@ defmodule OpentelemetryRedix do
 
   """
 
+  alias OpenTelemetry.SemanticConventions.Trace
   alias OpentelemetryRedix.Command
   alias OpentelemetryRedix.ConnectionTracker
 
+  require Trace
   require OpenTelemetry.Tracer
 
   @typedoc "Setup options"
@@ -54,9 +56,9 @@ defmodule OpentelemetryRedix do
 
     attributes =
       %{
-        "db.system": "redis",
-        "db.operation": operation,
-        "db.statement": statement
+        Trace.db_system() => "redis",
+        Trace.db_operation() => operation,
+        Trace.db_statement() => statement
       }
       |> Map.merge(net_attributes(connection))
       |> Map.merge(redix_attributes(meta))
@@ -77,7 +79,7 @@ defmodule OpentelemetryRedix do
 
   defp net_attributes(%{address: address}) when is_binary(address) do
     [host, port] = address |> String.split(":")
-    %{"net.peer.name": host, "net.peer.port": port}
+    %{Trace.net_peer_name() => host, Trace.net_peer_port() => port}
   end
 
   defp net_attributes(_), do: %{}

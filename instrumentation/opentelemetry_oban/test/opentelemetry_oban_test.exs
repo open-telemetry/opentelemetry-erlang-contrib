@@ -161,7 +161,7 @@ defmodule OpentelemetryObanTest do
 
   test "records spans for Oban jobs that stop with {:error, :something}" do
     OpentelemetryOban.insert(TestJobThatReturnsError.new(%{}))
-    assert %{success: 0, failure: 1} = Oban.drain_queue(queue: :events)
+    assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
     expected_status = OpenTelemetry.status(:error, "")
 
@@ -202,7 +202,7 @@ defmodule OpentelemetryObanTest do
   test "records spans for each retry" do
     OpentelemetryOban.insert(TestJobThatReturnsError.new(%{}, max_attempts: 2))
 
-    assert %{success: 0, failure: 2} =
+    assert %{success: 0, failure: 1, discard: 1} =
              Oban.drain_queue(queue: :events, with_scheduled: true, with_recursion: true)
 
     expected_status = OpenTelemetry.status(:error, "")
@@ -239,7 +239,7 @@ defmodule OpentelemetryObanTest do
 
   test "records spans for Oban jobs that stop with an exception" do
     OpentelemetryOban.insert(TestJobThatThrowsException.new(%{}))
-    assert %{success: 0, failure: 1} = Oban.drain_queue(queue: :events)
+    assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
     expected_status = OpenTelemetry.status(:error, "")
 

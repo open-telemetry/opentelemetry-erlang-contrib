@@ -66,6 +66,14 @@ defmodule OpentelemetryEctoTest do
            } = :otel_attributes.map(attributes)
   end
 
+  test "include additionaL_attributes" do
+    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"config.attribute": "special value", "db.instance": "my_instance"} = :otel_attributes.map(attributes)
+  end
+
   test "changes the time unit" do
     attach_handler(time_unit: :millisecond)
 
@@ -187,6 +195,29 @@ defmodule OpentelemetryEctoTest do
     # preloads of user
     assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
     assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+  end
+
+  test "nested query within Task does not skip parent span" do
+    user = Repo.insert!(%User{email: "opentelemetry@erlang.org"})
+    Repo.insert!(%Post{body: "We got traced!", user: user})
+    Repo.insert!(%Comment{body: "We got traced!", user: user})
+
+    attach_handler()
+
+    Tracer.with_span "root span" do
+      task =
+        Task.async(fn ->
+          Tracer.with_span "parent span" do
+            Repo.all(User)
+          end
+        end)
+
+      Task.await(task)
+    end
+
+    assert_receive {:span, span(span_id: _root_span_id, name: "root span")}
+    assert_receive {:span, span(span_id: parent_span_id, name: "parent span")}
+    assert_receive {:span, span(parent_span_id: ^parent_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
   end
 
   def attach_handler(config \\ []) do

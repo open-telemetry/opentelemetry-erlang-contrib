@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0
+
+### Changed
+
+* Allow setting additional attributes
+
+### Fixes
+
+* Fix span linking in additional task-spawned use cases
+
 ## 1.0.0
 
 ### Changed

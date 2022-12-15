@@ -45,7 +45,7 @@ defmodule OpentelemetryTelemetry.MixProject do
     end)
     |> Enum.concat([
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.26.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
     ])

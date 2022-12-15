@@ -36,6 +36,9 @@ defmodule OpentelemetryEcto do
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
+    * `:additional_attributes` - additional attributes to include in the span. If there
+      are conflits with default provided attributes, the ones provided with
+      this config will have precedence.
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -80,6 +83,7 @@ defmodule OpentelemetryEcto do
       |> maybe_append_source(source)
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
+    additional_attributes = Keyword.get(config, :additional_attributes, %{})
 
     base_attributes =
       %{
@@ -100,18 +104,36 @@ defmodule OpentelemetryEcto do
 
     attributes =
       measurements
-      |> Stream.take_while(fn {k, _} -> k in [:decode_time, :query_time, :queue_time, :idle_time] end)
-      |> Stream.map(fn {k, v} -> {:"#{k}_#{time_unit}s", System.convert_time_unit(v, :native, time_unit)} end)
-      |> Enum.into(%{})
+      |> Enum.reduce(%{}, fn
+        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
 
-    parent_context = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
+        _, acc ->
+          acc
+      end)
+      |> Map.merge(base_attributes)
+      |> Map.merge(additional_attributes)
 
-    if ctx?(parent_context), do: OpenTelemetry.Ctx.attach(parent_context)
+    parent_context =
+      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
+        :undefined ->
+          OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
+
+        ctx ->
+          ctx
+      end
+
+    parent_token =
+      if ctx?(parent_context)  do
+        OpenTelemetry.Ctx.attach(parent_context)
+      else
+        :undefined
+      end
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: Map.merge(attributes, base_attributes),
+        attributes: attributes,
         kind: :client
       })
 
@@ -125,7 +147,7 @@ defmodule OpentelemetryEcto do
 
     OpenTelemetry.Span.end_span(s)
 
-    if ctx?(parent_context), do: OpenTelemetry.Ctx.detach(parent_context)
+    if ctx?(parent_token), do: OpenTelemetry.Ctx.detach(parent_token)
   end
 
   defp format_error(%{__exception__: true} = exception) do

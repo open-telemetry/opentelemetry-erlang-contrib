@@ -53,6 +53,9 @@ opentelemetry_cowboy:
 opentelemetry_ecto:
   - instrumentation/opentelemetry_ecto/**/*
 
+opentelemetry_nebulex:
+  - instrumentation/opentelemetry_nebulex/**/*
+
 opentelemetry_oban:
   - instrumentation/opentelemetry_oban/**/*
 
@@ -65,5 +68,14 @@ opentelemetry_process_propagator:
 opentelemetry_redix:
   - instrumentation/opentelemetry_redix/**/*
 
+opentelemetry_finch:
+  - instrumentation/opentelemetry_finch/**/*
+
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
+
+opentelemetry_tesla:
+  - instrumentation/opentelemetry_tesla/**/*
+
+opentelemetry_xray:
+  - utilities/opentelemetry_xray/**/*

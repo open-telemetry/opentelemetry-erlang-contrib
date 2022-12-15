@@ -71,9 +71,10 @@ successful_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/success", Headers}, [], []),
     receive
-        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId,kind=Kind}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
             ?assertEqual(13235353014750950193, ParentSpanId),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"203.0.133.195">>,
                              'http.flavor' => '1.1',
@@ -97,8 +98,9 @@ chunked_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/chunked", []}, [], []),
     receive
-        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"127.0.0.1">>,
                              'http.flavor' => '1.1',
@@ -122,10 +124,11 @@ failed_request(_Config) ->
     {ok, {{_Version, 500, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/failure", []}, [], []),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
             #event{name= <<"exception">>} = Event,
             ?assertEqual(<<"HTTP GET">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"127.0.0.1">>,
                              'http.flavor' => '1.1',
@@ -149,7 +152,7 @@ client_timeout_request(_Config) ->
     {error, timeout} =
         httpc:request(get, {"http://localhost:8080/slow", []}, [{timeout, 50}], []),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
             #event{name='socket_error',attributes = EventAttributes} = Event,
             ExpectedEventAttrs = #{
@@ -158,6 +161,7 @@ client_timeout_request(_Config) ->
                                   },
             ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP GET">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"127.0.0.1">>,
                              'http.flavor' => '1.1',
@@ -180,7 +184,7 @@ idle_timeout_request(_Config) ->
     {error, socket_closed_remotely} =
         httpc:request(head, {"http://localhost:8080/slow", []}, [], []),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
             #event{name= 'connection_error',attributes = EventAttributes} = Event,
             ExpectedEventAttrs = #{
@@ -189,6 +193,7 @@ idle_timeout_request(_Config) ->
                                   },
             ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP HEAD">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"127.0.0.1">>,
                              'http.flavor' => '1.1',
@@ -210,8 +215,9 @@ idle_timeout_request(_Config) ->
 chunk_timeout_request(_Config) ->
     httpc:request(head, {"http://localhost:8080/chunked_slow", []}, [], []),
     receive
-        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             ?assertEqual(<<"HTTP HEAD">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"127.0.0.1">>,
                              'http.flavor' => '1.1',
@@ -239,7 +245,7 @@ bad_request(_Config) ->
     {ok, {{_Version, 501, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(trace, {"http://localhost:8080/", Headers}, [], []),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
             #event{name='connection_error',attributes = EventAttributes} = Event,
             ExpectedEventAttrs = #{
@@ -248,6 +254,7 @@ bad_request(_Config) ->
                                   },
             ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual(<<"HTTP Error">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
                              'http.status_code' => 501,
                              'http.response_content_length' => 0},
@@ -265,8 +272,9 @@ binary_status_code_request(_Config) ->
     {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(get, {"http://localhost:8080/binary_status_code", Headers}, [], []),
     receive
-        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId}} ->
+        {span, #span{name=Name,attributes=Attributes,parent_span_id=ParentSpanId,kind=Kind}} ->
             ?assertEqual(<<"HTTP GET">>, Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ?assertEqual(13235353014750950193, ParentSpanId),
             ExpectedAttrs = #{
                              'http.client_ip' => <<"203.0.133.195">>,
