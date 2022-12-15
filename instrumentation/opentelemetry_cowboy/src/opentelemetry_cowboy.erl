@@ -46,7 +46,8 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
                   'net.transport' => 'IP.TCP'
                  },
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
-    otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, #{attributes => Attributes});
+    Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
+    otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, Opts);
 
 handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
     Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
@@ -107,7 +108,8 @@ handle_event([cowboy, request, early_error], Measurements, Meta, _Config) ->
                    'http.status_code' => StatusCode,
                    'http.response_content_length' => maps:get(resp_body_length, Measurements)
                   },
-    Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, #{attributes => Attributes}),
+    Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
+    Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, <<"HTTP Error">>, Meta, Opts),
     otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),

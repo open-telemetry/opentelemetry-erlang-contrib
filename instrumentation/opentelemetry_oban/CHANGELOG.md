@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0
+
+### Changed
+
+* Publish 1.0
+
+### Fixes
+
+* Fix issue with insert_all
+
 ## 0.2.0-rc.5
 
 ### Changed

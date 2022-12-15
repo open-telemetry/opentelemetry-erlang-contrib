@@ -1,0 +1,15 @@
+{application, opentelemetry_aws_xray, [
+    {description, "OpenTelemetry AWS X-Ray TraceId Generator"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
+        opentelemetry
+    ]},
+    {env, []},
+    {modules, []},
+
+    {licenses, ["Apache-2.0"]},
+    {links, [{"GitHub", "https://github.com/open-telemetry/opentelemetry-erlang-contrib"}]}
+]}.

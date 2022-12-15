@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.0
+
+### Changed
+
+* Allow setting additional attributes
+
+### Fixes
+
+* Fix span linking in additional task-spawned use cases
+
+## 1.0.0
+
+### Changed
+
+* Add idle time as an attribute
+
+### Fixes
+
+* Fix Ecto preload spans not being linked to the root parent query
+
 ## 1.0.0-rc.5
 
 ### Changed

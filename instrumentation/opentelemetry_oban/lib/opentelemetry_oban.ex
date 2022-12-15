@@ -18,7 +18,9 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
+  alias OpenTelemetry.SemanticConventions.Trace
 
+  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -108,7 +110,7 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert_all(name \\ __MODULE__, multi, multi_name, changesets_or_wrapper) do
+  def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper) do
     Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
   end
 
@@ -128,10 +130,10 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker, "unknown")
 
     %{
-      "messaging.system": :oban,
-      "messaging.destination": queue,
-      "messaging.destination_kind": :queue,
-      "messaging.oban.worker": worker
+      Trace.messaging_system() => :oban,
+      Trace.messaging_destination() => queue,
+      Trace.messaging_destination_kind() => :queue,
+      :"messaging.oban.worker" => worker
     }
   end
 
