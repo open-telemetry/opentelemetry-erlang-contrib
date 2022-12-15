@@ -37,7 +37,7 @@ defmodule OpentelemetryEcto do
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
     * `:additional_attributes` - additional attributes to include in the span. If there
-      are conflits with default provided attributes, the ones provided with
+      are conflicts with default provided attributes, the ones provided with
       this config will have precedence.
   """
   def setup(event_prefix, config \\ []) do
@@ -115,20 +115,13 @@ defmodule OpentelemetryEcto do
       |> Map.merge(additional_attributes)
 
     parent_context =
-      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
-        :undefined ->
-          OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
-
-        ctx ->
-          ctx
-      end
-
-    parent_token =
-      if ctx?(parent_context)  do
-        OpenTelemetry.Ctx.attach(parent_context)
+      if ctx?(ctx = OpentelemetryProcessPropagator.fetch_ctx(self())) do
+        ctx
       else
-        :undefined
+        OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
       end
+
+    parent_token = if ctx?(parent_context), do: OpenTelemetry.Ctx.attach(parent_context), else: :undefined
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
