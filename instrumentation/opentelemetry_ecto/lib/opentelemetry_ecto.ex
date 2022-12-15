@@ -147,12 +147,16 @@ defmodule OpentelemetryEcto do
     if ip?(peer_name), do: maybe_add(map, :"net.sock.peer.addr", peer_name), else: map
   end
 
-  defp db_system(Ecto.Adapters.Postgres), do: "postgresql"
-  defp db_system(Ecto.Adapters.MyXQL), do: "mysql"
-  defp db_system(Ecto.Adapters.Tds), do: "mssql"
-  defp db_system(other) when is_atom(other), do: other |> Atom.to_string() |> String.downcase()
+  defp db_system(Ecto.Adapters.Postgres), do: :postgresql
+  defp db_system(Ecto.Adapters.MyXQL), do: :mysql
+  defp db_system(Ecto.Adapters.Tds), do: :mssql
+
+  defp db_system(other) when is_atom(other) do
+    other |> Module.split() |> List.last() |> String.downcase()
+  end
+
   defp db_system(other) when is_binary(other), do: other |> String.downcase()
-  defp db_system(_), do: "unknown"
+  defp db_system(_), do: :other_sql
 
   defp ip?(address) when is_binary(address), do: address |> to_charlist() |> ip?()
 
