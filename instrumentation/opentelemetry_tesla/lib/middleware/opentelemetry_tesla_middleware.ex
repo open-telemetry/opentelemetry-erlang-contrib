@@ -13,6 +13,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
     - `:span_name` - override span name. Can be a `String` for a static span name,
     or a function that takes the `Tesla.Env` and returns a `String`
 
+    - `:inject_distributed_tracing_headers` - decide if distributed tracing headers
+    should be added to the request. It defaults to `true`
+
   """
 
   alias OpenTelemetry.SemanticConventions.Trace
@@ -25,9 +28,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
   def call(env, next, opts) do
     span_name = get_span_name(env, Keyword.get(opts, :span_name))
 
+    inject_distributed_tracing_headers? =
+      Keyword.get(opts, :inject_distributed_tracing_headers, true)
+
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
-      |> Tesla.put_headers(:otel_propagator_text_map.inject([]))
+      |> maybe_inject_distributed_tracing_headers(inject_distributed_tracing_headers?)
       |> Tesla.run(next)
       |> set_span_attributes()
       |> handle_result()
@@ -118,4 +124,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
     |> Atom.to_string()
     |> String.upcase()
   end
+
+  defp maybe_inject_distributed_tracing_headers(env, true),
+    do: Tesla.put_headers(env, :otel_propagator_text_map.inject([]))
+
+  defp maybe_inject_distributed_tracing_headers(env, _), do: env
 end
