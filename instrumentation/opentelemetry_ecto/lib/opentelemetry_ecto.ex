@@ -17,6 +17,9 @@ defmodule OpentelemetryEcto do
   > represented as nested spans within a trace.
   """
 
+  alias OpenTelemetry.SemanticConventions.Trace
+
+  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -49,7 +52,7 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo, type: type} = event_metadata,
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
@@ -58,13 +61,23 @@ defmodule OpentelemetryEcto do
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
-    database = repo.config()[:database]
+    repo_config = repo.config()
+
+    dbg(%{
+      event_metadata: event_metadata,
+      config: config,
+      repo_config: repo_config
+    })
 
     url =
       case repo.config()[:url] do
         nil ->
-          # TODO: add port
-          URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
+          URI.to_string(%URI{
+            scheme: "ecto",
+            host: repo_config[:hostname],
+            # TODO: should we remove the default port?
+            port: repo_config[:port] || 5432,
+          })
 
         url ->
           url
@@ -88,12 +101,18 @@ defmodule OpentelemetryEcto do
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.type": db_type,
-      "db.statement": query,
-      source: source,
-      "db.instance": database,
-      "db.url": url,
-      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+      Trace.db_user() => repo_config[:username],
+      # TODO: figure out the type that would be something like mysql, postgresql, etc
+      # https://opentelemetry.io/docs/specs/otel/trace/semantic_conventions/database/
+      Trace.db_system() => nil,
+      # TODO: the schema name
+      Trace.db_name() => nil,
+      Trace.db_sql_table() => source,
+      Trace.db_statement() => query,
+      Trace.db_connection_string() => url,
+      :"db.type" => db_type,
+      :"db.instance" => repo_config[:database],
+      :"total_time_#{time_unit}s" => System.convert_time_unit(total_time, :native, time_unit)
     }
 
     attributes =
@@ -123,6 +142,8 @@ defmodule OpentelemetryEcto do
       else
         :undefined
       end
+
+    attributes |> dbg()
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
