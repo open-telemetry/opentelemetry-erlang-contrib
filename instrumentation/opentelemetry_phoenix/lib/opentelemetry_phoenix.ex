@@ -36,7 +36,6 @@ defmodule OpentelemetryPhoenix do
       def start(_type, _args) do
         :opentelemetry_cowboy.setup()
         OpentelemetryPhoenix.setup(adapter: :cowboy2)
-        OpentelemetryPhoenix.setup()
 
         children = [
           {Phoenix.PubSub, name: MyApp.PubSub},
