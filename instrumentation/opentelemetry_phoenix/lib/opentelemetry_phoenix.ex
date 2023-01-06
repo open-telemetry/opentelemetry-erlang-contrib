@@ -48,7 +48,6 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  require Logger
   require OpenTelemetry.Tracer
   alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Tracer
@@ -126,7 +125,7 @@ defmodule OpentelemetryPhoenix do
   @doc false
   def handle_endpoint_start(_event, _measurements, meta, config) do
     Process.put({:otel_phoenix, :adapter}, config.adapter)
-    # TODO: maybe add config for what paths are traced? Via sampler?
+
     case adapter() do
       :cowboy2 ->
         cowboy2_start()

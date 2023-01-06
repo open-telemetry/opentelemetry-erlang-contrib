@@ -49,9 +49,10 @@ defmodule Demo.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:opentelemetry_exporter, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.1"},
-      {:opentelemetry, "~> 1.1"},
+      {:opentelemetry_exporter, "~> 1.3"},
+      {:opentelemetry_api, "~> 1.2"},
+      {:opentelemetry, "~> 1.2"},
+      {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:opentelemetry_cowboy, path: "../../instrumentation/opentelemetry_cowboy"},
       {:opentelemetry_phoenix, path: "../../instrumentation/opentelemetry_phoenix"},
       {:opentelemetry_ecto, path: "../../instrumentation/opentelemetry_ecto"}

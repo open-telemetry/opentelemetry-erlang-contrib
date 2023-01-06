@@ -5,6 +5,8 @@ receivers:
       http:
 processors:
   batch:
+    send_batch_size: 1024
+    timeout: 5s
 exporters:
   otlp:
     # Uncomment below for using Honeycomb
@@ -18,8 +20,10 @@ exporters:
     #   "lightstep-access-token": "<YOUR_ACCESS_TOKEN>"
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
+    tls:
+      insecure: true
   jaeger:
-    endpoint: jaeger-all-in-one:14250
+    endpoint: "jaeger:14250"
     tls:
       insecure: true
 extensions:
@@ -31,7 +35,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [zipkin, jaeger]
+      exporters: [jaeger, zipkin]
       # Add 'otlp' if you're exporting to Honeycomb
       # or Lightstep
       # exporters: [zipkin, jaeger, otlp]
