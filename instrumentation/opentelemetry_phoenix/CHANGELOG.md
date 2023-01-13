@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+### Features
+
+* Add support for opentelemetry_cowboy to capture the full request lifecycle
+  when using the Plug.Cowboy adapter
+
 ## 1.0.0
 
 ### Fixes
