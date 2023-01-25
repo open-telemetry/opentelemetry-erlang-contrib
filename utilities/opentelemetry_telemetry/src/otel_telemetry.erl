@@ -100,7 +100,9 @@ peek_from_tracer_stack(TracerId) ->
         undefined ->
             undefined;
         [SpanCtxSet | _Rest] ->
-            SpanCtxSet
+            SpanCtxSet;
+        [] ->
+            undefined
     end.
 
 -spec pop_ctx(atom(), telemetry:event_metadata()) -> ctx_set().
