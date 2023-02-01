@@ -6,6 +6,7 @@
    [kernel,
     stdlib,
     opentelemetry_api,
+    opentelemetry_telemetry,
     telemetry,
     telemetry_registry
    ]},
