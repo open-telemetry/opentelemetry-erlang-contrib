@@ -12,7 +12,8 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
     - `:span_name` - override span name. Can be a `String` for a static span name,
     or a function that takes the `Tesla.Env` and returns a `String`
-
+    - `:non_error_statuses` - configures expected HTTP response status errors,
+      usually >= 400, to not mark spans as errors. E.g., expected 404
   """
 
   alias OpenTelemetry.SemanticConventions.Trace
@@ -27,6 +28,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
+      |> maybe_put_non_error_statuses(opts[:non_error_statuses])
       |> Tesla.put_headers(:otel_propagator_text_map.inject([]))
       |> Tesla.run(next)
       |> set_span_attributes()
@@ -49,6 +51,16 @@ defmodule Tesla.Middleware.OpenTelemetry do
     end
   end
 
+  defp maybe_put_non_error_statuses(env, nil), do: env
+  defp maybe_put_non_error_statuses(env, []), do: env
+
+  defp maybe_put_non_error_statuses(env, [_ | _] = non_error_statuses) do
+    case env.opts[:non_error_statuses] do
+      nil -> Tesla.put_opt(env, :non_error_statuses, non_error_statuses)
+      _ -> env
+    end
+  end
+
   defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
     OpenTelemetry.Tracer.set_attributes(build_attrs(env))
 
@@ -59,8 +71,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
     result
   end
 
-  defp handle_result({:ok, %Tesla.Env{status: status} = env}) when status > 400 do
-    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
+  defp handle_result({:ok, %Tesla.Env{status: status, opts: opts} = env}) when status >= 400 do
+    non_error_statuses = Keyword.get(opts, :non_error_statuses, [])
+
+    if status not in non_error_statuses do
+      OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
+    end
 
     {:ok, env}
   end
