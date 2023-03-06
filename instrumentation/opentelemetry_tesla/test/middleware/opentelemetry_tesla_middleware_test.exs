@@ -191,32 +191,65 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
   end
 
-  test "Marks Span status as :error when HTTP request fails", %{bypass: bypass} do
-    defmodule TestClient do
-      def get(client) do
-        Tesla.get(client, "/users/")
+  @error_codes [
+    400,
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410,
+    411,
+    412,
+    413,
+    414,
+    415,
+    416,
+    417,
+    418,
+    500,
+    501,
+    502,
+    503,
+    504,
+    505,
+    506,
+    507,
+    508
+  ]
+
+  for code <- @error_codes do
+    test "Marks Span status as :error when HTTP request fails with #{code}", %{bypass: bypass} do
+      defmodule TestClient do
+        def get(client) do
+          Tesla.get(client, "/users/")
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            Tesla.Middleware.OpenTelemetry
+          ]
+
+          Tesla.client(middleware)
+        end
       end
 
-      def client(url) do
-        middleware = [
-          {Tesla.Middleware.BaseUrl, url},
-          Tesla.Middleware.OpenTelemetry
-        ]
+      Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+        Plug.Conn.resp(conn, unquote(code), "")
+      end)
 
-        Tesla.client(middleware)
-      end
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(status: {:status, :error, ""})}
     end
-
-    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
-      Plug.Conn.resp(conn, 500, "")
-    end)
-
-    bypass.port
-    |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
-
-    assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
   test "Marks Span status as :errors when max redirects are exceeded", %{bypass: bypass} do
