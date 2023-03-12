@@ -22,6 +22,7 @@ defmodule OpentelemetryExAws do
 
   """
   alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetryExAws.DynamoDB
 
   require Trace
   require OpenTelemetry.Tracer
@@ -61,6 +62,10 @@ defmodule OpentelemetryExAws do
   end
 
   def handle_request_stop(_event, _measurements, metadata, _config) do
+    attributes = get_attributes(metadata)
+    OpenTelemetry.Tracer.set_attributes(attributes)
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
+
+  defp get_attributes(%{operation: "DynamoDB" <> _rest} = metadata), do: DynamoDB.get_attributes(metadata)
 end
