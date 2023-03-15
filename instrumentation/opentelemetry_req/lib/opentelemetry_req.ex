@@ -57,8 +57,6 @@ defmodule OpentelemetryReq do
 
     attrs = build_req_attrs(request)
 
-    parent_ctx = OpenTelemetry.Ctx.get_current()
-
     Tracer.start_span(span_name, %{
       attributes: attrs,
       kind: :client
