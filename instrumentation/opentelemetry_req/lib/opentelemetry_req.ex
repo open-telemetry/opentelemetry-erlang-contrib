@@ -65,8 +65,6 @@ defmodule OpentelemetryReq do
     })
     |> Tracer.set_current_span()
 
-    Req.Request.put_private(request, :otel_parent_ctx, parent_ctx)
-
     request
   end
 
