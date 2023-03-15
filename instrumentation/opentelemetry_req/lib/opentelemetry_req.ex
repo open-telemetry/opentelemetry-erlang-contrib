@@ -43,56 +43,53 @@ defmodule OpentelemetryReq do
     request
     |> Req.Request.register_options([:span_name, :no_path_params, :propagate_trace_ctx])
     |> Req.Request.merge_options(options)
-    |> Req.Request.prepend_request_steps(
+    |> Req.Request.append_request_steps(
       require_path_params: &require_path_params_option/1,
-      set_start_time: &set_start_time/1,
+      start_span: &start_span/1,
       put_trace_headers: &maybe_put_trace_headers/1
     )
-    |> Req.Request.prepend_response_steps(otel_record_span: &record_span/1)
-    |> Req.Request.prepend_error_steps(otel_record_errored_span: &record_errored_span/1)
+    |> Req.Request.prepend_response_steps(otel_end_span: &end_span/1)
+    |> Req.Request.prepend_error_steps(otel_end_span: &end_errored_span/1)
   end
 
-  defp record_span({request, %Req.Response{} = response}) do
+  defp start_span(request) do
     span_name = span_name(request)
-    start_time = get_start_time(request)
 
+    attrs = build_req_attrs(request)
+
+    parent_ctx = OpenTelemetry.Ctx.get_current()
+
+    Tracer.start_span(span_name, %{
+      attributes: attrs,
+      kind: :client
+    })
+    |> Tracer.set_current_span()
+
+    Req.Request.put_private(request, :otel_parent_ctx, parent_ctx)
+
+    request
+  end
+
+  defp end_span({request, %Req.Response{} = response}) do
     attrs =
-      build_req_attrs(request)
-      |> Map.put(Trace.http_status_code(), response.status)
+      Map.put(%{}, Trace.http_status_code(), response.status)
       |> maybe_append_resp_content_length(response)
 
-    s =
-      Tracer.start_span(span_name, %{
-        start_time: start_time,
-        attributes: attrs,
-        kind: :client
-      })
+    Tracer.set_attributes(attrs)
 
     if response.status >= 400 do
-      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, ""))
+      OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
     end
 
-    OpenTelemetry.Span.end_span(s)
+    OpenTelemetry.Tracer.end_span()
 
     {request, response}
   end
 
-  defp record_errored_span({request, exception}) do
-    span_name = span_name(request)
-    start_time = get_start_time(request)
+  defp end_errored_span({request, exception}) do
+    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, format_exception(exception)))
 
-    attrs = build_req_attrs(request)
-
-    s =
-      Tracer.start_span(span_name, %{
-        start_time: start_time,
-        attributes: attrs,
-        kind: :client
-      })
-
-    OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_exception(exception)))
-
-    OpenTelemetry.Span.end_span(s)
+    OpenTelemetry.Tracer.end_span()
 
     {request, exception}
   end
@@ -172,14 +169,6 @@ defmodule OpentelemetryReq do
       :options -> :OPTIONS
       :trace -> :TRACE
     end
-  end
-
-  defp set_start_time(request) do
-    Req.Request.put_private(request, :otel_start_time, :opentelemetry.timestamp())
-  end
-
-  defp get_start_time(request) do
-    Req.Request.get_private(request, :otel_start_time)
   end
 
   defp maybe_put_trace_headers(request) do
