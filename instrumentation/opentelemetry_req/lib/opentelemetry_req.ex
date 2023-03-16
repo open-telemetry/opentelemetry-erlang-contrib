@@ -57,6 +57,9 @@ defmodule OpentelemetryReq do
 
     attrs = build_req_attrs(request)
 
+    parent_ctx = OpenTelemetry.Ctx.get_current()
+    Process.put(:otel_parent_ctx, parent_ctx)
+
     Tracer.start_span(span_name, %{
       attributes: attrs,
       kind: :client
@@ -79,6 +82,9 @@ defmodule OpentelemetryReq do
 
     OpenTelemetry.Tracer.end_span()
 
+    Process.delete(:otel_parent_ctx)
+    |> OpenTelemetry.Ctx.attach()
+
     {request, response}
   end
 
@@ -86,6 +92,9 @@ defmodule OpentelemetryReq do
     OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, format_exception(exception)))
 
     OpenTelemetry.Tracer.end_span()
+
+    Process.delete(:otel_parent_ctx)
+    |> OpenTelemetry.Ctx.attach()
 
     {request, exception}
   end
