@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1
+
+### Fixes
+
+* Set span kind as server
+
 ## v0.2.0
 
 ### Fixes
