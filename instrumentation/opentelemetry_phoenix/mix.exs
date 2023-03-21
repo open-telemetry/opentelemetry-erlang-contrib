@@ -58,7 +58,7 @@ defmodule OpentelemetryPhoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:nimble_options, "~> 0.5"},
+      {:nimble_options, "~> 0.5 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
       {:opentelemetry_process_propagator, "~> 0.2"},
