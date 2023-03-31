@@ -68,6 +68,9 @@ opentelemetry_process_propagator:
 opentelemetry_redix:
   - instrumentation/opentelemetry_redix/**/*
 
+opentelemetry_req:
+  - instrumentation/opentelemetry_req/**/*
+
 opentelemetry_finch:
   - instrumentation/opentelemetry_finch/**/*
 
