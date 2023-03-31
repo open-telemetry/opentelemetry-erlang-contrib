@@ -831,6 +831,6 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
   end
 
   defdelegate children(supervisor), to: Task.Supervisor
-  defdelegate start_link(), to: Task.Supervisor
+  defdelegate start_link(options \\ []), to: Task.Supervisor
   defdelegate terminate_child(supervisor, pid), to: Task.Supervisor
 end
