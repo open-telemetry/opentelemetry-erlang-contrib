@@ -53,6 +53,9 @@ opentelemetry_cowboy:
 opentelemetry_ecto:
   - instrumentation/opentelemetry_ecto/**/*
 
+opentelemetry_nebulex:
+  - instrumentation/opentelemetry_nebulex/**/*
+
 opentelemetry_oban:
   - instrumentation/opentelemetry_oban/**/*
 
@@ -64,6 +67,9 @@ opentelemetry_process_propagator:
 
 opentelemetry_redix:
   - instrumentation/opentelemetry_redix/**/*
+
+opentelemetry_req:
+  - instrumentation/opentelemetry_req/**/*
 
 opentelemetry_finch:
   - instrumentation/opentelemetry_finch/**/*

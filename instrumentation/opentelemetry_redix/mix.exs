@@ -51,7 +51,7 @@ defmodule OpentelemetryRedix.MixProject do
       {:ex_doc, "~> 0.29.0", only: [:dev], runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.1.0"},
+      {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:redix, "~> 1.0", only: [:dev, :test]},
       {:telemetry, "~> 0.4 or ~> 1.0"}

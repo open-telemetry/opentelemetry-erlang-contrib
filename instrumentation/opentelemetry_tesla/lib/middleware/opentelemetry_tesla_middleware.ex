@@ -59,7 +59,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
     result
   end
 
-  defp handle_result({:ok, %Tesla.Env{status: status} = env}) when status > 400 do
+  defp handle_result({:ok, %Tesla.Env{status: status} = env}) when status >= 400 do
     OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
 
     {:ok, env}
