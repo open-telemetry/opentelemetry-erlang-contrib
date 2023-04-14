@@ -106,7 +106,9 @@ defmodule OpentelemetryReq do
   defp format_exception(_), do: ""
 
   defp span_name(request) do
-    Req.Request.get_private(request, :path_params_template)
+    Req.Request.get_private(request, :span_name) ||
+      Req.Request.get_private(request, :path_params_template) ||
+      request.url.path
   end
 
   defp build_req_attrs(request) do
