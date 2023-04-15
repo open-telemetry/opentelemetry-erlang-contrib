@@ -182,14 +182,6 @@ defmodule OpentelemetryReq do
     end
   end
 
-  defp url(uri) do
-    if uri.query do
-      uri.path <> "?" <> uri.query
-    else
-      uri.path
-    end
-  end
-
   defp http_method(method) do
     case method do
       :get -> :GET
