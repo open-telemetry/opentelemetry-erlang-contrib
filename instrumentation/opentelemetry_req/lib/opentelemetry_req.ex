@@ -122,14 +122,19 @@ defmodule OpentelemetryReq do
   defp format_exception(_), do: ""
 
   defp span_name(request) do
-    Req.Request.get_private(request, :span_name) ||
-      Req.Request.get_private(request, :path_params_template) ||
-      request.url.path
+    route =
+      Req.Request.get_private(request, :span_name) ||
+        Req.Request.get_private(request, :path_params_template) ||
+        request.url.path
+
+    method = http_method(request.method)
+
+    "#{method} #{route}"
   end
 
   defp build_req_attrs(request) do
     uri = request.url
-    url = url(uri)
+    url = sanitize_url(uri)
 
     %{
       Trace.http_method() => http_method(request.method),
@@ -140,6 +145,11 @@ defmodule OpentelemetryReq do
     }
     |> maybe_append_req_content_length(request)
     |> maybe_append_retry_count(request)
+  end
+
+  defp sanitize_url(uri) do
+    %{uri | userinfo: nil}
+    |> URI.to_string()
   end
 
   defp maybe_append_req_content_length(attrs, req) do
