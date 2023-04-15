@@ -122,14 +122,16 @@ defmodule OpentelemetryReq do
   defp format_exception(_), do: ""
 
   defp span_name(request) do
-    route =
-      Req.Request.get_private(request, :span_name) ||
-        Req.Request.get_private(request, :path_params_template) ||
-        request.url.path
+    case request.options[:span_name] do
+      nil ->
+        route = Req.Request.get_private(request, :path_params_template) || request.url.path
 
-    method = http_method(request.method)
+        method = http_method(request.method)
+        "#{method} #{route}"
 
-    "#{method} #{route}"
+      span_name ->
+        span_name
+    end
   end
 
   defp build_req_attrs(request) do
