@@ -289,16 +289,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
-  test "Puts the `non_error_statuses` option into Tesla.Env's `opts`" do
-    assert {:ok, env} =
-             Tesla.Middleware.OpenTelemetry.call(%Tesla.Env{url: ""}, [],
-               non_error_statuses: [404]
-             )
-
-    assert env.opts[:non_error_statuses] == [404]
-  end
-
-  test "Does not mark Span status as :errors if error status is within non_error_statuses opt list",
+  test "Marks Span status as :error if error status is within `mark_status_ok` opt list",
        %{bypass: bypass} do
     defmodule TestClient do
       def get(client) do
@@ -308,7 +299,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       def client(url) do
         middleware = [
           {Tesla.Middleware.BaseUrl, url},
-          {Tesla.Middleware.OpenTelemetry, non_error_statuses: [404]}
+          {Tesla.Middleware.OpenTelemetry, mark_status_ok: [404]}
         ]
 
         Tesla.client(middleware)
@@ -324,8 +315,36 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     |> TestClient.client()
     |> TestClient.get()
 
-    assert_receive {:span, _}
-    refute_receive {:span, span(status: {:status, :error, ""})}
+    assert_receive {:span, span(status: {:status, :ok, ""})}
+  end
+
+  test "Marks Span status as :ok unless error status is within `mark_status_ok` opt list",
+       %{bypass: bypass} do
+    defmodule TestClient do
+      def get(client) do
+        Tesla.get(client, "/users/")
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          {Tesla.Middleware.OpenTelemetry, mark_status_ok: []}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      Plug.Conn.resp(conn, 404, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> TestClient.client()
+    |> TestClient.get()
+
+    assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
   test "Appends query string parameters to http.url attribute", %{bypass: bypass} do
