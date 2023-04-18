@@ -36,6 +36,7 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 - [opentelemetry-cowboy](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_cowboy)
 - [opentelemetry-phoenix](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix)
 - [opentelemetry-ecto](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto)
+- [opentelemetry-req](https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_req)
 
 ## Supported Runtimes
 
