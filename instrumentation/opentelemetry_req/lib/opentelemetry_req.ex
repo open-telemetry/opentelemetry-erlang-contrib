@@ -5,17 +5,20 @@ defmodule OpentelemetryReq do
   expected by default and an error will be raised if the path params option is
   not set for the request.
 
-  Given the steps pipeline can be halted to skip further steps from running, it is important
-  to _append_ request and response steps _after_ this step to ensure execution. Spans are not
-  created until the request is completed or errored.
+  Spans are not created until the request is completed or errored.
 
-  ### Example
+  ## Request Options
+
+    * `:span_name` - `String.t()` if provided, overrides the span name. Defaults to `nil`.
+    * `:no_path_params` - `boolean()` when set to `true` no path params are expected for the request. Defaults to `false`
+    * `:propagate_trace_ctx` - `boolean()` when set to `true`, trace headers will be propagated. Defaults to `false`
+
+  ### Example with path_params
 
   ```
   client =
     Req.new()
-    |> OpentelemetryReq.attach()
-    |> Req.Request.merge_options(
+    |> OpentelemetryReq.attach(
       base_url: "http://localhost:4000",
       propagate_trace_ctx: true
     )
@@ -26,11 +29,24 @@ defmodule OpentelemetryReq do
     path_params: [user_id: user_id]
   )
   ```
-  ## Request Options
 
-    * `:span_name` - `String.t()` if provided, overrides the span name. Defaults to `nil`.
-    * `:no_path_params` - `boolean()` when set to `true` no path params are expected for the request. Defaults to `false`
-    * `:propagate_trace_ctx` - `boolean()` when set to `true`, trace headers will be propagated. Defaults to `false`
+  ### Example without path_params
+
+  ```
+  client =
+    Req.new()
+    |> OpentelemetryReq.attach(
+      base_url: "http://localhost:4000",
+      propagate_trace_ctx: true,
+      no_path_params: true
+    )
+
+  client
+  |> Req.get(
+    url: "/api/users"
+  )
+  ```
+  If you don't set `path_params` the request will raise.
   """
 
   alias OpenTelemetry.Tracer
@@ -106,12 +122,23 @@ defmodule OpentelemetryReq do
   defp format_exception(_), do: ""
 
   defp span_name(request) do
-    Req.Request.get_private(request, :path_params_template)
+    case request.options[:span_name] do
+      nil ->
+        method = http_method(request.method)
+
+        case Req.Request.get_private(request, :path_params_template) do
+          nil -> method
+          params_template -> "#{method} #{params_template}"
+        end
+
+      span_name ->
+        span_name
+    end
   end
 
   defp build_req_attrs(request) do
     uri = request.url
-    url = url(uri)
+    url = sanitize_url(uri)
 
     %{
       Trace.http_method() => http_method(request.method),
@@ -122,6 +149,11 @@ defmodule OpentelemetryReq do
     }
     |> maybe_append_req_content_length(request)
     |> maybe_append_retry_count(request)
+  end
+
+  defp sanitize_url(uri) do
+    %{uri | userinfo: nil}
+    |> URI.to_string()
   end
 
   defp maybe_append_req_content_length(attrs, req) do
@@ -151,14 +183,6 @@ defmodule OpentelemetryReq do
       Map.put(attrs, Trace.http_retry_count(), retry_count)
     else
       attrs
-    end
-  end
-
-  defp url(uri) do
-    if uri.query do
-      uri.path <> "?" <> uri.query
-    else
-      uri.path
     end
   end
 
