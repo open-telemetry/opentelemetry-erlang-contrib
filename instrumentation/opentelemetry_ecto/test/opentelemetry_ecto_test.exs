@@ -50,8 +50,6 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.instance": "opentelemetry_ecto_test",
-             "db.name": "opentelemetry_ecto_test",
-             "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
              "db.type": :sql,
              "db.url": "ecto://localhost",
              decode_time_microseconds: _,
@@ -60,6 +58,14 @@ defmodule OpentelemetryEctoTest do
              source: "users",
              total_time_microseconds: _
            } = :otel_attributes.map(attributes)
+  end
+
+  test "include sanitized query" do
+    attach_handler(query_sanitizer: fn query -> query end)
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
   end
 
   test "include additionaL_attributes" do
@@ -83,8 +89,6 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.instance": "opentelemetry_ecto_test",
-             "db.name": "opentelemetry_ecto_test",
-             "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
              "db.type": :sql,
              "db.url": "ecto://localhost",
              decode_time_milliseconds: _,

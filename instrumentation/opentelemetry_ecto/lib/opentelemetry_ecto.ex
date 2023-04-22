@@ -31,7 +31,6 @@ defmodule OpentelemetryEcto do
 
     * `:time_unit` - a time unit used to convert the values of query phase
       timings, defaults to `:microsecond`. See `System.convert_time_unit/3`
-
     * `:span_prefix` - the first part of the span name, as a `String.t`,
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
@@ -39,6 +38,10 @@ defmodule OpentelemetryEcto do
     * `:additional_attributes` - additional attributes to include in the span. If there
       are conflits with default provided attributes, the ones provided with
       this config will have precedence.
+    * `:query_sanitizer` - a function that takes a query string and returns a sanitized
+      version of it. This is useful for removing sensitive information from the
+      query string. Unless this option is provided, query statements will not be
+      recorded on spans.
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -89,13 +92,21 @@ defmodule OpentelemetryEcto do
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
       "db.type": db_type,
-      "db.statement": query,
       source: source,
       "db.instance": database,
       "db.name": database,
       "db.url": url,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
+
+    base_attributes =
+      case Keyword.fetch(config, :query_sanitizer) do
+        {:ok, sanitizer} ->
+          Map.put(base_attributes, :"db.statement", sanitizer.(query))
+
+        :error ->
+          base_attributes
+      end
 
     attributes =
       measurements
