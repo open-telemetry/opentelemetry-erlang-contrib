@@ -13,7 +13,13 @@ defmodule OpentelemetryEcto.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       source_url:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto"
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto",
+      docs: [
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_ecto/%{path}#L%{line}",
+        main: "OpentelemetryEcto",
+        extras: ["README.md"]
+      ]
     ]
   end
 
