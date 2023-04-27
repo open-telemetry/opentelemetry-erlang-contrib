@@ -1,4 +1,4 @@
-defmodule Telepoison do
+defmodule OpentelemetryHTTPoison do
   @moduledoc """
   OpenTelemetry-instrumented wrapper around HTTPoison.Base
 
@@ -17,8 +17,8 @@ defmodule Telepoison do
   alias OpenTelemetry.Tracer
 
   @doc ~S"""
-  Configures Telepoison using the provided `opts` `Keyword list`.
-  You should call this function within your application startup, before Telepoison is used.
+  Configures OpentelemetryHTTPoison using the provided `opts` `Keyword list`.
+  You should call this function within your application startup, before OpentelemetryHTTPoison is used.
 
   Using the `:infer_route` option, you can customise the URL resource route inference procedure
   that is used to set the `http.route` Open Telemetry metadata attribute.
@@ -27,19 +27,19 @@ defmodule Telepoison do
   then that function is used to determine the inference.
 
   If no value is provided then the out of the box, conservative inference provided by
-  `Telepoison.URI.infer_route_from_request/1` is used to determine the inference.
+  `OpentelemetryHTTPoison.URI.infer_route_from_request/1` is used to determine the inference.
 
-  This can be overridden per each call to `Telepoison.request/1`.
+  This can be overridden per each call to `OpentelemetryHTTPoison.request/1`.
 
     ## Examples
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       :ok
 
       iex> infer_fn = fn
       ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
       ...> end
-      iex> Telepoison.setup(infer_route: infer_fn)
+      iex> OpentelemetryHTTPoison.setup(infer_route: infer_fn)
       :ok
 
   """
@@ -48,7 +48,7 @@ defmodule Telepoison do
       fn ->
         case Keyword.get(opts, :infer_route) do
           nil ->
-            {:ok, &Telepoison.URI.infer_route_from_request/1}
+            {:ok, &OpentelemetryHTTPoison.URI.infer_route_from_request/1}
 
           infer_fn when is_function(infer_fn, 1) ->
             {:ok, infer_fn}
@@ -71,9 +71,9 @@ defmodule Telepoison do
   end
 
   @doc ~S"""
-  Performs a request using Telepoison with the provided `t:HTTPoison.Request/0` `request`.
+  Performs a request using OpentelemetryHTTPoison with the provided `t:HTTPoison.Request/0` `request`.
 
-  Depending on configuration passed to `Telepoison.setup/1` and whether or not the `:ot_resource_route`
+  Depending on configuration passed to `OpentelemetryHTTPoison.setup/1` and whether or not the `:ot_resource_route`
   option is set to `:infer` (provided as a part of the `t:HTTPoison.Request/0` `options` `Keyword list`)
   this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
   the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
@@ -85,24 +85,24 @@ defmodule Telepoison do
 
     ## Examples
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}]}
-      iex> Telepoison.request(request)
+      iex> OpentelemetryHTTPoison.request(request)
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
       ...> options: [ot_resource_route: :infer]}
-      iex> Telepoison.request(request)
+      iex> OpentelemetryHTTPoison.request(request)
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       iex> resource_route = "/users/edit/"
       iex> request = %HTTPoison.Request{
       ...> method: :post,
@@ -110,9 +110,9 @@ defmodule Telepoison do
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
       ...> options: [ot_resource_route: resource_route]}
-      iex> Telepoison.request(request)
+      iex> OpentelemetryHTTPoison.request(request)
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       iex> infer_fn = fn
       ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
       ...> end
@@ -122,22 +122,23 @@ defmodule Telepoison do
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
       ...> options: [ot_resource_route: infer_fn]}
-      iex> Telepoison.request(request)
+      iex> OpentelemetryHTTPoison.request(request)
 
-      iex> Telepoison.setup()
+      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
       ...> body: ~s({"foo": 3}),
       ...> headers: [{"Accept", "application/json"}],
       ...> options: [ot_resource_route: :ignore]}
-      iex> Telepoison.request(request)
+      iex> OpentelemetryHTTPoison.request(request)
 
   """
   def request(%Request{options: opts} = request) do
     save_parent_ctx()
 
-    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name =
+      Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
 
     resource_route = get_resource_route(opts, request)
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()

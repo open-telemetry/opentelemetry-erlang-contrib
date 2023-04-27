@@ -1,4 +1,4 @@
-defmodule Telepoison.URI do
+defmodule OpentelemetryHTTPoison.URI do
   @moduledoc """
   Exposes a function to normalise URIs in a format suitable for usage as Open Telemetry metadata.
   """
@@ -11,7 +11,8 @@ defmodule Telepoison.URI do
   @doc """
   Infers the route of the provided `HTTPoison.Request`, returned in a format suitable for usage as Open Telemetry metadata.
   """
-  def infer_route_from_request(%Request{url: url}) when is_binary(url), do: infer_route_from_url(url)
+  def infer_route_from_request(%Request{url: url}) when is_binary(url),
+    do: infer_route_from_url(url)
 
   def infer_route_from_request(%Request{}), do: @default_route
 

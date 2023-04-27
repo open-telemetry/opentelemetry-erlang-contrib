@@ -1,9 +1,9 @@
-defmodule TelepoisonTest do
-  alias Telepoison
+defmodule OpentelemetryHTTPoisonTest do
+  alias OpentelemetryHTTPoison
   alias OpenTelemetry.Tracer
   use ExUnit.Case
 
-  doctest Telepoison
+  doctest OpentelemetryHTTPoison
 
   require OpenTelemetry.Tracer
   require Record
@@ -18,13 +18,13 @@ defmodule TelepoisonTest do
     :ok
   end
 
-  describe "Telepoison setup without additional configuration" do
+  describe "OpentelemetryHTTPoison setup without additional configuration" do
     setup do
-      Telepoison.setup()
+      OpentelemetryHTTPoison.setup()
     end
 
     test "standard http client span attribute are set in span" do
-      Telepoison.get!("http://localhost:8000")
+      OpentelemetryHTTPoison.get!("http://localhost:8000")
 
       assert_receive {:span, span(attributes: attributes_record)}
       attributes = elem(attributes_record, 4)
@@ -37,68 +37,80 @@ defmodule TelepoisonTest do
     end
 
     test "traceparent header is injected when no headers" do
-      %HTTPoison.Response{request: %{headers: headers}} = Telepoison.get!("http://localhost:8000")
+      %HTTPoison.Response{request: %{headers: headers}} =
+        OpentelemetryHTTPoison.get!("http://localhost:8000")
+
       assert "traceparent" in Enum.map(headers, &elem(&1, 0))
     end
 
     test "traceparent header is injected when list headers" do
       %HTTPoison.Response{request: %{headers: headers}} =
-        Telepoison.get!("http://localhost:8000", [{"Accept", "application/json"}])
+        OpentelemetryHTTPoison.get!("http://localhost:8000", [{"Accept", "application/json"}])
 
       assert "traceparent" in Enum.map(headers, &elem(&1, 0))
     end
 
     test "traceparent header is injected to user-supplied map headers" do
       %HTTPoison.Response{request: %{headers: headers}} =
-        Telepoison.get!("http://localhost:8000", %{"Accept" => "application/json"})
+        OpentelemetryHTTPoison.get!("http://localhost:8000", %{"Accept" => "application/json"})
 
       assert "traceparent" in Enum.map(headers, &elem(&1, 0))
     end
 
-    test "additional span attributes can be passed to Telepoison invocation" do
-      Telepoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
+    test "additional span attributes can be passed to OpentelemetryHTTPoison invocation" do
+      OpentelemetryHTTPoison.get!("http://localhost:8000", [],
+        ot_attributes: [{"app.callname", "mariorossi"}]
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
     end
 
-    test "resource route can be explicitly passed to Telepoison invocation as a string" do
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
+    test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a string" do
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: "/user/edit"
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit"})
     end
 
-    test "resource route can be explicitly passed to Telepoison invocation as a function" do
+    test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a function" do
       infer_fn = fn request -> URI.parse(request.url).path end
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: infer_fn)
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: infer_fn
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
     end
 
     test "resource route inferrence can be explicitly ignored" do
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :ignore)
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: :ignore
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       refute confirm_http_route_attribute(attributes)
     end
 
     test "resource route inferrence can be implicitly ignored" do
-      Telepoison.get!("http://localhost:8000/user/edit/24")
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       refute confirm_http_route_attribute(attributes)
     end
 
-    test "resource route inferrence fails if an incorrect value is passed to the Telepoison invocation" do
+    test "resource route inferrence fails if an incorrect value is passed to the OpentelemetryHTTPoison invocation" do
       assert_raise(ArgumentError, fn ->
-        Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: nil)
+        OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+          ot_resource_route: nil
+        )
       end)
 
       assert_raise(ArgumentError, fn ->
-        Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: 1)
+        OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: 1)
       end)
     end
   end
@@ -107,7 +119,7 @@ defmodule TelepoisonTest do
     test "with a successful request" do
       Tracer.with_span "parent" do
         pre_request_ctx = Tracer.current_span_ctx()
-        Telepoison.get("http://localhost:8000")
+        OpentelemetryHTTPoison.get("http://localhost:8000")
 
         post_request_ctx = Tracer.current_span_ctx()
         assert post_request_ctx == pre_request_ctx
@@ -117,7 +129,7 @@ defmodule TelepoisonTest do
     test "with an nxdomain request" do
       Tracer.with_span "parent" do
         pre_request_ctx = Tracer.current_span_ctx()
-        Telepoison.get("http://domain.invalid:8000")
+        OpentelemetryHTTPoison.get("http://domain.invalid:8000")
 
         post_request_ctx = Tracer.current_span_ctx()
         assert post_request_ctx == pre_request_ctx
@@ -127,78 +139,90 @@ defmodule TelepoisonTest do
 
   describe "span_status is set to error for" do
     test "status codes >= 400" do
-      Telepoison.get!("http://localhost:8000/status/400")
+      OpentelemetryHTTPoison.get!("http://localhost:8000/status/400")
 
       assert_receive {:span, span(status: {:status, :error, ""})}
     end
 
     test "HTTP econnrefused errors" do
-      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://localhost:8001")
+      {:error, %HTTPoison.Error{reason: expected_reason}} =
+        OpentelemetryHTTPoison.get("http://localhost:8001")
 
       assert_receive {:span, span(status: {:status, :error, recorded_reason})}
       assert inspect(expected_reason) == recorded_reason
     end
 
     test "HTTP nxdomain errors" do
-      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("http://domain.invalid:8001")
+      {:error, %HTTPoison.Error{reason: expected_reason}} =
+        OpentelemetryHTTPoison.get("http://domain.invalid:8001")
 
       assert_receive {:span, span(status: {:status, :error, recorded_reason})}
       assert inspect(expected_reason) == recorded_reason
     end
 
     test "HTTP tls errors" do
-      {:error, %HTTPoison.Error{reason: expected_reason}} = Telepoison.get("https://localhost:8000")
+      {:error, %HTTPoison.Error{reason: expected_reason}} =
+        OpentelemetryHTTPoison.get("https://localhost:8000")
+
       assert_receive {:span, span(status: {:status, :error, recorded_reason})}
       assert inspect(expected_reason) == recorded_reason
     end
   end
 
-  describe "Telepoison setup with additional configuration" do
-    test "resource route can be implicitly inferred by Telepoison invocation" do
-      Telepoison.setup()
+  describe "OpentelemetryHTTPoison setup with additional configuration" do
+    test "resource route can be implicitly inferred by OpentelemetryHTTPoison invocation" do
+      OpentelemetryHTTPoison.setup()
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: :infer
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "/user/:subpath")
     end
 
-    test "resource route can be implicitly inferred by Telepoison invocation via a function passed to Telepoison.setup/1" do
+    test "resource route can be implicitly inferred by OpentelemetryHTTPoison invocation via a function passed to OpentelemetryHTTPoison.setup/1" do
       infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      Telepoison.setup(infer_route: infer_fn)
+      OpentelemetryHTTPoison.setup(infer_route: infer_fn)
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: :infer
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "/user/edit/24")
     end
 
-    test "implicit resource route inference can be overridden with a function passed to the Telepoison invocation" do
+    test "implicit resource route inference can be overridden with a function passed to the OpentelemetryHTTPoison invocation" do
       setup_infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
       invocation_infer_fn = fn _ -> "test" end
 
-      Telepoison.setup(infer_route: setup_infer_fn)
+      OpentelemetryHTTPoison.setup(infer_route: setup_infer_fn)
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: invocation_infer_fn
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "test")
     end
 
-    test "implicit resource route inference can be overridden with a string passed to the Telepoison invocation" do
+    test "implicit resource route inference can be overridden with a string passed to the OpentelemetryHTTPoison invocation" do
       setup_infer_fn = fn
         %HTTPoison.Request{} = request -> URI.parse(request.url).path
       end
 
-      Telepoison.setup(infer_route: setup_infer_fn)
+      OpentelemetryHTTPoison.setup(infer_route: setup_infer_fn)
 
-      Telepoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
+        ot_resource_route: "test"
+      )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "test")

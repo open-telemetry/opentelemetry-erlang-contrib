@@ -1,41 +1,41 @@
-# Telepoison
+# OpentelemetryHTTPoison
 
-[![Module Version](https://img.shields.io/hexpm/v/telepoison.svg)](https://hex.pm/packages/telepoison)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/telepoison/)
-[![Total Downloads](https://img.shields.io/hexpm/dt/telepoison.svg)](https://hex.pm/packages/telepoison)
+[![Module Version](https://img.shields.io/hexpm/v/opentelemetry_httpoison.svg)](https://hex.pm/packages/opentelemetry_httpoison)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/opentelemetry_httpoison/)
+[![Total Downloads](https://img.shields.io/hexpm/dt/opentelemetry_httpoison.svg)](https://hex.pm/packages/opentelemetry_httpoison)
 
-Telepoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPoison.
+OpentelemetryHTTPoison is a [opentelemetry-instrumented](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/glossary.md#instrumented-library) wrapper around HTTPoison.
 
 ## Usage
 
-Call `Telepoison.setup/1` within your application start-up.
+Call `OpentelemetryHTTPoison.setup/1` within your application start-up.
 
-Replace usages of the `HTTPoison` module with `Telepoison` when calling one of the *derived* request functions provided by `HTTPoison` (`HTTPoison.get/3`, `HTTPoison.get!/3` etc.)
+Replace usages of the `HTTPoison` module with `OpentelemetryHTTPoison` when calling one of the *derived* request functions provided by `HTTPoison` (`HTTPoison.get/3`, `HTTPoison.get!/3` etc.)
 
 ```elixir
 # Before
 HTTPoison.get!(url, headers, opts)
 
 # After
-Telepoison.get!(url, headers, opts)
+OpentelemetryHTTPoison.get!(url, headers, opts)
 ```
 
 ## Configuration
 
-`Telepoison.setup/1` takes a `Keyword list` that can configure how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+`OpentelemetryHTTPoison.setup/1` takes a `Keyword list` that can configure how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
 
-* If no value is provided then the out of the box, conservative inference provided by `Telepoison.URI.infer_route_from_request/1` is used to determine the inference
+* If no value is provided then the out of the box, conservative inference provided by `OpentelemetryHTTPoison.URI.infer_route_from_request/1` is used to determine the inference
 
 * If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
 
-This can be overridden per each call to Telepoison functions that wrap `Telepoison.request/1`, such as `Telepoison.get/3`, `Telepoison.get!/3`, `Telepoison.post/3` etc.
+This can be overridden per each call to OpentelemetryHTTPoison functions that wrap `OpentelemetryHTTPoison.request/1`, such as `OpentelemetryHTTPoison.get/3`, `OpentelemetryHTTPoison.get!/3`, `OpentelemetryHTTPoison.post/3` etc.
 
 See here for [examples](#examples)
 
 ## Open Telemetry integration
 
-Additionally, `Telepoison` provides some options that can be added to each derived function via
-the `Keyword list` `opts` parameter (or the `t:HTTPoison.Request/0` `Keyword list` `options` parameter if calling `Telepoison.Request/1` directly). These are prefixed with `:ot_`.
+Additionally, `OpentelemetryHTTPoison` provides some options that can be added to each derived function via
+the `Keyword list` `opts` parameter (or the `t:HTTPoison.Request/0` `Keyword list` `options` parameter if calling `OpentelemetryHTTPoison.Request/1` directly). These are prefixed with `:ot_`.
 
 * `:ot_span_name` - sets the span name.
 * `:ot_attributes` - a list of `{name, value}` `tuple` attributes that will be added to the span.
@@ -51,12 +51,12 @@ If the atom `:ignore` is provided then the `http.route` attribute is ignored ent
 
 ## Examples
 
-In the below examples, `Telepoison.get!/3` is used for the sake of simplicity but other functions derived from `Telepoison.request/1` can be used
+In the below examples, `OpentelemetryHTTPoison.get!/3` is used for the sake of simplicity but other functions derived from `OpentelemetryHTTPoison.request/1` can be used
 
 ```elixir
-Telepoison.setup()
+OpentelemetryHTTPoison.setup()
 
-Telepoison.get!(
+OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
   ot_span_name: "list example users",
@@ -67,7 +67,7 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no arguments
+* `OpentelemetryHTTPoison.setup/1` is called with no arguments
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/:subpath*
@@ -77,9 +77,9 @@ infer_fn = fn
   %HTTPoison.Request{} = request -> URI.parse(request.url).path
 end
 
-Telepoison.setup(infer_route: infer_fn)
+OpentelemetryHTTPoison.setup(infer_route: infer_fn)
 
-Telepoison.get!(
+OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
   ot_resource_route: :infer
@@ -88,15 +88,15 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* `OpentelemetryHTTPoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/list*
 
 ```elixir
-Telepoison.setup()
+OpentelemetryHTTPoison.setup()
 
-Telepoison.get!(
+OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
   ot_resource_route: "my secret path"
@@ -105,15 +105,15 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no `Keyword list` options
+* `OpentelemetryHTTPoison.setup/1` is called with no `Keyword list` options
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be set as *my secret path*
 
 ```elixir
-Telepoison.setup()
+OpentelemetryHTTPoison.setup()
 
-Telepoison.get!(
+OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
   ot_resource_route: :ignore
@@ -122,20 +122,20 @@ Telepoison.get!(
 
 In the example above:
 
-* `Telepoison.setup/1` is called with no `Keyword list` options
+* `OpentelemetryHTTPoison.setup/1` is called with no `Keyword list` options
 * `:ignore` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will not be set to any value
 
 ## How it works
 
-Telepoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
+OpentelemetryHTTPoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
 the [trace context propagation headers](https://www.w3.org/TR/trace-context/) in the request headers, and
 ends the span once the response is received.
 It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status`, `http.host` etc,
 based on the request and response data.
 
-Telepoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
+OpentelemetryHTTPoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
 opentelemetry-instrumented library, e.g. [opentelemetry_plug](https://github.com/opentelemetry-beam/opentelemetry_plug).
 These do the opposite work: they take the trace context information from the request headers,
 and they create a [SERVER](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) span which becomes the currently active span.
@@ -147,11 +147,11 @@ through HTTP "jumps".
 
 * The [Erlang opentelemetry SDK](https://github.com/open-telemetry/opentelemetry-erlang) stores
   the currently active span in a `pdict`, a per-process dict.
-  If Telepoison is called from a different process than the one that initially handled the request and created
-  the "server-side" span, Telepoison won't find a parent span and will create a new root client span,
+  If OpentelemetryHTTPoison is called from a different process than the one that initially handled the request and created
+  the "server-side" span, OpentelemetryHTTPoison won't find a parent span and will create a new root client span,
   losing the trace context.
   In this case, your only option to correctly propagate the trace context is to manually pass around the parent
-  span, and pass it to Telepoison when doing the HTTP client request.
+  span, and pass it to OpentelemetryHTTPoison when doing the HTTP client request.
 
 * If the request fails due to nxdomain, the `process_response_status_code` hook is not called and therefore
   the span is not ended.

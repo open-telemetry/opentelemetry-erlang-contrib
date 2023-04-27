@@ -1,13 +1,13 @@
-defmodule Telepoison.URITest do
+defmodule OpentelemetryHTTPoison.URITest do
   @moduledoc """
-  Tests for `Telepoison.URI`
+  Tests for `OpentelemetryHTTPoison.URI`
   """
 
   alias HTTPoison.Request
 
   use ExUnit.Case
 
-  alias Telepoison.URI, as: UtilsURI
+  alias OpentelemetryHTTPoison.URI, as: UtilsURI
 
   @base_uri "https://www.test.com"
 

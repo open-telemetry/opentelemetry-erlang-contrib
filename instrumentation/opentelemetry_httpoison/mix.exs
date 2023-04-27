@@ -1,12 +1,12 @@
-defmodule Telepoison.MixProject do
+defmodule OpentelemetryHTTPoison.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/telepoison"
+  @source_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_httpoison"
   @version "1.1.2"
 
   def project do
     [
-      app: :telepoison,
+      app: :opentelemetry_httpoison,
       version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
@@ -45,8 +45,9 @@ defmodule Telepoison.MixProject do
 
   defp package do
     [
-      name: "telepoison",
-      description: "Telepoison is a opentelemetry-instrumented wrapper around HTTPoison",
+      name: "opentelemetry_httpoison",
+      description:
+        "OpentelemetryHTTPoison is a opentelemetry-instrumented wrapper around HTTPoison",
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @source_url,
