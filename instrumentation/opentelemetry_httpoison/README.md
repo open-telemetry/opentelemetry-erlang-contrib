@@ -8,8 +8,6 @@ OpentelemetryHTTPoison is a [opentelemetry-instrumented](https://github.com/open
 
 ## Usage
 
-Call `OpentelemetryHTTPoison.setup/1` within your application start-up.
-
 Replace usages of the `HTTPoison` module with `OpentelemetryHTTPoison` when calling one of the *derived* request functions provided by `HTTPoison` (`HTTPoison.get/3`, `HTTPoison.get!/3` etc.)
 
 ```elixir
@@ -22,13 +20,23 @@ OpentelemetryHTTPoison.get!(url, headers, opts)
 
 ## Configuration
 
-`OpentelemetryHTTPoison.setup/1` takes a `Keyword list` that can configure how the `http.route` Open Telemetry metadata will be set per request using the `:infer_route` option
+OpentelemetryHTTPoison can be configured through `config :opentelemetry_httpoison`. The configurable options are:
 
-* If no value is provided then the out of the box, conservative inference provided by `OpentelemetryHTTPoison.URI.infer_route_from_request/1` is used to determine the inference
+* `:ot_attributes`: what default Open Telemetry metadata attributes will be sent per request
 
-* If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+  If no value is provided, then no default Open Telemetry metadata attributes will sent per request by default
 
-This can be overridden per each call to OpentelemetryHTTPoison functions that wrap `OpentelemetryHTTPoison.request/1`, such as `OpentelemetryHTTPoison.get/3`, `OpentelemetryHTTPoison.get!/3`, `OpentelemetryHTTPoison.post/3` etc.
+  If a `list` of two element `tuple`s (both elements of `String.t()`) is provided, then these will form the default Open Telemetry metadata attributes sent per request
+
+  The first element of a provided `tuple` is the attribute name, e.g. `service.name`, whilst the second element is the attribute value, e.g. "shoppingcart"
+
+* `:infer_route`: how the `http.route` Open Telemetry metadata will be set per request
+
+  If no value is provided then the out of the box, conservative inference provided by `OpentelemetryHTTPoison.URI.infer_route_from_request/1` is used to determine the inference
+
+  If a function with an arity of 1 (the argument given being the `t:HTTPoison.Request/0` `request`) is provided then that function is used to determine the inference
+
+Both of these can be overridden per each call to OpentelemetryHTTPoison functions that wrap `OpentelemetryHTTPoison.request/1`, such as `OpentelemetryHTTPoison.get/3`, `OpentelemetryHTTPoison.get!/3`, `OpentelemetryHTTPoison.post/3` etc.
 
 See here for [examples](#examples)
 
@@ -54,7 +62,8 @@ If the atom `:ignore` is provided then the `http.route` attribute is ignored ent
 In the below examples, `OpentelemetryHTTPoison.get!/3` is used for the sake of simplicity but other functions derived from `OpentelemetryHTTPoison.request/1` can be used
 
 ```elixir
-OpentelemetryHTTPoison.setup()
+config :opentelemetry_httpoison,
+  ot_attributes: [{"service.name", "users"}]
 
 OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
@@ -67,17 +76,32 @@ OpentelemetryHTTPoison.get!(
 
 In the example above:
 
-* `OpentelemetryHTTPoison.setup/1` is called with no arguments
+* OpentelemetryHTTPoison is configured with `{"service.name", "users"}` as the value for the `:ot_attributes` option
+* `:infer` is passed as the value for the `:ot_resource_route` `Keyword list` option
+
+Given the above, the `service.name` attribute will be set to "users" and the `http.route` attribute will be inferred as */user/:subpath*
+
+```elixir
+OpentelemetryHTTPoison.get!(
+  "https://www.example.com/user/list",
+  [],
+  ot_span_name: "list example users",
+  ot_attributes: [{"example.language", "en"}],
+  ot_resource_route: :infer
+)
+```
+
+In the example above:
+
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/:subpath*
 
 ```elixir
-infer_fn = fn 
-  %HTTPoison.Request{} = request -> URI.parse(request.url).path
-end
-
-OpentelemetryHTTPoison.setup(infer_route: infer_fn)
+config :opentelemetry_httpoison,
+  infer_route: fn 
+    %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  end
 
 OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
@@ -88,14 +112,12 @@ OpentelemetryHTTPoison.get!(
 
 In the example above:
 
-* `OpentelemetryHTTPoison.setup/1` is called with the `:infer_route` `Keyword list` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
+* OpentelemetryHTTPoison is configured with the `:infer_route` option set to a function which takes a `%HTTPoison.Request/0` argument, returning the path of the request URL
 * `:infer` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be inferred as */user/list*
 
 ```elixir
-OpentelemetryHTTPoison.setup()
-
 OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
@@ -105,14 +127,11 @@ OpentelemetryHTTPoison.get!(
 
 In the example above:
 
-* `OpentelemetryHTTPoison.setup/1` is called with no `Keyword list` options
 * `"my secret path"` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will be set as *my secret path*
 
 ```elixir
-OpentelemetryHTTPoison.setup()
-
 OpentelemetryHTTPoison.get!(
   "https://www.example.com/user/list",
   [],
@@ -122,7 +141,6 @@ OpentelemetryHTTPoison.get!(
 
 In the example above:
 
-* `OpentelemetryHTTPoison.setup/1` is called with no `Keyword list` options
 * `:ignore` is passed as the value for `:ot_resource_route` `Keyword list` option
 
 Given the above, the `http.route` attribute will not be set to any value
@@ -132,7 +150,7 @@ Given the above, the `http.route` attribute will not be set to any value
 OpentelemetryHTTPoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
 the [trace context propagation headers](https://www.w3.org/TR/trace-context/) in the request headers, and
 ends the span once the response is received.
-It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status`, `http.host` etc,
+It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status` etc,
 based on the request and response data.
 
 OpentelemetryHTTPoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
@@ -160,4 +178,12 @@ through HTTP "jumps".
 
 * Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
-* Support for fixed span attributes, either in `Teleposion.setup` or in config
+* Support for fixed span attributes
+* A lot of other stuff..
+
+## Copyright and License
+
+Copyright (c) 2020 Prima.it
+
+This work is free. You can redistribute it and/or modify it under the
+terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.

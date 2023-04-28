@@ -9,16 +9,31 @@ defmodule OpentelemetryHTTPoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.Tracer
+  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
   require OpenTelemetry.Span
+  require OpenTelemetry.Tracer
   require Record
+  require Logger
 
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
+  alias OpentelemetryHTTPoison.Configuration
+
+  @http_url Atom.to_string(Conventions.http_url())
+  @http_method Atom.to_string(Conventions.http_method())
+  @http_route Atom.to_string(Conventions.http_route())
+  @http_status_code Atom.to_string(Conventions.http_status_code())
+  @net_peer_name Atom.to_string(Conventions.net_peer_name())
 
   @doc ~S"""
   Configures OpentelemetryHTTPoison using the provided `opts` `Keyword list`.
+
   You should call this function within your application startup, before OpentelemetryHTTPoison is used.
+  Using the `:ot_attributes` option, you can set default Open Telemetry metadata attributes
+  to be added to each OpentelemetryHTTPoison request in the format of a list of two element tuples, with both elements
+  being strings.
+
+  Attributes can be overridden per each call to `OpentelemetryHTTPoison.request/1`.
 
   Using the `:infer_route` option, you can customise the URL resource route inference procedure
   that is used to set the `http.route` Open Telemetry metadata attribute.
@@ -31,31 +46,27 @@ defmodule OpentelemetryHTTPoison do
 
   This can be overridden per each call to `OpentelemetryHTTPoison.request/1`.
 
-    ## Examples
-
-      iex> OpentelemetryHTTPoison.setup()
-      :ok
-
-      iex> infer_fn = fn
-      ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
-      ...> end
-      iex> OpentelemetryHTTPoison.setup(infer_route: infer_fn)
-      :ok
-
+  ## Examples
+  iex> OpentelemetryHTTPoison.setup()
+  :ok
+  iex> infer_fn = fn
+  ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  ...> end
+  iex> OpentelemetryHTTPoison.setup(infer_route: infer_fn)
+  :ok
+  iex> OpentelemetryHTTPoison.setup(ot_attributes: [{"service.name", "..."}, {"service.namespace", "..."}])
+  :ok
+  iex> infer_fn = fn
+  ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
+  ...> end
+  iex> ot_attributes = [{"service.name", "..."}, {"service.namespace", "..."}]
+  iex> OpentelemetryHTTPoison.setup(infer_route: infer_fn, ot_attributes: ot_attributes)
+  :ok
   """
   def setup(opts \\ []) do
-    Agent.start_link(
-      fn ->
-        case Keyword.get(opts, :infer_route) do
-          nil ->
-            {:ok, &OpentelemetryHTTPoison.URI.infer_route_from_request/1}
+    Logger.warning("setup/1 is deprecated, use `config :opentelemetry_httpoison, ...` instead")
 
-          infer_fn when is_function(infer_fn, 1) ->
-            {:ok, infer_fn}
-        end
-      end,
-      name: __MODULE__
-    )
+    Configuration.setup(opts)
 
     :ok
   end
@@ -67,13 +78,21 @@ defmodule OpentelemetryHTTPoison do
   end
 
   def process_request_headers(headers) when is_list(headers) do
-    :otel_propagator_text_map.inject(headers)
+    headers
+    # Convert atom header keys.
+    # otel_propagator_text_map only accepts string keys, while Request.headers() keys can be atoms or strings.
+    # The value in Request.headers() has to be a binary() so we don't need to convert it
+    #
+    # Note that this causes the header keys from HTTPoison.Response{request: %{headers: headers}} to also become strings
+    # while with plain HTTPoison they would remain atoms.
+    |> Enum.map(fn {k, v} -> {to_string(k), v} end)
+    |> :otel_propagator_text_map.inject()
   end
 
   @doc ~S"""
   Performs a request using OpentelemetryHTTPoison with the provided `t:HTTPoison.Request/0` `request`.
 
-  Depending on configuration passed to `OpentelemetryHTTPoison.setup/1` and whether or not the `:ot_resource_route`
+  Depending how `OpentelemetryHTTPoison` is configured and whether or not the `:ot_resource_route`
   option is set to `:infer` (provided as a part of the `t:HTTPoison.Request/0` `options` `Keyword list`)
   this may attempt to automatically set the `http.route` Open Telemetry metadata attribute by obtaining
   the first segment of the `t:HTTPoison.Request/0` `url` (since this part typically does not contain dynamic data)
@@ -85,7 +104,6 @@ defmodule OpentelemetryHTTPoison do
 
     ## Examples
 
-      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -93,7 +111,6 @@ defmodule OpentelemetryHTTPoison do
       ...> headers: [{"Accept", "application/json"}]}
       iex> OpentelemetryHTTPoison.request(request)
 
-      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -102,7 +119,6 @@ defmodule OpentelemetryHTTPoison do
       ...> options: [ot_resource_route: :infer]}
       iex> OpentelemetryHTTPoison.request(request)
 
-      iex> OpentelemetryHTTPoison.setup()
       iex> resource_route = "/users/edit/"
       iex> request = %HTTPoison.Request{
       ...> method: :post,
@@ -112,7 +128,6 @@ defmodule OpentelemetryHTTPoison do
       ...> options: [ot_resource_route: resource_route]}
       iex> OpentelemetryHTTPoison.request(request)
 
-      iex> OpentelemetryHTTPoison.setup()
       iex> infer_fn = fn
       ...>  %HTTPoison.Request{} = request -> URI.parse(request.url).path
       ...> end
@@ -124,7 +139,6 @@ defmodule OpentelemetryHTTPoison do
       ...> options: [ot_resource_route: infer_fn]}
       iex> OpentelemetryHTTPoison.request(request)
 
-      iex> OpentelemetryHTTPoison.setup()
       iex> request = %HTTPoison.Request{
       ...> method: :post,
       ...> url: "https://www.example.com/users/edit/2",
@@ -137,24 +151,28 @@ defmodule OpentelemetryHTTPoison do
   def request(%Request{options: opts} = request) do
     save_parent_ctx()
 
-    span_name =
-      Keyword.get_lazy(opts, :ot_span_name, fn -> compute_default_span_name(request) end)
+    span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> default_span_name(request) end)
 
-    resource_route = get_resource_route(opts, request)
     %URI{host: host} = request.url |> process_request_url() |> URI.parse()
 
-    attributes =
-      [
-        {"http.method", request.method |> Atom.to_string() |> String.upcase()},
-        {"http.url", request.url},
-        {"net.peer.name", host}
-      ] ++
-        Keyword.get(opts, :ot_attributes, []) ++
-        if resource_route != nil,
-          do: [{"http.route", resource_route}],
-          else: []
+    resource_route_attribute =
+      opts
+      |> Keyword.get(:ot_resource_route, :unset)
+      |> get_resource_route(request)
+      |> case do
+        resource_route when is_binary(resource_route) ->
+          [{@http_route, resource_route}]
 
-    request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: attributes})
+        nil ->
+          []
+      end
+
+    ot_attributes =
+      get_standard_ot_attributes(request, host) ++
+        get_ot_attributes(opts) ++
+        resource_route_attribute
+
+    request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
     Tracer.set_current_span(request_ctx)
 
     result = super(request)
@@ -179,7 +197,7 @@ defmodule OpentelemetryHTTPoison do
       Tracer.set_status(:error, "")
     end
 
-    Tracer.set_attribute("http.status_code", status_code)
+    Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
   end
@@ -189,11 +207,8 @@ defmodule OpentelemetryHTTPoison do
     restore_parent_ctx()
   end
 
-  def compute_default_span_name(request) do
-    method_str = request.method |> Atom.to_string() |> String.upcase()
-    %URI{authority: authority} = request.url |> process_request_url() |> URI.parse()
-    "#{method_str} #{authority}"
-  end
+  # see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
+  defp default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
@@ -207,29 +222,46 @@ defmodule OpentelemetryHTTPoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp get_resource_route(opts, request) do
-    case Keyword.get(opts, :ot_resource_route, :ignore) do
-      route when is_binary(route) ->
-        route
+  defp get_standard_ot_attributes(request, host) do
+    [
+      {@http_method,
+       request.method
+       |> Atom.to_string()
+       |> String.upcase()},
+      {@http_url, strip_uri_credentials(request.url)},
+      {@net_peer_name, host}
+    ]
+  end
 
-      infer_fn when is_function(infer_fn, 1) ->
-        infer_fn.(request)
+  defp get_ot_attributes(opts) do
+    default_ot_attributes = Configuration.get(:ot_attributes)
 
-      :infer ->
-        Agent.get(
-          __MODULE__,
-          fn
-            {:ok, infer_fn} when is_function(infer_fn, 1) ->
-              infer_fn.(request)
-          end
-        )
+    default_ot_attributes
+    |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
+    |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, value) end)
+    |> Enum.into([], fn {key, value} -> {key, value} end)
+  end
 
-      :ignore ->
-        nil
+  defp get_resource_route(option, request)
 
-      _ ->
-        raise ArgumentError,
-              "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
-    end
+  defp get_resource_route(route, _) when is_binary(route), do: route
+
+  defp get_resource_route(infer_fn, request) when is_function(infer_fn, 1), do: infer_fn.(request)
+
+  defp get_resource_route(:infer, request), do: Configuration.get(:infer_route).(request)
+
+  defp get_resource_route(:ignore, _), do: nil
+
+  defp get_resource_route(:unset, _), do: nil
+
+  defp get_resource_route(_unknown_option, _),
+    do:
+      raise(
+        ArgumentError,
+        "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
+      )
+
+  defp strip_uri_credentials(uri) do
+    uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
   end
 end
