@@ -62,18 +62,26 @@ defmodule OpentelemetryEctoTest do
 
   test "exclude unsantized query" do
     attach_handler()
-    Repo.all(from u in User, where: u.id == ^1)
+    Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
     assert !Map.has_key?(:otel_attributes.map(attributes), :"db.statement")
   end
 
-  test "include sanitized query" do
-    attach_handler(query_sanitizer: fn query -> query end)
+  test "include unsanitized query when enabled" do
+    attach_handler(db_statement: :enabled)
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
     assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
+  end
+
+  test "include santized query with sanitizer function" do
+    attach_handler(db_statement: fn (str) -> String.replace(str, "SELECT", "") end)
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"db.statement": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
   end
 
   test "include additional_attributes" do

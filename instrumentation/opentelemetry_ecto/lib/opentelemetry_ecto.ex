@@ -38,10 +38,12 @@ defmodule OpentelemetryEcto do
     * `:additional_attributes` - additional attributes to include in the span. If there
       are conflits with default provided attributes, the ones provided with
       this config will have precedence.
-    * `:query_sanitizer` - a function that takes a query string and returns a sanitized
-      version of it. This is useful for removing sensitive information from the
-      query string. Unless this option is provided, query statements will not be
-      recorded on spans.
+    * `:db_statement` - :disabled (default) | :enabled | fun
+      Whether or not to include db statements.
+      Optionally provide a function that takes a query string and returns a
+      sanitized version of it. This is useful for removing sensitive information from the
+      query string. Unless this option is `:enabled` or a function,
+      query statements will not be recorded on spans.
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -100,7 +102,11 @@ defmodule OpentelemetryEcto do
     }
 
     base_attributes =
-      case Keyword.fetch(config, :query_sanitizer) do
+      case Keyword.fetch(config, :db_statement) do
+        {:ok, :enabled} ->
+          Map.put(base_attributes, :"db.statement", query)
+        {:ok, :disabled} ->
+          base_attributes
         {:ok, sanitizer} ->
           Map.put(base_attributes, :"db.statement", sanitizer.(query))
 
