@@ -5,7 +5,7 @@ Tesla middleware that creates OpenTelemetry spans and injects tracing headers in
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+The package is [available in Hex](https://hex.pm/packages/opentelemetry_tesla) and can be installed
 by adding `opentelemetry_tesla` to your list of dependencies in `mix.exs`:
 
 ```elixir

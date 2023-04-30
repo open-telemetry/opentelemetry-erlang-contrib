@@ -17,6 +17,8 @@ defmodule OpentelemetryPhoenix.MixProject do
       name: "Opentelemetry Phoenix",
       docs: [
         main: "OpentelemetryPhoenix",
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_phoenix/%{path}#L%{line}",
         extras: ["README.md"]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),

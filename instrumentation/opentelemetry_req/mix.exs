@@ -11,7 +11,10 @@ defmodule OpentelemetryReq.MixProject do
       deps: deps(),
       name: "Opentelemetry Req",
       docs: [
-        main: "OpentelemetryReq"
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_req/%{path}#L%{line}",
+        main: "OpentelemetryReq",
+        extras: ["README.md"]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
