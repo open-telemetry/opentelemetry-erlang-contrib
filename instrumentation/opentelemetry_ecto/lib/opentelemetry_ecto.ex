@@ -37,7 +37,7 @@ defmodule OpentelemetryEcto do
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters).
     * `:additional_attributes` - additional attributes to include in the span. If there
-      are conflits with default provided attributes, the ones provided with
+      are conflicts with default provided attributes, the ones provided with
       this config will have precedence.
   """
   def setup(event_prefix, config \\ []) do
@@ -54,47 +54,53 @@ defmodule OpentelemetryEcto do
       ) do
     # Doing all this even if the span isn't sampled so the sampler
     # could technically use the attributes to decide if it should sample or not
-
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
-    database = repo.config()[:database]
+
+    %{
+      hostname: hostname,
+      username: username,
+      database: database,
+      port: port
+    } =
+      [hostname: nil, username: nil, database: nil, port: nil]
+      |> Keyword.merge(repo.config())
+      |> Keyword.merge(Ecto.Repo.Supervisor.parse_url(repo.config()[:url] || ""))
+      |> Keyword.take([:hostname, :username, :database, :port])
+      |> Enum.into(%{})
 
     url =
-      case repo.config()[:url] do
-        nil ->
-          # TODO: add port
-          URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
-
-        url ->
-          url
-      end
+      "ecto://#{hostname}:#{port}/#{database}"
+      |> URI.parse()
+      |> URI.to_string()
 
     span_name =
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
-      end <> if source != nil, do: ":#{source}", else: ""
+      end
+      |> maybe_append_source(source)
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})
 
-    db_type =
-      case type do
-        :ecto_sql_query -> :sql
-        _ -> type
-      end
-
-    # TODO: need connection information to complete the required attributes
-    # net.peer.name or net.peer.ip and net.peer.port
-    base_attributes = %{
-      "db.type": db_type,
-      "db.statement": query,
-      source: source,
-      "db.instance": database,
-      "db.url": url,
-      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
-    }
+    base_attributes =
+      %{
+        "db.type": if(type == :ecto_sql_query, do: :sql, else: type),
+        "db.statement": query,
+        "db.system": db_system(repo.__adapter__()),
+        "db.instance": database,
+        "db.connection_string": url,
+        "db.user": username,
+        "db.name": database,
+        "net.peer.name": hostname,
+        "net.transport": "IP.TCP",
+        "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+      }
+      |> maybe_add(:"db.sql.table", source)
+      |> maybe_add(:"net.peer.port", port)
+      |> maybe_add_peer_addr(hostname)
 
     attributes =
       measurements
@@ -109,20 +115,13 @@ defmodule OpentelemetryEcto do
       |> Map.merge(additional_attributes)
 
     parent_context =
-      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
-        :undefined ->
-          OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
-
-        ctx ->
-          ctx
-      end
-
-    parent_token =
-      if parent_context != :undefined do
-        OpenTelemetry.Ctx.attach(parent_context)
+      if ctx?(ctx = OpentelemetryProcessPropagator.fetch_ctx(self())) do
+        ctx
       else
-        :undefined
+        OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
       end
+
+    parent_token = if ctx?(parent_context), do: OpenTelemetry.Ctx.attach(parent_context), else: :undefined
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
@@ -141,9 +140,7 @@ defmodule OpentelemetryEcto do
 
     OpenTelemetry.Span.end_span(s)
 
-    if parent_token != :undefined do
-      OpenTelemetry.Ctx.detach(parent_token)
-    end
+    if ctx?(parent_token), do: OpenTelemetry.Ctx.detach(parent_token)
   end
 
   defp format_error(%{__exception__: true} = exception) do
@@ -151,4 +148,39 @@ defmodule OpentelemetryEcto do
   end
 
   defp format_error(_), do: ""
+
+  defp ctx?(:undefined), do: false
+  defp ctx?(_), do: true
+
+  defp maybe_add(map, _, nil), do: map
+  defp maybe_add(map, key, value) when is_map(map), do: Map.put(map, key, value)
+
+  defp maybe_append_source(name, nil), do: name
+  defp maybe_append_source(name, source), do: "#{name}:#{source}"
+
+  defp maybe_add_peer_addr(map, peer_name) do
+    if ip?(peer_name), do: maybe_add(map, :"net.sock.peer.addr", peer_name), else: map
+  end
+
+  defp db_system(Ecto.Adapters.Postgres), do: :postgresql
+  defp db_system(Ecto.Adapters.MyXQL), do: :mysql
+  defp db_system(Ecto.Adapters.Tds), do: :mssql
+
+  defp db_system(other) when is_atom(other) do
+    other |> Module.split() |> List.last() |> String.downcase()
+  end
+
+  defp db_system(other) when is_binary(other), do: other |> String.downcase()
+  defp db_system(_), do: :other_sql
+
+  defp ip?(address) when is_binary(address), do: address |> to_charlist() |> ip?()
+
+  defp ip?(address) when is_list(address) do
+    case :inet.parse_address(address) do
+      {:ok, _} -> true
+      _ -> false
+    end
+  end
+
+  defp ip?(_), do: false
 end
