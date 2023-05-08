@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## O.1.3
+## O.2.0
 
 ## Fixes
 
