@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## O.1.3
+
+## Fixes
+
 * Change span_name to follow [OpenTelemetry http spec](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#name)
 * Use span_name if provided, otherwise use path_params. If there are no path_params,
   default to http.method
