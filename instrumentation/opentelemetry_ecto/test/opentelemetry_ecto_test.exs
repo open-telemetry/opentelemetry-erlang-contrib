@@ -50,7 +50,7 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.instance": "opentelemetry_ecto_test",
-             "db.name: "opentelemetry_ecto_test",
+             "db.name": "opentelemetry_ecto_test",
              "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
              "db.type": :sql,
              "db.url": "ecto://localhost",
