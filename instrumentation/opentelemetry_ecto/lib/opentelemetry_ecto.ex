@@ -92,6 +92,7 @@ defmodule OpentelemetryEcto do
       "db.statement": query,
       source: source,
       "db.instance": database,
+      "db.name": database,
       "db.url": url,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
