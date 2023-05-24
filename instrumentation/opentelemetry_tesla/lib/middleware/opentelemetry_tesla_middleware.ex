@@ -12,8 +12,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
     - `:span_name` - override span name. Can be a `String` for a static span name,
     or a function that takes the `Tesla.Env` and returns a `String`
-    - `:propagator` - configures trace headers propagation. Setting it to `:none` disables propagation.
-    Defaults to `:otel_propagator_text_map`
+    - `:propagator` - configures trace headers propagators. Setting it to `:none` disables propagation.
+    Any module that implements `:otel_propagator_text_map` can be used.
+    Defaults to calling `:otel_propagator_text_map.get_text_map_injector/0`
     - `:mark_status_ok` - configures spans with a list of expected HTTP error codes to be marked as `ok`,
     not as an error-containing spans
   """
