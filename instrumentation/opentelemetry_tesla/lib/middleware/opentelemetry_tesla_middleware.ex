@@ -54,6 +54,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp maybe_propagate(env, :none), do: env
+
   defp maybe_propagate(env, propagator) do
     :otel_propagator_text_map.inject(
       propagator,

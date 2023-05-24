@@ -514,7 +514,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
   defp client(opts \\ []) do
     [
-      {Tesla.Middleware.OpenTelemetry, opts},
+      {Tesla.Middleware.OpenTelemetry, opts}
     ]
     |> Tesla.client(fn env -> {:ok, env} end)
   end
