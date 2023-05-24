@@ -503,7 +503,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
 
     test "optionally disable propagation but keep span report" do
-      {:ok, env} = Tesla.get(client(propagate: false), "/propagate-traces")
+      {:ok, env} = Tesla.get(client(propagator: :none), "/propagate-traces")
 
       refute Tesla.get_header(env, "traceparent")
 
