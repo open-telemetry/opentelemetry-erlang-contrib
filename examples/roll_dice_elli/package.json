@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/auto-instrumentations-web": "^0.32.2",
+    "@opentelemetry/context-zone": "^1.13.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.39.1",
+    "@opentelemetry/exporter-zipkin": "^1.13.0",
+    "@opentelemetry/instrumentation-document-load": "^0.32.2",
+    "@opentelemetry/sdk-trace-web": "^1.13.0",
+    "esbuild": "0.17.19",
+    "htmx.org": "^1.9.2"
+  },
+  "scripts": {
+    "build": "esbuild js/app.js --bundle --outfile=priv/static/index.js"
+  }
+}
