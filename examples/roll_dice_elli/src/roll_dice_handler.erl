@@ -43,17 +43,17 @@ do_roll() ->
 
 -spec index(unicode:unicode_binary()) -> binary().
 index(TraceContext) ->
-    <<"<html>
-        <head>
-         <script src=\"/static/index.js\"> </script>
-         <meta name=\"traceparent\" content=\"", TraceContext/binary, "\" />
-        </head>
-        <body>
-          <div id=\"dice-result-div\">0</div>
+    [<<"<html>
+          <head>
+            <script src=\"/static/index.js\"> </script>
+            <meta name=\"traceparent\" content=\"">>, TraceContext, <<"\" />
+          </head>
+          <body>
+            <div id=\"dice-result-div\">0</div>
 
-          <button hx-get=\"/rolldice\" hx-target=\"#dice-result-div\" hx-swap=\"innerHTML\">
-          Roll
-          </button>
+            <button hx-get=\"/rolldice\" hx-target=\"#dice-result-div\" hx-swap=\"innerHTML\">
+            Roll
+            </button>
 
-       </body>
-     </html>">>.
+          </body>
+        </html>">>].
