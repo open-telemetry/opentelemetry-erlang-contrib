@@ -50,6 +50,7 @@ defmodule OpentelemetryHTTPoison.MixProject do
       name: "opentelemetry_httpoison",
       description:
         "OpentelemetryHTTPoison is a opentelemetry-instrumented wrapper around HTTPoison",
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @source_url,
@@ -76,7 +77,6 @@ defmodule OpentelemetryHTTPoison.MixProject do
   defp docs do
     [
       extras: [
-        "LICENSE.md": [title: "License"],
         "README.md": [title: "Overview"]
       ],
       main: "readme",

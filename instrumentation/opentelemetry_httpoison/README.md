@@ -179,11 +179,4 @@ through HTTP "jumps".
 * Set [SpanKind](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/api.md#spankind) to client
 * Support for explicit parent span
 * Support for fixed span attributes
-* A lot of other stuff..
-
-## Copyright and License
-
-Copyright (c) 2020 Prima.it
-
-This work is free. You can redistribute it and/or modify it under the
-terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.
+* Lots of other stuff...
