@@ -41,7 +41,7 @@ do_roll() ->
                        Roll
                end).
 
--spec index(unicode:unicode_binary()) -> binary().
+-spec index(unicode:unicode_binary()) -> iolist().
 index(TraceContext) ->
     [<<"<html>
           <head>
