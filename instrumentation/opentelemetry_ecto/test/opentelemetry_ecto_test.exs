@@ -77,7 +77,7 @@ defmodule OpentelemetryEctoTest do
   end
 
   test "include santized query with sanitizer function" do
-    attach_handler(db_statement: fn (str) -> String.replace(str, "SELECT", "") end)
+    attach_handler(db_statement: fn str -> String.replace(str, "SELECT", "") end)
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}

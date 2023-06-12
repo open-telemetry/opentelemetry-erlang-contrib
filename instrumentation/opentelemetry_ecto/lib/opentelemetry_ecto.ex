@@ -105,8 +105,10 @@ defmodule OpentelemetryEcto do
       case Keyword.fetch(config, :db_statement) do
         {:ok, :enabled} ->
           Map.put(base_attributes, :"db.statement", query)
+
         {:ok, :disabled} ->
           base_attributes
+
         {:ok, sanitizer} ->
           Map.put(base_attributes, :"db.statement", sanitizer.(query))
 
