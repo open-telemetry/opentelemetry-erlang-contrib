@@ -50,8 +50,6 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.instance": "opentelemetry_ecto_test",
-             "db.name": "opentelemetry_ecto_test",
-             "db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0",
              "db.type": :sql,
              "db.url": "ecto://localhost",
              decode_time_microseconds: _,
@@ -62,7 +60,31 @@ defmodule OpentelemetryEctoTest do
            } = :otel_attributes.map(attributes)
   end
 
-  test "include additionaL_attributes" do
+  test "exclude unsantized query" do
+    attach_handler()
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert !Map.has_key?(:otel_attributes.map(attributes), :"db.statement")
+  end
+
+  test "include unsanitized query when enabled" do
+    attach_handler(db_statement: :enabled)
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
+  end
+
+  test "include santized query with sanitizer function" do
+    attach_handler(db_statement: fn str -> String.replace(str, "SELECT", "") end)
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{"db.statement": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
+  end
+
+  test "include additional_attributes" do
     attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
     Repo.all(User)
 
@@ -83,8 +105,6 @@ defmodule OpentelemetryEctoTest do
 
     assert %{
              "db.instance": "opentelemetry_ecto_test",
-             "db.name": "opentelemetry_ecto_test",
-             "db.statement": "SELECT p0.\"id\", p0.\"body\", p0.\"user_id\" FROM \"posts\" AS p0",
              "db.type": :sql,
              "db.url": "ecto://localhost",
              decode_time_milliseconds: _,
