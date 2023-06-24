@@ -316,9 +316,9 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
-              "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
-              "db.system": "mariadb"
-            } = :otel_attributes.map(attributes)
+             "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
+             "db.system": "mariadb"
+           } = :otel_attributes.map(attributes)
   end
 
   test "fallbacks to default if it is not a well-known db systems" do
@@ -333,9 +333,9 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
-              "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
-              "db.system": "other_sql"
-            } = :otel_attributes.map(attributes)
+             "ecto.db.adapter": "Elixir.Ecto.Adapters.MyXQL",
+             "db.system": "other_sql"
+           } = :otel_attributes.map(attributes)
   end
 
   def attach_handler(config \\ [], event_name \\ @event_name) do
