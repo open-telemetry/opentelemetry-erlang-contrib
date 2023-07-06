@@ -22,6 +22,7 @@ defmodule OpentelemetryEcto do
   @db_systems [
     "other_sql",
     "mssql",
+    "mssqlcompact",
     "mysql",
     "oracle",
     "db2",
@@ -66,7 +67,11 @@ defmodule OpentelemetryEcto do
     "geode",
     "elasticsearch",
     "memcached",
-    "cockroachdb"
+    "cockroachdb",
+    "opensearch",
+    "clickhouse",
+    "spanner",
+    "trino"
   ]
 
   @doc """
