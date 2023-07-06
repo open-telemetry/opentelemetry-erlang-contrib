@@ -5,7 +5,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.1.0",
+      version: "1.1.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
@@ -17,6 +17,8 @@ defmodule OpentelemetryPhoenix.MixProject do
       name: "Opentelemetry Phoenix",
       docs: [
         main: "OpentelemetryPhoenix",
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_phoenix/%{path}#L%{line}",
         extras: ["README.md"]
       ],
       elixirc_paths: elixirc_paths(Mix.env()),

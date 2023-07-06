@@ -12,7 +12,13 @@ defmodule OpentelemetryNebulex.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       source_url:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_nebulex"
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_nebulex",
+      docs: [
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_nebulex/%{path}#L%{line}",
+        main: "OpentelemetryNebulex",
+        extras: ["README.md"]
+      ]
     ]
   end
 

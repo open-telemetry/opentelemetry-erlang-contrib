@@ -9,6 +9,8 @@ defmodule OpentelemetryOban.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_oban/%{path}#L%{line}",
         main: "OpentelemetryOban",
         extras: ["README.md"]
       ],
@@ -24,7 +26,9 @@ defmodule OpentelemetryOban.MixProject do
           "OpenTelemetry.io" => "https://opentelemetry.io"
         },
         files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*)
-      ]
+      ],
+      source_url:
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_oban"
     ]
   end
 
