@@ -226,7 +226,6 @@ defmodule OpentelemetryPhoenix do
 
       # record exception and mark the span as errored
       Tracer.record_exception(exception, stacktrace, attrs)
-      Tracer.set_status(OpenTelemetry.status(:error, ""))
 
       # do not close the span as endpoint stop will still be called with
       # more info, including the status code, which is nil at this stage
