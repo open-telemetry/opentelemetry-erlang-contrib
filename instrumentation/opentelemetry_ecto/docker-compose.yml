@@ -11,7 +11,7 @@ services:
       - 5432:5432
 
   mariadb:
-    image: mariadb:10.7
+    image: mariadb:11.0
     environment:
       - MARIADB_RANDOM_ROOT_PASSWORD=yes
       - MARIADB_USER=mariadb
