@@ -53,6 +53,9 @@ opentelemetry_cowboy:
 opentelemetry_ecto:
   - instrumentation/opentelemetry_ecto/**/*
 
+opentelemetry_ex_aws:
+  - instrumentation/opentelemetry_ex_aws/**/*
+
 opentelemetry_nebulex:
   - instrumentation/opentelemetry_nebulex/**/*
 
