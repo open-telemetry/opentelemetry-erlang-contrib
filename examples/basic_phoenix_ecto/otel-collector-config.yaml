@@ -20,19 +20,22 @@ exporters:
     #   "lightstep-access-token": "<YOUR_ACCESS_TOKEN>"
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
+    tls:
+      insecure: true
   jaeger:
-    endpoint: jaeger-all-in-one:14250
+    endpoint: "jaeger:14250"
     tls:
       insecure: true
 extensions:
-  zpages: {}
+  zpages:
+    endpoint: :55679
 service:
   extensions: [zpages]
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [zipkin, jaeger]
+      exporters: [jaeger, zipkin]
       # Add 'otlp' if you're exporting to Honeycomb
       # or Lightstep
       # exporters: [zipkin, jaeger, otlp]

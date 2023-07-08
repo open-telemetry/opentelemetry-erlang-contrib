@@ -12,7 +12,11 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
     - `:span_name` - override span name. Can be a `String` for a static span name,
     or a function that takes the `Tesla.Env` and returns a `String`
-
+    - `:propagator` - configures trace headers propagators. Setting it to `:none` disables propagation.
+    Any module that implements `:otel_propagator_text_map` can be used.
+    Defaults to calling `:otel_propagator_text_map.get_text_map_injector/0`
+    - `:mark_status_ok` - configures spans with a list of expected HTTP error codes to be marked as `ok`,
+    not as an error-containing spans
   """
 
   alias OpenTelemetry.SemanticConventions.Trace
@@ -27,7 +31,8 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
-      |> Tesla.put_headers(:otel_propagator_text_map.inject([]))
+      |> maybe_put_additional_ok_statuses(opts[:mark_status_ok])
+      |> maybe_propagate(Keyword.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
       |> Tesla.run(next)
       |> set_span_attributes()
       |> handle_result()
@@ -49,6 +54,25 @@ defmodule Tesla.Middleware.OpenTelemetry do
     end
   end
 
+  defp maybe_propagate(env, :none), do: env
+
+  defp maybe_propagate(env, propagator) do
+    :otel_propagator_text_map.inject(
+      propagator,
+      env,
+      fn key, value, env -> Tesla.put_header(env, key, value) end
+    )
+  end
+
+  defp maybe_put_additional_ok_statuses(env, [_ | _] = additional_ok_statuses) do
+    case env.opts[:additional_ok_statuses] do
+      nil -> Tesla.put_opt(env, :additional_ok_statuses, additional_ok_statuses)
+      _ -> env
+    end
+  end
+
+  defp maybe_put_additional_ok_statuses(env, _additional_ok_statuses), do: env
+
   defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
     OpenTelemetry.Tracer.set_attributes(build_attrs(env))
 
@@ -59,8 +83,13 @@ defmodule Tesla.Middleware.OpenTelemetry do
     result
   end
 
-  defp handle_result({:ok, %Tesla.Env{status: status} = env}) when status > 400 do
-    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
+  defp handle_result({:ok, %Tesla.Env{status: status, opts: opts} = env}) when status >= 400 do
+    span_status =
+      if status in Keyword.get(opts, :additional_ok_statuses, []), do: :ok, else: :error
+
+    span_status
+    |> OpenTelemetry.status("")
+    |> OpenTelemetry.Tracer.set_status()
 
     {:ok, env}
   end

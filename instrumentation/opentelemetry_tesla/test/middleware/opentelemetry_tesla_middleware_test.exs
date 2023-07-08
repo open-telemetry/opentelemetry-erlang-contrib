@@ -191,32 +191,65 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
   end
 
-  test "Marks Span status as :error when HTTP request fails", %{bypass: bypass} do
-    defmodule TestClient do
-      def get(client) do
-        Tesla.get(client, "/users/")
+  @error_codes [
+    400,
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410,
+    411,
+    412,
+    413,
+    414,
+    415,
+    416,
+    417,
+    418,
+    500,
+    501,
+    502,
+    503,
+    504,
+    505,
+    506,
+    507,
+    508
+  ]
+
+  for code <- @error_codes do
+    test "Marks Span status as :error when HTTP request fails with #{code}", %{bypass: bypass} do
+      defmodule TestClient do
+        def get(client) do
+          Tesla.get(client, "/users/")
+        end
+
+        def client(url) do
+          middleware = [
+            {Tesla.Middleware.BaseUrl, url},
+            Tesla.Middleware.OpenTelemetry
+          ]
+
+          Tesla.client(middleware)
+        end
       end
 
-      def client(url) do
-        middleware = [
-          {Tesla.Middleware.BaseUrl, url},
-          Tesla.Middleware.OpenTelemetry
-        ]
+      Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+        Plug.Conn.resp(conn, unquote(code), "")
+      end)
 
-        Tesla.client(middleware)
-      end
+      bypass.port
+      |> endpoint_url()
+      |> TestClient.client()
+      |> TestClient.get()
+
+      assert_receive {:span, span(status: {:status, :error, ""})}
     end
-
-    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
-      Plug.Conn.resp(conn, 500, "")
-    end)
-
-    bypass.port
-    |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
-
-    assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
   test "Marks Span status as :errors when max redirects are exceeded", %{bypass: bypass} do
@@ -246,6 +279,64 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       conn
       |> Plug.Conn.put_resp_header("Location", "/users/2")
       |> Plug.Conn.resp(301, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> TestClient.client()
+    |> TestClient.get()
+
+    assert_receive {:span, span(status: {:status, :error, ""})}
+  end
+
+  test "Marks Span status as :error if error status is within `mark_status_ok` opt list",
+       %{bypass: bypass} do
+    defmodule TestClient do
+      def get(client) do
+        Tesla.get(client, "/users/")
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          {Tesla.Middleware.OpenTelemetry, mark_status_ok: [404]}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      Plug.Conn.resp(conn, 404, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> TestClient.client()
+    |> TestClient.get()
+
+    assert_receive {:span, span(status: {:status, :ok, ""})}
+  end
+
+  test "Marks Span status as :ok unless error status is within `mark_status_ok` opt list",
+       %{bypass: bypass} do
+    defmodule TestClient do
+      def get(client) do
+        Tesla.get(client, "/users/")
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          {Tesla.Middleware.OpenTelemetry, mark_status_ok: []}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      Plug.Conn.resp(conn, 404, "")
     end)
 
     bypass.port
@@ -400,27 +491,32 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert response_size == byte_size(response)
   end
 
-  test "Injects distributed tracing headers" do
-    OpentelemetryTelemetry.start_telemetry_span(
-      "tracer_id",
-      "my_label",
-      %{},
-      %{kind: :client}
-    )
+  describe "trace propagation" do
+    test "injects distributed tracing headers by default" do
+      {:ok, env} = Tesla.get(client(), "/propagate-traces")
 
-    assert {:ok,
-            %Tesla.Env{
-              headers: [
-                {"traceparent", traceparent}
-              ]
-            }} =
-             Tesla.Middleware.OpenTelemetry.call(
-               _env = %Tesla.Env{url: ""},
-               _next = [],
-               _opts = []
-             )
+      assert traceparent = Tesla.get_header(env, "traceparent")
+      assert is_binary(traceparent)
 
-    assert is_binary(traceparent)
+      assert_receive {:span, span(name: _name, attributes: attributes)}
+      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+    end
+
+    test "optionally disable propagation but keep span report" do
+      {:ok, env} = Tesla.get(client(propagator: :none), "/propagate-traces")
+
+      refute Tesla.get_header(env, "traceparent")
+
+      assert_receive {:span, span(name: _name, attributes: attributes)}
+      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+    end
+  end
+
+  defp client(opts \\ []) do
+    [
+      {Tesla.Middleware.OpenTelemetry, opts}
+    ]
+    |> Tesla.client(fn env -> {:ok, env} end)
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}/"
