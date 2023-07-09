@@ -75,8 +75,8 @@ defmodule OpentelemetryPhoenix do
 
     attach_endpoint_start_handler(opts)
     attach_endpoint_stop_handler(opts)
-    attach_router_start_handler()
-    attach_router_dispatch_exception_handler()
+    attach_router_start_handler(opts)
+    attach_router_dispatch_exception_handler(opts)
 
     :ok
   end
@@ -102,35 +102,30 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def attach_router_start_handler do
+  def attach_router_start_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_start},
       [:phoenix, :router_dispatch, :start],
       &__MODULE__.handle_router_dispatch_start/4,
-      %{}
+      %{adapter: opts[:adapter]}
     )
   end
 
   @doc false
-  def attach_router_dispatch_exception_handler do
+  def attach_router_dispatch_exception_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_exception},
       [:phoenix, :router_dispatch, :exception],
       &__MODULE__.handle_router_dispatch_exception/4,
-      %{}
+      %{adapter: opts[:adapter]}
     )
   end
 
   @doc false
   def handle_endpoint_start(_event, _measurements, meta, config) do
-    Process.put({:otel_phoenix, :adapter}, config.adapter)
-
-    case adapter() do
-      :cowboy2 ->
-        cowboy2_start()
-
-      _ ->
-        default_start(meta)
+    case config.adapter do
+      :cowboy2 -> cowboy2_start()
+      _ -> default_start(meta)
     end
   end
 
@@ -171,13 +166,10 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_stop(_event, _measurements, meta, _config) do
-    case adapter() do
-      :cowboy2 ->
-        :ok
-
-      _ ->
-        default_stop(meta)
+  def handle_endpoint_stop(_event, _measurements, meta, config) do
+    case config.adapter do
+      :cowboy2 -> :ok
+      _ -> default_stop(meta)
     end
   end
 
@@ -266,9 +258,5 @@ defmodule OpentelemetryPhoenix do
       [value | _] ->
         value
     end
-  end
-
-  defp adapter do
-    Process.get({:otel_phoenix, :adapter})
   end
 end
