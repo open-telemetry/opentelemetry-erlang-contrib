@@ -10,6 +10,11 @@ defmodule OpentelemetryPhoenix do
                       default: nil,
                       doc: "The phoenix server adapter being used.",
                       type_doc: ":atom"
+                    ],
+                    headers_attrs: [
+                      type: {:list, :string},
+                      default: [],
+                      doc: "List of headers whose values should be added as span attributes"
                     ]
                   )
 
@@ -71,7 +76,10 @@ defmodule OpentelemetryPhoenix do
   """
   @spec setup(opts()) :: :ok
   def setup(opts \\ []) do
-    opts = NimbleOptions.validate!(opts, @options_schema)
+    opts =
+      opts
+      |> NimbleOptions.validate!(@options_schema)
+      |> parse_opts()
 
     attach_endpoint_start_handler(opts)
     attach_endpoint_stop_handler(opts)
@@ -87,7 +95,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
-      %{adapter: opts[:adapter]}
+      %{adapter: opts[:adapter], headers_attrs: opts[:headers_attrs]}
     )
   end
 
@@ -97,7 +105,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_stop},
       opts[:endpoint_prefix] ++ [:stop],
       &__MODULE__.handle_endpoint_stop/4,
-      %{adapter: opts[:adapter]}
+      %{adapter: opts[:adapter], headers_attrs: opts[:headers_attrs]}
     )
   end
 
@@ -107,7 +115,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :router_dispatch_start},
       [:phoenix, :router_dispatch, :start],
       &__MODULE__.handle_router_dispatch_start/4,
-      %{adapter: opts[:adapter]}
+      %{adapter: opts[:adapter], headers_attrs: opts[:headers_attrs]}
     )
   end
 
@@ -117,7 +125,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :router_dispatch_exception},
       [:phoenix, :router_dispatch, :exception],
       &__MODULE__.handle_router_dispatch_exception/4,
-      %{adapter: opts[:adapter]}
+      %{adapter: opts[:adapter], headers_attrs: opts[:headers_attrs]}
     )
   end
 
@@ -125,7 +133,7 @@ defmodule OpentelemetryPhoenix do
   def handle_endpoint_start(_event, _measurements, meta, config) do
     case config.adapter do
       :cowboy2 -> cowboy2_start()
-      _ -> default_start(meta)
+      _ -> default_start(meta, config)
     end
   end
 
@@ -134,7 +142,7 @@ defmodule OpentelemetryPhoenix do
     |> OpenTelemetry.Ctx.attach()
   end
 
-  defp default_start(meta) do
+  defp default_start(meta, config) do
     %{conn: conn} = meta
     :otel_propagator_text_map.extract(conn.req_headers)
 
@@ -157,6 +165,10 @@ defmodule OpentelemetryPhoenix do
       SemanticConventions.Trace.net_peer_port() => peer_data.port,
       SemanticConventions.Trace.net_transport() => :"IP.TCP"
     }
+
+    headers_attributes = headers_attributes(conn.req_headers, config)
+
+    attributes = Map.merge(attributes, headers_attributes)
 
     # start the span with a default name. Route name isn't known until router dispatch
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
@@ -258,5 +270,36 @@ defmodule OpentelemetryPhoenix do
       [value | _] ->
         value
     end
+  end
+
+  defp headers_attributes(req_headers, %{headers_attrs: headers_attrs}) do
+    if MapSet.size(headers_attrs) > 0 do
+      Enum.reduce(req_headers, %{}, fn {header, value}, acc ->
+        normalized_header_name = normalize_header_name(header)
+
+        if MapSet.member?(headers_attrs, normalized_header_name) do
+          attr = String.to_atom("http.request.header.#{normalized_header_name}")
+          Map.update(acc, attr, [value], &[value | &1])
+        else
+          acc
+        end
+      end)
+    else
+      %{}
+    end
+  end
+
+  defp parse_opts(opts) do
+    opts
+    |> Map.new()
+    |> Map.update(:headers_attrs, MapSet.new(), fn headers ->
+      MapSet.new(headers, &normalize_header_name/1)
+    end)
+  end
+
+  defp normalize_header_name(header) do
+    header
+    |> String.downcase()
+    |> String.replace("-", "_")
   end
 end
