@@ -10,7 +10,7 @@
 -define(TRACER_ID, ?MODULE).
 
 -type opts() :: #{
-    start_attributes_fun => fun((map()) -> map()) | {module(), atom()}
+    request_hook => fun((map()) -> map()) | {module(), atom()}
 }.
 
 -spec setup() -> ok.
@@ -147,7 +147,7 @@ client_ip(Headers, RemoteIP) ->
   end.
 
 user_attributes(Opts, Meta) ->
-  case maps:get(start_attributes_fun, Opts, undefined) of
+  case maps:get(request_hook, Opts, undefined) of
     {Module, Function} -> Module:Function(Meta);
     Fun when is_function(Fun) -> Fun(Meta);
     undefined -> #{}
