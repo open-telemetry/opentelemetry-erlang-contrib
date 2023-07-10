@@ -45,17 +45,11 @@ defmodule OpentelemetryDataloader do
   def handle_event(event, measurements, metadata, config)
 
   def handle_event(@run_start, _measurements, metadata, config) do
-    parent_ctx =
-      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
-        :undefined ->
-          OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+    self_ctx = OpentelemetryProcessPropagator.fetch_ctx(self())
+    parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
 
-        ctx ->
-          ctx
-      end
-
-    if parent_ctx != :undefined do
-      attach_parent_ctx(parent_ctx)
+    if self_ctx == :undefined and parent_ctx != :undefined do
+      OpenTelemetry.Ctx.attach(parent_ctx)
     end
 
     OpentelemetryTelemetry.start_telemetry_span(
@@ -72,8 +66,6 @@ defmodule OpentelemetryDataloader do
     OpentelemetryTelemetry.set_current_telemetry_span(config.tracer_id, metadata)
 
     OpentelemetryTelemetry.end_telemetry_span(config.tracer_id, metadata)
-
-    detach_parent_ctx()
   end
 
   def handle_event(@batch_start, _measurements, metadata, config) do
@@ -104,23 +96,5 @@ defmodule OpentelemetryDataloader do
     OpentelemetryTelemetry.set_current_telemetry_span(config.tracer_id, metadata)
 
     OpentelemetryTelemetry.end_telemetry_span(config.tracer_id, metadata)
-  end
-
-  @ctx_key {__MODULE__, :parent_ctx}
-
-  defp attach_parent_ctx(parent_ctx) do
-    parent_token = OpenTelemetry.Ctx.attach(parent_ctx)
-
-    Process.put(@ctx_key, parent_token)
-  end
-
-  defp detach_parent_ctx() do
-    parent_ctx = Process.get(@ctx_key, :undefined)
-
-    if parent_ctx != :undefined do
-      @ctx_key
-      |> Process.delete()
-      |> OpenTelemetry.Ctx.detach()
-    end
   end
 end
