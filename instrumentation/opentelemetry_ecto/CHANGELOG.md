@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+### Changed
+
+* Add db.name to ecto spans
+
 ## 1.1.0
 
 ### Changed

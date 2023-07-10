@@ -5,7 +5,7 @@ defmodule OpentelemetryEcto.MixProject do
     [
       app: :opentelemetry_ecto,
       description: description(),
-      version: "1.1.0",
+      version: "1.1.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -13,7 +13,13 @@ defmodule OpentelemetryEcto.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       source_url:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto"
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_ecto",
+      docs: [
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_ecto/%{path}#L%{line}",
+        main: "OpentelemetryEcto",
+        extras: ["README.md"]
+      ]
     ]
   end
 

@@ -17,7 +17,9 @@ defmodule OpentelemetryTesla.MixProject do
   defp docs() do
     [
       main: "readme",
-      extras: ["README.md"]
+      extras: ["README.md"],
+      source_url_pattern:
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_tesla/%{path}#L%{line}"
     ]
   end
 
