@@ -63,6 +63,22 @@ defmodule OpentelemetryRedix do
       |> Map.merge(net_attributes(connection))
       |> Map.merge(redix_attributes(meta))
 
+    parent_context =
+      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
+        :undefined ->
+          OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
+
+        ctx ->
+          ctx
+      end
+
+    parent_token =
+      if parent_context != :undefined do
+        OpenTelemetry.Ctx.attach(parent_context)
+      else
+        :undefined
+      end
+
     s =
       OpenTelemetry.Tracer.start_span(operation, %{
         start_time: start_time,
@@ -75,6 +91,10 @@ defmodule OpentelemetryRedix do
     end
 
     OpenTelemetry.Span.end_span(s)
+
+    if parent_token != :undefined do
+      OpenTelemetry.Ctx.detach(parent_token)
+    end
   end
 
   defp net_attributes(%{address: address}) when is_binary(address) do
