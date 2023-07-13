@@ -5,7 +5,7 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.1.0",
+      version: "1.1.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
