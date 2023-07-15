@@ -9,9 +9,9 @@
     normalize_header_name/1
 ]).
 
--spec normalize_header_name(binary()) -> Result when
-      Result :: binary() | {error, string(), RestData} | {incomplete, binary(), binary()},
-      RestData :: latin1_chardata() | chardata() | external_chardata().
+-spec normalize_header_name(string() | binary()) -> Result when
+      Result :: binary() | {error, binary(), RestData} | {incomplete, binary(), binary()},
+      RestData :: unicode:latin1_chardata() | unicode:chardata() | unicode:external_chardata().
 normalize_header_name(Header) when is_binary(Header) ->
     normalize_header_name(binary_to_list(Header));
 normalize_header_name(Header) when is_list(Header) ->
