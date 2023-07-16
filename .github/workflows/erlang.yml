@@ -118,3 +118,34 @@ jobs:
         run: rebar3 get-deps
       - name: Test
         run: rebar3 ct
+
+  opentelemetry-instrumentation-http:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_instrumentation_http'))
+    env:
+      app: "opentelemetry_instrumentation_http"
+    defaults:
+      run:
+        working-directory: utilities/${{ env.app }}
+    runs-on: ubuntu-20.04
+    name: OpenTelemetry Instrumentation HTTP test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('**/rebar.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: rebar3 get-deps
+      - name: Test
+        run: rebar3 eunit

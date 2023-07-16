@@ -82,3 +82,6 @@ opentelemetry_tesla:
 
 opentelemetry_xray:
   - utilities/opentelemetry_xray/**/*
+
+opentelemetry_instrumentation_http:
+  - utilities/opentelemetry_instrumentation_http/**/*
