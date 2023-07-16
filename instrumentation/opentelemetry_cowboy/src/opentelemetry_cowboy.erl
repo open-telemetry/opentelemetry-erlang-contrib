@@ -150,5 +150,5 @@ user_attributes(Opts, Meta) ->
   case maps:get(request_hook, Opts, undefined) of
     {Module, Function} -> Module:Function(Meta);
     Fun when is_function(Fun) -> Fun(Meta);
-    undefined -> #{}
+    _ -> #{}
   end.
