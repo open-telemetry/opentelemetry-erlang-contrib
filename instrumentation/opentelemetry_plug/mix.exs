@@ -57,6 +57,7 @@ defmodule OpentelemetryPlug.MixProject do
       {:hackney, "~> 1.0", only: :test, runtime: false},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
+      {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:plug, ">= 1.10.1"},
       {:plug_cowboy, "~> 2.2", only: :test, runtime: false},
       {:telemetry, "~> 0.4 or ~> 1.0"}

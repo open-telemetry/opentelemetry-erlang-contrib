@@ -36,9 +36,9 @@ defmodule OpentelemetryPlugTest do
     http.status_code
     http.target
     http.user_agent
-    net.host.ip
+    net.sock.host.addr
     net.host.port
-    net.peer.ip
+    net.sock.peer.addr
     net.peer.name
     net.peer.port
     net.transport

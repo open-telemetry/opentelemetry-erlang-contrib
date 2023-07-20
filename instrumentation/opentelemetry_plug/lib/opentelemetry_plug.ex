@@ -3,8 +3,11 @@ defmodule OpentelemetryPlug do
   Telemetry handler for creating OpenTelemetry Spans from Plug events.
   """
 
-  require OpenTelemetry.Tracer, as: Tracer
+  alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Span
+
+  require OpenTelemetry.Tracer, as: Tracer
+  require SemanticConventions.Trace
 
   defmodule Propagation do
     @moduledoc """
@@ -80,21 +83,23 @@ defmodule OpentelemetryPlug do
     peer_ip = Map.get(peer_data, :address)
 
     attributes =
-      [
-        "http.target": conn.request_path,
-        "http.host": conn.host,
-        "http.scheme": conn.scheme,
-        "http.flavor": http_flavor(conn.adapter),
-        "http.route": route,
-        "http.user_agent": user_agent,
-        "http.method": conn.method,
-        "net.peer.ip": to_string(:inet_parse.ntoa(peer_ip)),
-        "net.peer.port": peer_data.port,
-        "net.peer.name": host,
-        "net.transport": "IP.TCP",
-        "net.host.ip": to_string(:inet_parse.ntoa(conn.remote_ip)),
-        "net.host.port": conn.port
-      ] ++ optional_attributes(conn)
+      %{
+        SemanticConventions.Trace.http_target() => conn.request_path,
+        SemanticConventions.Trace.net_host_name() => conn.host,
+        SemanticConventions.Trace.http_scheme() => "#{conn.scheme}",
+        SemanticConventions.Trace.http_flavor() => http_flavor(conn.adapter),
+        SemanticConventions.Trace.http_route() => route,
+        SemanticConventions.Trace.http_user_agent() => user_agent,
+        SemanticConventions.Trace.http_method() => conn.method,
+        SemanticConventions.Trace.net_sock_peer_addr() => to_string(:inet_parse.ntoa(peer_ip)),
+        SemanticConventions.Trace.net_peer_port() => peer_data.port,
+        SemanticConventions.Trace.net_peer_name() => host,
+        SemanticConventions.Trace.net_transport() => :"IP.TCP",
+        SemanticConventions.Trace.net_sock_host_addr() =>
+          to_string(:inet_parse.ntoa(conn.remote_ip)),
+        SemanticConventions.Trace.net_host_port() => conn.port
+      }
+      |> Map.merge(optional_attributes(conn))
 
     # TODO: Plug should provide a monotonic native time in measurements to use here
     # for the `start_time` option
@@ -105,7 +110,7 @@ defmodule OpentelemetryPlug do
 
   @doc false
   def handle_stop(_, _measurements, %{conn: conn}, _config) do
-    Tracer.set_attribute(:"http.status_code", conn.status)
+    Tracer.set_attribute(SemanticConventions.Trace.http_status_code(), conn.status)
     # For HTTP status codes in the 4xx and 5xx ranges, as well as any other
     # code the client failed to interpret, status MUST be set to Error.
     #
@@ -134,7 +139,7 @@ defmodule OpentelemetryPlug do
     )
 
     Tracer.set_status(OpenTelemetry.status(:error, Exception.message(exception)))
-    Tracer.set_attribute(:"http.status_code", 500)
+    Tracer.set_attribute(SemanticConventions.Trace.http_status_code(), 500)
     Tracer.end_span()
     restore_parent_ctx()
   end
@@ -150,9 +155,13 @@ defmodule OpentelemetryPlug do
   end
 
   defp optional_attributes(conn) do
-    ["http.client_ip": &client_ip/1, "http.server_name": &server_name/1]
+    [
+      {SemanticConventions.Trace.http_client_ip(), &client_ip/1},
+      {:"http.server_name", &server_name/1}
+    ]
     |> Enum.map(fn {attr, fun} -> {attr, fun.(conn)} end)
     |> Enum.reject(&is_nil(elem(&1, 1)))
+    |> Enum.into(%{})
   end
 
   defp client_ip(conn) do
