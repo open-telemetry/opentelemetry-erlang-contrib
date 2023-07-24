@@ -19,6 +19,16 @@ defmodule OpentelemetryPhoenixTest do
   setup do
     :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
+    Enum.each(
+      [
+        {OpentelemetryPhoenix, :endpoint_start},
+        {OpentelemetryPhoenix, :endpoint_stop},
+        {OpentelemetryPhoenix, :router_dispatch_start},
+        {OpentelemetryPhoenix, :router_dispatch_exception}
+      ],
+      &:telemetry.detach/1
+    )
+
     :ok
   end
 
@@ -67,6 +77,83 @@ defmodule OpentelemetryPhoenixTest do
              "net.transport": :"IP.TCP",
              "phoenix.action": :user,
              "phoenix.plug": Elixir.MyStoreWeb.PageController
+           } == :otel_attributes.map(attributes)
+  end
+
+  test "records request/response headers as configured for Phoenix web requests" do
+    OpentelemetryPhoenix.setup(
+      req_headers_to_span_attributes: ["foo", "bar"],
+      resp_headers_to_span_attributes: ["foo", "bar"]
+    )
+
+    headers = [{"foo", "foo-1"}, {"foo", "foo-2"}, {"bar", "bar-1"}]
+
+    meta_start = Meta.endpoint_start()
+
+    meta_start = %{
+      meta_start
+      | conn: %{
+          meta_start.conn
+          | req_headers: headers ++ meta_start.conn.req_headers
+        }
+    }
+
+    meta_stop = Meta.endpoint_stop()
+
+    meta_stop = %{
+      meta_stop
+      | conn: %{
+          meta_stop.conn
+          | resp_headers: headers ++ meta_stop.conn.resp_headers
+        }
+    }
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :start],
+      %{system_time: System.system_time()},
+      meta_start
+    )
+
+    :telemetry.execute(
+      [:phoenix, :router_dispatch, :start],
+      %{system_time: System.system_time()},
+      Meta.router_dispatch_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :endpoint, :stop],
+      %{duration: 444},
+      meta_stop
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "/users/:user_id",
+                      attributes: attributes,
+                      parent_span_id: 13_235_353_014_750_950_193
+                    )}
+
+    assert %{
+             "http.client_ip": "10.211.55.2",
+             "http.flavor": :"1.1",
+             "net.host.name": "localhost",
+             "http.method": "GET",
+             "http.route": "/users/:user_id",
+             "http.scheme": "http",
+             "http.status_code": 200,
+             "http.target": "/users/123",
+             "http.user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
+             "net.sock.host.addr": "10.211.55.2",
+             "net.host.port": 4000,
+             "net.sock.peer.addr": "10.211.55.2",
+             "net.peer.port": 64291,
+             "net.transport": :"IP.TCP",
+             "phoenix.action": :user,
+             "phoenix.plug": Elixir.MyStoreWeb.PageController,
+             "http.request.header.foo": ["foo-1", "foo-2"],
+             "http.request.header.bar": ["bar-1"],
+             "http.response.header.foo": ["foo-1", "foo-2"],
+             "http.response.header.bar": ["bar-1"]
            } == :otel_attributes.map(attributes)
   end
 
