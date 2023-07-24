@@ -17,6 +17,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
     Defaults to calling `:otel_propagator_text_map.get_text_map_injector/0`
     - `:mark_status_ok` - configures spans with a list of expected HTTP error codes to be marked as `ok`,
     not as an error-containing spans
+    - `:req_headers_to_span_attributes` - List of request headers whose values should be added as span attributes.
+    Request headers set by iddlewares successive to `Tesla.Middleware.OpenTelemetry` can not be extracted.
+    - `:resp_headers_to_span_attributes` - List of response headers whose values should be added as span attributes
   """
 
   alias OpenTelemetry.SemanticConventions.Trace
@@ -33,7 +36,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
       env
       |> maybe_put_additional_ok_statuses(opts[:mark_status_ok])
       |> maybe_propagate(Keyword.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
+      |> headers_to_span_attributes(:request, opts[:req_headers_to_span_attributes])
       |> Tesla.run(next)
+      |> headers_to_span_attributes(:response, opts[:resp_headers_to_span_attributes])
       |> set_span_attributes()
       |> handle_result()
     end
@@ -72,6 +77,23 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp maybe_put_additional_ok_statuses(env, _additional_ok_statuses), do: env
+
+  defp headers_to_span_attributes(env, _type, nil), do: env
+
+  defp headers_to_span_attributes({tag, %Tesla.Env{} = env}, type, headers_to_extract) do
+    {tag, headers_to_span_attributes(env, type, headers_to_extract)}
+  end
+
+  defp headers_to_span_attributes(%Tesla.Env{headers: headers} = env, type, headers_to_extract) do
+    headers_to_extract =
+      Enum.map(headers_to_extract, &:opentelemetry_instrumentation_http.normalize_header_name/1)
+
+    type
+    |> :opentelemetry_instrumentation_http.extract_headers_attributes(headers, headers_to_extract)
+    |> OpenTelemetry.Tracer.set_attributes()
+
+    env
+  end
 
   defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
     OpenTelemetry.Tracer.set_attributes(build_attrs(env))

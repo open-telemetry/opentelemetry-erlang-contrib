@@ -29,8 +29,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     test "uses generic route name when opentelemetry middleware is configured before path params middleware",
          %{
            bypass: bypass
-         } do
-      defmodule TestClient do
+         } = ctx do
+      client_module = :"#{ctx.test}.Client"
+
+      defmodule client_module do
         def get(client) do
           params = [id: '3']
 
@@ -54,8 +56,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       bypass.port
       |> endpoint_url()
-      |> TestClient.client()
-      |> TestClient.get()
+      |> client_module.client()
+      |> client_module.get()
 
       assert_receive {:span, span(name: "/users/:id", attributes: _attributes)}
     end
@@ -63,8 +65,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     test "uses low-cardinality method name when path params middleware is not used",
          %{
            bypass: bypass
-         } do
-      defmodule TestClient do
+         } = ctx do
+      client_module = :"#{ctx.test}.Client"
+
+      defmodule client_module do
         def get(client) do
           Tesla.get(client, "/users/")
         end
@@ -85,8 +89,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       bypass.port
       |> endpoint_url()
-      |> TestClient.client()
-      |> TestClient.get()
+      |> client_module.client()
+      |> client_module.get()
 
       assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
     end
@@ -94,8 +98,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     test "uses custom span name when passed in middleware opts",
          %{
            bypass: bypass
-         } do
-      defmodule TestClient do
+         } = ctx do
+      client_module = :"#{ctx.test}.Client"
+
+      defmodule client_module do
         def get(client) do
           params = [id: '3']
 
@@ -119,8 +125,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       bypass.port
       |> endpoint_url()
-      |> TestClient.client()
-      |> TestClient.get()
+      |> client_module.client()
+      |> client_module.get()
 
       assert_receive {:span, span(name: "POST :my-high-cardinality-url", attributes: _attributes)}
     end
@@ -128,8 +134,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     test "uses custom span name function when passed in middleware opts",
          %{
            bypass: bypass
-         } do
-      defmodule TestClient do
+         } = ctx do
+      client_module = :"#{ctx.test}.Client"
+
+      defmodule client_module do
         def get(client) do
           params = [id: '3']
 
@@ -156,15 +164,17 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       bypass.port
       |> endpoint_url()
-      |> TestClient.client()
-      |> TestClient.get()
+      |> client_module.client()
+      |> client_module.get()
 
       assert_receive {:span, span(name: "GET potato", attributes: _attributes)}
     end
   end
 
-  test "Records spans for Tesla HTTP client", %{bypass: bypass} do
-    defmodule TestClient do
+  test "Records spans for Tesla HTTP client", %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client) do
         Tesla.get(client, "/users/")
       end
@@ -185,10 +195,65 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
+    |> client_module.client()
+    |> client_module.get()
 
-    assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
+    assert_receive {:span, span(name: "HTTP GET", attributes: attributes)}
+
+    assert %{
+             "http.method": "GET",
+             "http.url": "http://localhost:#{bypass.port}/users/",
+             "http.target": "/users/",
+             "net.host.name": "localhost",
+             "http.scheme": "http",
+             "http.status_code": 204
+           } == :otel_attributes.map(attributes)
+  end
+
+  test "Request response headers are extracted as attributes as configured",
+       %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
+      def get(client, headers) do
+        Tesla.get(client, "/users/", headers: headers)
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          {Tesla.Middleware.OpenTelemetry,
+           req_headers_to_span_attributes: ["Req-Header"],
+           resp_headers_to_span_attributes: ["Resp-Header"]}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("resp-header", "1")
+      |> Plug.Conn.resp(204, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> client_module.client()
+    |> client_module.get([{"req-header", "1"}])
+
+    assert_receive {:span, span(name: "HTTP GET", attributes: attributes)}
+
+    assert %{
+             "http.method": "GET",
+             "http.url": "http://localhost:#{bypass.port}/users/",
+             "http.target": "/users/",
+             "net.host.name": "localhost",
+             "http.scheme": "http",
+             "http.status_code": 204,
+             "http.request.header.req_header": ["1"],
+             "http.response.header.resp_header": ["1"]
+           } == :otel_attributes.map(attributes)
   end
 
   @error_codes [
@@ -223,8 +288,11 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
   ]
 
   for code <- @error_codes do
-    test "Marks Span status as :error when HTTP request fails with #{code}", %{bypass: bypass} do
-      defmodule TestClient do
+    test "Marks Span status as :error when HTTP request fails with #{code}",
+         %{bypass: bypass} = ctx do
+      client_module = :"#{ctx.test}.Client"
+
+      defmodule client_module do
         def get(client) do
           Tesla.get(client, "/users/")
         end
@@ -245,15 +313,17 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       bypass.port
       |> endpoint_url()
-      |> TestClient.client()
-      |> TestClient.get()
+      |> client_module.client()
+      |> client_module.get()
 
       assert_receive {:span, span(status: {:status, :error, ""})}
     end
   end
 
-  test "Marks Span status as :errors when max redirects are exceeded", %{bypass: bypass} do
-    defmodule TestClient do
+  test "Marks Span status as :errors when max redirects are exceeded", %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client) do
         Tesla.get(client, "/users/")
       end
@@ -283,15 +353,17 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
+    |> client_module.client()
+    |> client_module.get()
 
     assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
-  test "Marks Span status as :error if error status is within `mark_status_ok` opt list",
-       %{bypass: bypass} do
-    defmodule TestClient do
+  test "Marks Span status as :ok if error status is within `mark_status_ok` opt list",
+       %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client) do
         Tesla.get(client, "/users/")
       end
@@ -312,15 +384,17 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
+    |> client_module.client()
+    |> client_module.get()
 
     assert_receive {:span, span(status: {:status, :ok, ""})}
   end
 
-  test "Marks Span status as :ok unless error status is within `mark_status_ok` opt list",
-       %{bypass: bypass} do
-    defmodule TestClient do
+  test "Marks Span status as :error unless error status is within `mark_status_ok` opt list",
+       %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client) do
         Tesla.get(client, "/users/")
       end
@@ -341,14 +415,16 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get()
+    |> client_module.client()
+    |> client_module.get()
 
     assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
-  test "Appends query string parameters to http.url attribute", %{bypass: bypass} do
-    defmodule TestClient do
+  test "Appends query string parameters to http.url attribute", %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client, id) do
         params = [id: id]
         Tesla.get(client, "/users/:id", opts: [path_params: params])
@@ -372,8 +448,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get("2")
+    |> client_module.client()
+    |> client_module.get("2")
 
     assert_receive {:span, span(name: _name, attributes: attributes)}
 
@@ -383,10 +459,13 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
              "http://localhost:#{bypass.port}/users/2?token=some-token&array%5B%5D=foo&array%5B%5D=bar"
   end
 
-  test "http.url attribute is correct when request doesn't contain query string parameters", %{
-    bypass: bypass
-  } do
-    defmodule TestClient do
+  test "http.url attribute is correct when request doesn't contain query string parameters",
+       %{
+         bypass: bypass
+       } = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client, id) do
         params = [id: id]
         Tesla.get(client, "/users/:id", opts: [path_params: params])
@@ -410,8 +489,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get("2")
+    |> client_module.client()
+    |> client_module.get("2")
 
     assert_receive {:span, span(name: _name, attributes: attributes)}
 
@@ -421,8 +500,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
              "http://localhost:#{bypass.port}/users/2"
   end
 
-  test "Handles url path arguments correctly", %{bypass: bypass} do
-    defmodule TestClient do
+  test "Handles url path arguments correctly", %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client, id) do
         params = [id: id]
         Tesla.get(client, "/users/:id", opts: [path_params: params])
@@ -446,15 +527,17 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get("2")
+    |> client_module.client()
+    |> client_module.get("2")
 
     assert_receive {:span, span(name: _name, attributes: attributes)}
     assert %{"http.target": "/users/2"} = :otel_attributes.map(attributes)
   end
 
-  test "Records http.response_content_length param into the span", %{bypass: bypass} do
-    defmodule TestClient do
+  test "Records http.response_content_length param into the span", %{bypass: bypass} = ctx do
+    client_module = :"#{ctx.test}.Client"
+
+    defmodule client_module do
       def get(client, id) do
         params = [id: id]
         Tesla.get(client, "/users/:id", opts: [path_params: params])
@@ -480,8 +563,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     bypass.port
     |> endpoint_url()
-    |> TestClient.client()
-    |> TestClient.get("2")
+    |> client_module.client()
+    |> client_module.get("2")
 
     assert_receive {:span, span(name: _name, attributes: attributes)}
 
