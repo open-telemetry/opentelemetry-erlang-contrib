@@ -8,6 +8,7 @@
 * Change http.url to follow [OpenTelemetry http spec](https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#http-client).
   Full HTTP request URL in the form scheme://host[:port]/path?query[#fragment].
   Must not contain credentials passed via URL.
+* New options (`req_headers_to_span_attributes`  and `resp_headers_to_span_attributes`) to automatically add request/response headers as attributes
 
 ## 0.1.2
 
