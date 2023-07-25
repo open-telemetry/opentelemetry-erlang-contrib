@@ -95,7 +95,8 @@ defmodule OpentelemetryEcto do
         Ecto.Adapters.Postgres -> :postgresql
         Ecto.Adapters.MyXQL -> :mysql
         Ecto.Adapters.SQLite3 -> :sqlite
-        _ -> nil
+        Ecto.Adapters.Tds -> :mssql
+        _ -> :other_sql
       end
 
     # TODO: need connection information to complete the required attributes
