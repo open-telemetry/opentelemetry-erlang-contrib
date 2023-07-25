@@ -90,9 +90,18 @@ defmodule OpentelemetryEcto do
         _ -> type
       end
 
+    db_system =
+      case repo.__adapter__() do
+        Ecto.Adapters.Postgres -> :postgresql
+        Ecto.Adapters.MyXQL -> :mysql
+        Ecto.Adapters.SQLite3 -> :sqlite
+        _ -> nil
+      end
+
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
+      "db.system": db_system,
       "db.type": db_type,
       source: source,
       "db.instance": database,

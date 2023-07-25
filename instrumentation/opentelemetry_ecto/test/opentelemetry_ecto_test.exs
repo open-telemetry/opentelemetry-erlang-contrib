@@ -49,6 +49,7 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
+             "db.system": :postgresql,
              "db.instance": "opentelemetry_ecto_test",
              "db.type": :sql,
              "db.url": "ecto://localhost",
@@ -111,6 +112,7 @@ defmodule OpentelemetryEctoTest do
                     )}
 
     assert %{
+             "db.system": :postgresql,
              "db.instance": "opentelemetry_ecto_test",
              "db.type": :sql,
              "db.url": "ecto://localhost",
