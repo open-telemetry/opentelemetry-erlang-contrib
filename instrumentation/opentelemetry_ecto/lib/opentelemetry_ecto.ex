@@ -119,8 +119,13 @@ defmodule OpentelemetryEcto do
     attributes =
       measurements
       |> Enum.reduce(%{}, fn
-        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
-          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
+        {k, v}, acc
+        when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+          Map.put(
+            acc,
+            String.to_atom("#{k}_#{time_unit}s"),
+            System.convert_time_unit(v, :native, time_unit)
+          )
 
         _, acc ->
           acc

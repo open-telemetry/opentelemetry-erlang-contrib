@@ -73,7 +73,9 @@ defmodule OpentelemetryEctoTest do
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
-    assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
+
+    assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
+             :otel_attributes.map(attributes)
   end
 
   test "include santized query with sanitizer function" do
@@ -81,15 +83,20 @@ defmodule OpentelemetryEctoTest do
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
-    assert %{"db.statement": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} = :otel_attributes.map(attributes)
+
+    assert %{"db.statement": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
+             :otel_attributes.map(attributes)
   end
 
   test "include additional_attributes" do
     attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
-    assert %{"config.attribute": "special value", "db.instance": "my_instance"} = :otel_attributes.map(attributes)
+
+    assert %{"config.attribute": "special value", "db.instance": "my_instance"} =
+             :otel_attributes.map(attributes)
   end
 
   test "changes the time unit" do
@@ -141,7 +148,7 @@ defmodule OpentelemetryEctoTest do
     attach_handler()
 
     try do
-      Repo.all(from u in "users", select: u.non_existant_field)
+      Repo.all(from(u in "users", select: u.non_existant_field))
     rescue
       _ -> :ok
     end
@@ -167,9 +174,24 @@ defmodule OpentelemetryEctoTest do
     end
 
     assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:users"
+                    )}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:posts"
+                    )}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:comments"
+                    )}
   end
 
   test "preloads in parallel are tied to the parent span" do
@@ -184,9 +206,24 @@ defmodule OpentelemetryEctoTest do
     end
 
     assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:users"
+                    )}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:posts"
+                    )}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:comments"
+                    )}
   end
 
   test "nested query preloads are tied to the parent span" do
@@ -197,21 +234,45 @@ defmodule OpentelemetryEctoTest do
     attach_handler()
 
     Tracer.with_span "parent span" do
-      users_query = from u in User, preload: [:posts, :comments]
-      comments_query = from c in Comment, preload: [user: ^users_query]
+      users_query = from(u in User, preload: [:posts, :comments])
+      comments_query = from(c in Comment, preload: [user: ^users_query])
       Repo.all(Query.from(User, preload: [:posts, comments: ^comments_query]))
     end
 
     assert_receive {:span, span(span_id: root_span_id, name: "parent span")}
     # root query
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:users"
+                    )}
+
     # comments preload
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:comments"
+                    )}
+
     # users preload
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:users"
+                    )}
+
     # preloads of user
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:posts")}
-    assert_receive {:span, span(parent_span_id: ^root_span_id, name: "opentelemetry_ecto.test_repo.query:comments")}
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:posts"
+                    )}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^root_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:comments"
+                    )}
   end
 
   test "nested query within Task does not skip parent span" do
@@ -234,7 +295,12 @@ defmodule OpentelemetryEctoTest do
 
     assert_receive {:span, span(span_id: _root_span_id, name: "root span")}
     assert_receive {:span, span(span_id: parent_span_id, name: "parent span")}
-    assert_receive {:span, span(parent_span_id: ^parent_span_id, name: "opentelemetry_ecto.test_repo.query:users")}
+
+    assert_receive {:span,
+                    span(
+                      parent_span_id: ^parent_span_id,
+                      name: "opentelemetry_ecto.test_repo.query:users"
+                    )}
   end
 
   def attach_handler(config \\ []) do
