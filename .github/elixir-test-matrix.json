@@ -16,6 +16,13 @@
   "os": [
     "ubuntu-20.04"
   ],
+  "include": [
+    {
+      "elixir_version": "1.14.2",
+      "otp_version": "25.1.2",
+      "check_formatted": true
+    }
+  ],
   "exclude": [
     {
       "elixir_version": "1.11.4",

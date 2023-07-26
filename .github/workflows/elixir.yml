@@ -69,6 +69,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -106,6 +107,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -143,6 +145,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -184,6 +187,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -221,6 +225,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -258,6 +263,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -295,6 +301,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -341,8 +348,10 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
+
   opentelemetry-dataloader:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_dataloader'))
@@ -387,8 +396,10 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
+
   opentelemetry-process-propagator:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_process_propagator'))
@@ -423,6 +434,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -460,6 +472,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -497,5 +510,6 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
