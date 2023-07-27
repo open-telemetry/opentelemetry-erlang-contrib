@@ -76,4 +76,24 @@ defmodule OpentelemetryRedixTest do
              "net.peer.port": "6379"
            } = :otel_attributes.map(attributes)
   end
+
+  test "records span without db.statement if configured not to" do
+    OpentelemetryRedix.setup(db_statement: false)
+
+    conn = start_supervised!({Redix, []})
+
+    {:ok, [_]} =
+      Redix.pipeline(conn, [
+        ["GET", "counter"]
+      ])
+
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    refute Map.has_key?(:otel_attributes.map(attributes), :"db.statement")
+  end
 end
