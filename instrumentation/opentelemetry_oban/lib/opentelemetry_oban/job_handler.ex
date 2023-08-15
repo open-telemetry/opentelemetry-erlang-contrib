@@ -87,18 +87,16 @@ defmodule OpentelemetryOban.JobHandler do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
-  def handle_job_exception(
-        _event,
-        _measurements,
-        %{stacktrace: stacktrace, error: error} = metadata,
-        _config
-      ) do
+  def handle_job_exception(_event, _measurements, metadata, _config) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
-    # Record exception and mark the span as errored
-    Span.record_exception(ctx, error, stacktrace)
-    Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    exception = Exception.normalize(metadata.kind, metadata.reason, metadata.stacktrace)
+    Span.record_exception(ctx, exception, metadata.stacktrace)
+    Span.set_status(ctx, OpenTelemetry.status(:error, format_error(exception)))
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
+
+  defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
+  defp format_error(error), do: inspect(error)
 end

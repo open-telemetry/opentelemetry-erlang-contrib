@@ -163,7 +163,8 @@ defmodule OpentelemetryObanTest do
     OpentelemetryOban.insert(TestJobThatReturnsError.new(%{}))
     assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
-    expected_status = OpenTelemetry.status(:error, "")
+    expected_status =
+      OpenTelemetry.status(:error, "TestJobThatReturnsError failed with {:error, :something}")
 
     assert_receive {:span,
                     span(
@@ -195,8 +196,11 @@ defmodule OpentelemetryObanTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert %{
+             "exception.type" => "Elixir.Oban.PerformError",
+             "exception.message" => "TestJobThatReturnsError failed with {:error, :something}",
+             "exception.stacktrace" => _
+           } = :otel_attributes.map(event_attributes)
   end
 
   test "records spans for each retry" do
@@ -205,7 +209,8 @@ defmodule OpentelemetryObanTest do
     assert %{success: 0, failure: 1, discard: 1} =
              Oban.drain_queue(queue: :events, with_scheduled: true, with_recursion: true)
 
-    expected_status = OpenTelemetry.status(:error, "")
+    expected_status =
+      OpenTelemetry.status(:error, "TestJobThatReturnsError failed with {:error, :something}")
 
     assert_receive {:span,
                     span(
@@ -241,7 +246,11 @@ defmodule OpentelemetryObanTest do
     OpentelemetryOban.insert(TestJobThatThrowsException.new(%{}))
     assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
-    expected_status = OpenTelemetry.status(:error, "")
+    expected_status =
+      OpenTelemetry.status(
+        :error,
+        "function Some.error/0 is undefined (module Some is not available)"
+      )
 
     assert_receive {:span,
                     span(
@@ -273,8 +282,12 @@ defmodule OpentelemetryObanTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert %{
+             "exception.type" => "Elixir.UndefinedFunctionError",
+             "exception.message" =>
+               "function Some.error/0 is undefined (module Some is not available)",
+             "exception.stacktrace" => _
+           } = :otel_attributes.map(event_attributes)
   end
 
   test "spans inside the job are associated with the job trace" do

@@ -36,77 +36,67 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     :telemetry.execute(
       [:oban, :plugin, :start],
       %{system_time: System.system_time()},
-      %{plugin: Elixir.Oban.Plugins.Stager}
+      %{plugin: Oban.Plugins.Stager}
     )
 
     :telemetry.execute(
       [:oban, :plugin, :stop],
       %{duration: 444},
-      %{plugin: Elixir.Oban.Plugins.Stager}
+      %{plugin: Oban.Plugins.Stager}
     )
 
-    refute_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+    refute_receive {:span, span(name: "Oban.Plugins.Stager process")}
   end
 
   test "records span on plugin execution" do
     :telemetry.execute(
       [:oban, :plugin, :start],
       %{system_time: System.system_time()},
-      %{plugin: Elixir.Oban.Plugins.Stager}
+      %{plugin: Oban.Plugins.Stager}
     )
 
     :telemetry.execute(
       [:oban, :plugin, :stop],
       %{duration: 444},
-      %{plugin: Elixir.Oban.Plugins.Stager}
+      %{plugin: Oban.Plugins.Stager}
     )
 
-    assert_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+    assert_receive {:span, span(name: "Oban.Plugins.Stager process")}
   end
 
   test "records span on plugin error" do
-    :telemetry.execute(
-      [:oban, :plugin, :start],
-      %{system_time: System.system_time()},
-      %{plugin: Elixir.Oban.Plugins.Stager}
-    )
+    try do
+      :telemetry.span(
+        [:oban, :plugin],
+        %{plugin: Oban.Plugins.Stager},
+        fn ->
+          raise "some error"
+        end
+      )
+    rescue
+      RuntimeError -> :ok
+    end
 
-    :telemetry.execute(
-      [:oban, :plugin, :exception],
-      %{duration: 444},
-      %{
-        plugin: Elixir.Oban.Plugins.Stager,
-        kind: :error,
-        stacktrace: [
-          {Some, :error, [], []}
-        ],
-        error: %UndefinedFunctionError{
-          arity: 0,
-          function: :error,
-          message: nil,
-          module: Some,
-          reason: nil
-        }
-      }
-    )
-
-    expected_status = OpenTelemetry.status(:error, "")
+    expected_status = OpenTelemetry.status(:error, "some error")
 
     assert_receive {:span,
                     span(
-                      name: "Elixir.Oban.Plugins.Stager process",
+                      name: "Oban.Plugins.Stager process",
                       events: events,
                       status: ^expected_status
                     )}
 
-    [
-      event(
-        name: "exception",
-        attributes: event_attributes
-      )
-    ] = :otel_events.list(events)
+    assert [
+             event(
+               name: "exception",
+               attributes: event_attributes
+             )
+           ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert %{
+             "exception.type" => "Elixir.RuntimeError",
+             "exception.message" => "some error",
+             "exception.stacktrace" => _
+           } = :otel_attributes.map(event_attributes)
   end
 end
