@@ -53,7 +53,6 @@ defmodule OpentelemetryReq do
   alias OpenTelemetry.SemanticConventions.Trace
   require Trace
   require Tracer
-  require Logger
 
   def attach(%Req.Request{} = request, options \\ []) do
     request
@@ -105,7 +104,7 @@ defmodule OpentelemetryReq do
   end
 
   defp end_errored_span({request, exception}) do
-    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, format_exception(exception)))
+    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, format_error(exception)))
 
     OpenTelemetry.Tracer.end_span()
 
@@ -115,11 +114,8 @@ defmodule OpentelemetryReq do
     {request, exception}
   end
 
-  defp format_exception(%{__exception__: true} = exception) do
-    Exception.message(exception)
-  end
-
-  defp format_exception(_), do: ""
+  defp format_error(exception) when is_exception(exception), do: Exception.message(exception)
+  defp format_error(error), do: inspect(error)
 
   defp span_name(request) do
     case request.options[:span_name] do
@@ -127,7 +123,7 @@ defmodule OpentelemetryReq do
         method = http_method(request.method)
 
         case Req.Request.get_private(request, :path_params_template) do
-          nil -> method
+          nil -> "#{method} #{request.url.path}"
           params_template -> "#{method} #{params_template}"
         end
 
@@ -202,30 +198,46 @@ defmodule OpentelemetryReq do
 
   defp maybe_put_trace_headers(request) do
     if request.options[:propagate_trace_ctx] do
-      Map.put(request, :headers, :otel_propagator_text_map.inject(request.headers))
+      Req.Request.put_headers(request, :otel_propagator_text_map.inject(request.headers))
     else
       request
     end
   end
 
   defp require_path_params_option(request) do
-    if !request.options[:no_path_params] and !request.options[:path_params] do
-      {Req.Request.halt(request), __MODULE__.PathParamsOptionError.new()}
-    else
-      request
+    cond do
+      request.options[:span_name] ->
+        request
+
+      request.options[:path_params] ->
+        request
+
+      request.options[:no_path_params] ->
+        request
+
+      true ->
+        {Req.Request.halt(request), __MODULE__.PathParamsOptionError.exception(_default = [])}
     end
   end
 
   defmodule PathParamsOptionError do
-    defexception [:message]
+    defexception message: ~S"""
+                 :path_params option must be set
 
-    def new do
-      %__MODULE__{}
-    end
+                 Span names cannot have unbounded names, so path_params should always be provided to
+                 ensure that paths have a proper template. For example:
 
-    @impl true
-    def message(_) do
-      ":path_params option must be set"
-    end
+                   /users/:id
+
+                 instead of:
+
+                   /users/42
+
+                 In you can ensure paths have no dynamic parts, for example:
+
+                   /users
+
+                 Then you can skip this check by via :no_path_params option. 
+                 """
   end
 end
