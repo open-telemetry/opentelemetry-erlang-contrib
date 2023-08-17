@@ -155,7 +155,7 @@ defmodule OpentelemetryPhoenixTest do
       )
     ] = :otel_events.list(events)
 
-    assert [:key, :map, "exception.message", "exception.stacktrace", "exception.type"] ==
+    assert [:key, :map, :"exception.message", :"exception.stacktrace", :"exception.type"] ==
              Map.keys(:otel_attributes.map(event_attributes))
   end
 
@@ -262,7 +262,7 @@ defmodule OpentelemetryPhoenixTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
              Map.keys(:otel_attributes.map(event_attributes))
   end
 
