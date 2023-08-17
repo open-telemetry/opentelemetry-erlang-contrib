@@ -26,6 +26,7 @@ jobs:
         run: |
           matrixStringifiedObject="$(jq -c . .github/elixir-test-matrix.json)"
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
@@ -34,7 +35,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -81,7 +82,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -119,7 +120,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Phoenix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -157,7 +158,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -199,7 +200,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Req test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -237,7 +238,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -275,7 +276,7 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Telemetry test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -313,7 +314,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -360,7 +361,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Dataloader test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -408,7 +409,7 @@ jobs:
     defaults:
       run:
         working-directory: propagators/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Process Propagator test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -446,7 +447,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false

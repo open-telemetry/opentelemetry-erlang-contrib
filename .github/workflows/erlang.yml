@@ -26,6 +26,7 @@ jobs:
         run: |
           matrixStringifiedObject="$(jq -c . .github/erlang-test-matrix.json)"
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+
   opentelemetry-cowboy:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_cowboy'))
@@ -34,7 +35,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Cowboy test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
@@ -65,7 +66,7 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Telemetry test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
@@ -96,7 +97,7 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry AWS X-Ray test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
@@ -127,7 +128,7 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: OpenTelemetry Instrumentation HTTP test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
     strategy:
       fail-fast: false
