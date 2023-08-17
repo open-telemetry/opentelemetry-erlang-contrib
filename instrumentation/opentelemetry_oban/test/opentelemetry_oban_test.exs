@@ -195,8 +195,8 @@ defmodule OpentelemetryObanTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
   test "records spans for each retry" do
@@ -273,8 +273,8 @@ defmodule OpentelemetryObanTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
   test "spans inside the job are associated with the job trace" do
@@ -329,8 +329,8 @@ defmodule OpentelemetryObanTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
 
     refute_received {:span, span(name: "TestJob process")}
   end
