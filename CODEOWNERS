@@ -23,4 +23,3 @@
 /utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
 /utilities/opentelemetry_instrumentation_http   @tsloughter
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva
-/instrumentation/opentelemetry_httpoison        @primait/shared-services
