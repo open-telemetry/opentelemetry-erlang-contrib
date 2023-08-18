@@ -209,12 +209,8 @@ defmodule OpentelemetryReq do
   end
 
   defp require_path_params_option(request) do
-    unless request.options[:no_path_params] do
-      unless Map.has_key?(request.options, :path_params) do
-        {Req.Request.halt(request), __MODULE__.PathParamsOptionError.new()}
-      else
-        request
-      end
+    if !request.options[:no_path_params] and !request.options[:path_params] do
+      {Req.Request.halt(request), __MODULE__.PathParamsOptionError.new()}
     else
       request
     end
@@ -229,7 +225,7 @@ defmodule OpentelemetryReq do
 
     @impl true
     def message(_) do
-      "req_path_params path parameter options must be provided"
+      ":path_params option must be set"
     end
   end
 end
