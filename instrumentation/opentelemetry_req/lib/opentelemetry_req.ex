@@ -202,7 +202,12 @@ defmodule OpentelemetryReq do
 
   defp maybe_put_trace_headers(request) do
     if request.options[:propagate_trace_ctx] do
-      Map.put(request, :headers, :otel_propagator_text_map.inject(request.headers))
+      propagator = :opentelemetry.get_text_map_injector()
+      headers_to_inject = :otel_propagator_text_map.inject(propagator, [], &[{&1, &2} | &3])
+
+      Enum.reduce(headers_to_inject, request, fn {name, value}, acc ->
+        Req.Request.put_header(acc, name, value)
+      end)
     else
       request
     end
