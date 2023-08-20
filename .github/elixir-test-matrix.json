@@ -1,16 +1,16 @@
 {
   "otp_version": [
-    "26.x",
-    "25.x",
-    "24.x",
-    "23.x"
+    "26.0.2",
+    "25.3.2.5",
+    "24.3.4.13",
+    "23.3.4.19"
   ],
   "elixir_version": [
-    "1.15.x",
-    "1.14.x",
-    "1.13.x",
-    "1.12.x",
-    "1.11.x"
+    "1.15.4",
+    "1.14.4",
+    "1.13.4",
+    "1.12.3",
+    "1.11.4"
   ],
   "rebar3_version": [
     "3.20"
@@ -20,39 +20,39 @@
   ],
   "include": [
     {
-      "elixir_version": "1.15.x",
-      "otp_version": "26.x",
+      "elixir_version": "1.15.4",
+      "otp_version": "26.0.2",
       "check_formatted": true
     }
   ],
   "exclude": [
     {
-      "elixir_version": "1.15.x",
-      "otp_version": "23.x"
+      "elixir_version": "1.15.4",
+      "otp_version": "23.3.4.19"
     },
     {
-      "elixir_version": "1.14.x",
-      "otp_version": "26.x"
+      "elixir_version": "1.14.4",
+      "otp_version": "26.0.2"
     },
     {
-      "elixir_version": "1.13.x",
-      "otp_version": "26.x"
+      "elixir_version": "1.13.4",
+      "otp_version": "26.0.2"
     },
     {
-      "elixir_version": "1.12.x",
-      "otp_version": "25.x"
+      "elixir_version": "1.12.3",
+      "otp_version": "25.3.2.5"
     },
     {
-      "elixir_version": "1.12.x",
-      "otp_version": "26.x"
+      "elixir_version": "1.12.3",
+      "otp_version": "26.0.2"
     },
     {
-      "elixir_version": "1.11.x",
-      "otp_version": "25.x"
+      "elixir_version": "1.11.4",
+      "otp_version": "25.3.2.5"
     },
     {
-      "elixir_version": "1.11.x",
-      "otp_version": "26.x"
+      "elixir_version": "1.11.4",
+      "otp_version": "26.0.2"
     }
   ]
 }
