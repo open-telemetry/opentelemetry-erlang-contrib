@@ -7,6 +7,12 @@ defmodule TestServer do
   plug(:match)
   plug(:dispatch)
 
+  match "/headers" do
+    conn
+    |> Plug.Conn.put_resp_header("resp-header", "1")
+    |> send_resp(200, "ok")
+  end
+
   match "/status/:status_code" do
     send_resp(conn, String.to_integer(status_code), "Here's that status code you ordered!")
   end

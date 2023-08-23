@@ -21,6 +21,7 @@ defmodule OpentelemetryFinchTest do
     OpenTelemetry.Tracer.start_span("test")
 
     on_exit(fn ->
+      :telemetry.detach({OpentelemetryFinch, :request_stop})
       OpenTelemetry.Tracer.end_span()
     end)
 
@@ -73,6 +74,39 @@ defmodule OpentelemetryFinchTest do
              "http.scheme": :http,
              "http.status_code": 0
            } = :otel_attributes.map(attributes)
+  end
+
+  test "Request response headers are extracted as attributes as configured", %{bypass: bypass} do
+    Bypass.expect_once(bypass, "GET", "/", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("resp-header", "1")
+      |> Plug.Conn.resp(204, "")
+    end)
+
+    OpentelemetryFinch.setup(
+      req_headers_to_span_attributes: ["Req-Header"],
+      resp_headers_to_span_attributes: ["Resp-Header"]
+    )
+
+    _conn = start_supervised!({Finch, name: HttpFinch})
+
+    {:ok, _} =
+      Finch.build(:get, endpoint_url(bypass.port), [{"req-header", "1"}])
+      |> Finch.request(HttpFinch)
+
+    assert_receive {:span, span(name: "HTTP GET", attributes: attributes)}
+
+    assert %{
+             "http.method": "GET",
+             "http.url": "http://localhost:#{bypass.port}/",
+             "http.target": "/",
+             "net.peer.name": "localhost",
+             "net.peer.port": bypass.port,
+             "http.scheme": :http,
+             "http.status_code": 204,
+             "http.request.header.req_header": ["1"],
+             "http.response.header.resp_header": ["1"]
+           } == :otel_attributes.map(attributes)
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}/"

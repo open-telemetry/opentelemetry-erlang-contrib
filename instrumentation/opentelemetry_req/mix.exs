@@ -59,8 +59,11 @@ defmodule OpentelemetryReq.MixProject do
       {:jason, "~> 1.3"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_instrumentation_http, "~> 0.1"},
       {:req, ">= 0.3.5"},
-      {:ex_doc, "~> 0.29", only: [:dev, :test]}
+      {:ex_doc, "~> 0.29", only: [:dev, :test]},
+      {:bypass, "~> 2.1", only: :test},
+      {:opentelemetry, "~> 1.0", only: :test}
     ]
   end
 end

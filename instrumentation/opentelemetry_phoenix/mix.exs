@@ -65,6 +65,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry_telemetry, "~> 1.0"},
       {:opentelemetry_process_propagator, "~> 0.2"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_instrumentation_http, "~> 0.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:plug, ">= 1.11.0"},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},

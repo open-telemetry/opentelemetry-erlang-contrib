@@ -18,7 +18,8 @@ all() ->
      idle_timeout_request,
      chunk_timeout_request,
      bad_request,
-     binary_status_code_request
+     binary_status_code_request,
+     request_headers_as_attributes
      ].
 
 init_per_suite(Config) ->
@@ -46,20 +47,31 @@ end_per_suite(_Config) ->
     application:stop(ranch),
     application:stop(telemetry).
 
-init_per_testcase(_, Config) ->
+init_per_testcase(TestCase, Config) ->
     application:set_env(opentelemetry, processors, [{otel_batch_processor, #{scheduled_delay_ms => 1}}]),
 
     {ok, _} = application:ensure_all_started(telemetry),
     {ok, _} = application:ensure_all_started(opentelemetry),
     {ok, _} = application:ensure_all_started(opentelemetry_telemetry),
     {ok, _} = application:ensure_all_started(opentelemetry_cowboy),
-    opentelemetry_cowboy:setup(),
+    
+    case TestCase of
+        request_headers_as_attributes ->
+            opentelemetry_cowboy:setup(#{
+                req_headers_to_span_attributes => ["X-Forwarded-For", "Foo"],
+                resp_headers_to_span_attributes => ["foo"]
+            });
+
+        _ ->
+            opentelemetry_cowboy:setup()
+    end,
 
     otel_batch_processor:set_exporter(otel_exporter_pid, self()),
 
     Config.
 
 end_per_testcase(_, Config) ->
+    ok = telemetry:detach(opentelemetry_cowboy_handlers),
     Config.
 
 successful_request(_Config) ->
@@ -126,7 +138,7 @@ failed_request(_Config) ->
     receive
         {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
-            #event{name= <<"exception">>} = Event,
+            #event{name=exception} = Event,
             ?assertEqual(<<"HTTP GET">>, Name),
             ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{
@@ -294,4 +306,32 @@ binary_status_code_request(_Config) ->
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(binary_status_code_request)
+    end.
+
+request_headers_as_attributes(_Config) ->
+    ReqHeaders = [
+        {"x-forwarded-for", "127.0.0.1, 127.0.0.2"},
+        {"foo", "foo-value"},
+        {"bar", "bar-value"}
+    ],
+    {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
+        httpc:request(get, {"http://localhost:8080/success", ReqHeaders}, [], []),
+    receive
+        {span, #span{attributes=Attributes}} ->
+            MapAttributes = otel_attributes:map(Attributes),
+            ?assertMatch(#{
+                'http.request.header.x_forwarded_for' := [<<"127.0.0.1, 127.0.0.2">>],
+                'http.request.header.foo' := [<<"foo-value">>]
+            }, MapAttributes),
+            ?assertNotMatch(#{
+                'http.request.header.bar' := [<<"bar-value">>]
+            }, MapAttributes),
+            ?assertMatch(#{
+                'http.response.header.foo' := [<<"foo-value">>]
+            }, MapAttributes),
+            ?assertNotMatch(#{
+                'http.response.header.bar' := [<<"bar-value">>]
+            }, MapAttributes)
+    after
+        1000 -> ct:fail(successful_request)
     end.

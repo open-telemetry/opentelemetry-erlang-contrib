@@ -9,25 +9,31 @@
 
 -define(TRACER_ID, ?MODULE).
 
+-type opts() :: #{
+    req_headers_to_span_attributes => [string()],
+    resp_headers_to_span_attributes => [string()]
+}.
+
 -spec setup() -> ok.
 setup() ->
-    setup([]).
+    setup(#{}).
 
--spec setup([]) -> ok.
-setup(_Opts) ->
-    attach_event_handlers(),
+-spec setup(opts()) -> ok.
+setup(Opts) ->
+    ParsedOpts = parse_opts(Opts),
+    attach_event_handlers(ParsedOpts),
     ok.
 
-attach_event_handlers() ->
+attach_event_handlers(Opts) ->
     Events = [
               [cowboy, request, early_error],
               [cowboy, request, start],
               [cowboy, request, stop],
               [cowboy, request, exception]
              ],
-    telemetry:attach_many(opentelemetry_cowboy_handlers, Events, fun ?MODULE:handle_event/4, #{}).
+    telemetry:attach_many(opentelemetry_cowboy_handlers, Events, fun ?MODULE:handle_event/4, Opts).
 
-handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Config) ->
+handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, Config) ->
     Headers = maps:get(headers, Req),
     otel_propagator_text_map:extract(maps:to_list(Headers)),
     {RemoteIP, _Port} = maps:get(peer, Req),
@@ -45,18 +51,30 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
                   'net.host.ip' => iolist_to_binary(inet:ntoa(RemoteIP)),
                   'net.transport' => 'IP.TCP'
                  },
+
+    HeadersToExtract = maps:get(req_headers_to_span_attributes, Config, []),
+    HeadersAttributes = opentelemetry_instrumentation_http:extract_headers_attributes(request, Headers, HeadersToExtract),
+
+    Attributes1 = maps:merge(HeadersAttributes, Attributes),
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
-    Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
+    Opts = #{attributes => Attributes1, kind => ?SPAN_KIND_SERVER},
     otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, Opts);
 
-handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
+handle_event([cowboy, request, stop], Measurements, Meta, Config) ->
     Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
     Status = maps:get(resp_status, Meta),
+    Headers = maps:get(resp_headers, Meta),
+    
     Attributes = #{
                   'http.request_content_length' => maps:get(req_body_length, Measurements),
                   'http.response_content_length' => maps:get(resp_body_length, Measurements)
                  },
-    otel_span:set_attributes(Ctx, Attributes),
+
+    HeadersToExtract = maps:get(resp_headers_to_span_attributes, Config, []),
+    HeadersAttributes = opentelemetry_instrumentation_http:extract_headers_attributes(response, Headers, HeadersToExtract),
+
+    Attributes1 = maps:merge(HeadersAttributes, Attributes),
+    otel_span:set_attributes(Ctx, Attributes1),
     StatusCode = transform_status_to_code(Status),
     case StatusCode of
         undefined ->
@@ -139,3 +157,10 @@ client_ip(Headers, RemoteIP) ->
       Addresses ->
           hd(binary:split(Addresses, <<",">>))
   end.
+
+parse_opts(Opts) ->
+    Opts1 = maps:update_with(req_headers_to_span_attributes, fun parse_headers_to_span_attributes/1, [], Opts),
+    maps:update_with(resp_headers_to_span_attributes, fun parse_headers_to_span_attributes/1, [], Opts1).
+
+parse_headers_to_span_attributes(Headers) ->
+    lists:map(fun opentelemetry_instrumentation_http:normalize_header_name/1, Headers).

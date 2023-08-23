@@ -10,6 +10,16 @@ defmodule OpentelemetryPhoenix do
                       default: nil,
                       doc: "The phoenix server adapter being used.",
                       type_doc: ":atom"
+                    ],
+                    req_headers_to_span_attributes: [
+                      type: {:list, :string},
+                      default: [],
+                      doc: "List of request headers whose values should be added as span attributes"
+                    ],
+                    resp_headers_to_span_attributes: [
+                      type: {:list, :string},
+                      default: [],
+                      doc: "List of response headers whose values should be added as span attributes"
                     ]
                   )
 
@@ -71,12 +81,15 @@ defmodule OpentelemetryPhoenix do
   """
   @spec setup(opts()) :: :ok
   def setup(opts \\ []) do
-    opts = NimbleOptions.validate!(opts, @options_schema)
+    opts =
+      opts
+      |> NimbleOptions.validate!(@options_schema)
+      |> parse_opts()
 
     attach_endpoint_start_handler(opts)
     attach_endpoint_stop_handler(opts)
-    attach_router_start_handler()
-    attach_router_dispatch_exception_handler()
+    attach_router_start_handler(opts)
+    attach_router_dispatch_exception_handler(opts)
 
     :ok
   end
@@ -87,7 +100,7 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
-      %{adapter: opts[:adapter]}
+      opts
     )
   end
 
@@ -97,40 +110,35 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_stop},
       opts[:endpoint_prefix] ++ [:stop],
       &__MODULE__.handle_endpoint_stop/4,
-      %{adapter: opts[:adapter]}
+      opts
     )
   end
 
   @doc false
-  def attach_router_start_handler do
+  def attach_router_start_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_start},
       [:phoenix, :router_dispatch, :start],
       &__MODULE__.handle_router_dispatch_start/4,
-      %{}
+      opts
     )
   end
 
   @doc false
-  def attach_router_dispatch_exception_handler do
+  def attach_router_dispatch_exception_handler(opts) do
     :telemetry.attach(
       {__MODULE__, :router_dispatch_exception},
       [:phoenix, :router_dispatch, :exception],
       &__MODULE__.handle_router_dispatch_exception/4,
-      %{}
+      opts
     )
   end
 
   @doc false
   def handle_endpoint_start(_event, _measurements, meta, config) do
-    Process.put({:otel_phoenix, :adapter}, config.adapter)
-
-    case adapter() do
-      :cowboy2 ->
-        cowboy2_start()
-
-      _ ->
-        default_start(meta)
+    case config.adapter do
+      :cowboy2 -> cowboy2_start()
+      _ -> default_start(meta, config)
     end
   end
 
@@ -139,7 +147,7 @@ defmodule OpentelemetryPhoenix do
     |> OpenTelemetry.Ctx.attach()
   end
 
-  defp default_start(meta) do
+  defp default_start(meta, config) do
     %{conn: conn} = meta
     :otel_propagator_text_map.extract(conn.req_headers)
 
@@ -163,6 +171,15 @@ defmodule OpentelemetryPhoenix do
       SemanticConventions.Trace.net_transport() => :"IP.TCP"
     }
 
+    headers_attributes =
+      :opentelemetry_instrumentation_http.extract_headers_attributes(
+        :request,
+        conn.req_headers,
+        config.req_headers_to_span_attributes
+      )
+
+    attributes = Map.merge(attributes, headers_attributes)
+
     # start the span with a default name. Route name isn't known until router dispatch
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
       kind: :server,
@@ -171,23 +188,26 @@ defmodule OpentelemetryPhoenix do
   end
 
   @doc false
-  def handle_endpoint_stop(_event, _measurements, meta, _config) do
-    case adapter() do
-      :cowboy2 ->
-        :ok
-
-      _ ->
-        default_stop(meta)
+  def handle_endpoint_stop(_event, _measurements, meta, config) do
+    case config.adapter do
+      :cowboy2 -> :ok
+      _ -> default_stop(meta, config)
     end
   end
 
-  defp default_stop(meta) do
+  defp default_stop(meta, config) do
     %{conn: conn} = meta
 
     # ensure the correct span is current and update the status
     OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
 
-    Tracer.set_attribute(SemanticConventions.Trace.http_status_code(), conn.status)
+    :opentelemetry_instrumentation_http.extract_headers_attributes(
+      :response,
+      conn.resp_headers,
+      config.resp_headers_to_span_attributes
+    )
+    |> Map.put(SemanticConventions.Trace.http_status_code(), conn.status)
+    |> Tracer.set_attributes()
 
     if conn.status >= 500 do
       Tracer.set_status(OpenTelemetry.status(:error, ""))
@@ -268,7 +288,14 @@ defmodule OpentelemetryPhoenix do
     end
   end
 
-  defp adapter do
-    Process.get({:otel_phoenix, :adapter})
+  defp parse_opts(opts) do
+    opts
+    |> Map.new()
+    |> Map.update(:req_headers_to_span_attributes, [], &parse_headers_to_span_attributes/1)
+    |> Map.update(:resp_headers_to_span_attributes, [], &parse_headers_to_span_attributes/1)
+  end
+
+  defp parse_headers_to_span_attributes(headers) do
+    Enum.map(headers, &:opentelemetry_instrumentation_http.normalize_header_name/1)
   end
 end

@@ -12,6 +12,8 @@ defmodule OpentelemetryReq do
     * `:span_name` - `String.t()` if provided, overrides the span name. Defaults to `nil`.
     * `:no_path_params` - `boolean()` when set to `true` no path params are expected for the request. Defaults to `false`
     * `:propagate_trace_ctx` - `boolean()` when set to `true`, trace headers will be propagated. Defaults to `false`
+    * `:req_headers_to_span_attributes` - List of request headers whose values should be added as span attributes.
+    * `:resp_headers_to_span_attributes` - List of response headers whose values should be added as span attributes
 
   ### Example with path_params
 
@@ -56,8 +58,16 @@ defmodule OpentelemetryReq do
   require Logger
 
   def attach(%Req.Request{} = request, options \\ []) do
+    options = parse_options(options)
+
     request
-    |> Req.Request.register_options([:span_name, :no_path_params, :propagate_trace_ctx])
+    |> Req.Request.register_options([
+      :span_name,
+      :no_path_params,
+      :propagate_trace_ctx,
+      :req_headers_to_span_attributes,
+      :resp_headers_to_span_attributes
+    ])
     |> Req.Request.merge_options(options)
     |> Req.Request.append_request_steps(
       require_path_params: &require_path_params_option/1,
@@ -66,6 +76,16 @@ defmodule OpentelemetryReq do
     )
     |> Req.Request.prepend_response_steps(otel_end_span: &end_span/1)
     |> Req.Request.prepend_error_steps(otel_end_span: &end_errored_span/1)
+  end
+
+  defp parse_options(options) do
+    options
+    |> Keyword.update(:req_headers_to_span_attributes, [], &parse_headers_to_span_attributes/1)
+    |> Keyword.update(:resp_headers_to_span_attributes, [], &parse_headers_to_span_attributes/1)
+  end
+
+  defp parse_headers_to_span_attributes(headers) do
+    Enum.map(headers, &:opentelemetry_instrumentation_http.normalize_header_name/1)
   end
 
   defp start_span(request) do
@@ -89,6 +109,7 @@ defmodule OpentelemetryReq do
     attrs =
       Map.put(%{}, Trace.http_status_code(), response.status)
       |> maybe_append_resp_content_length(response)
+      |> maybe_append_headers_attrs(response, request.options[:resp_headers_to_span_attributes])
 
     Tracer.set_attributes(attrs)
 
@@ -149,6 +170,7 @@ defmodule OpentelemetryReq do
     }
     |> maybe_append_req_content_length(request)
     |> maybe_append_retry_count(request)
+    |> maybe_append_headers_attrs(request, request.options[:req_headers_to_span_attributes])
   end
 
   defp sanitize_url(uri) do
@@ -186,17 +208,40 @@ defmodule OpentelemetryReq do
     end
   end
 
+  defp maybe_append_headers_attrs(attrs, req_or_resp, headers_to_extract) do
+    type =
+      case req_or_resp do
+        %Req.Request{} -> :request
+        %Req.Response{} -> :response
+      end
+
+    case headers_to_extract do
+      nil ->
+        attrs
+
+      _ ->
+        Map.merge(
+          attrs,
+          :opentelemetry_instrumentation_http.extract_headers_attributes(
+            type,
+            req_or_resp.headers,
+            headers_to_extract
+          )
+        )
+    end
+  end
+
   defp http_method(method) do
     case method do
-      :get -> :GET
-      :head -> :HEAD
-      :post -> :POST
-      :patch -> :PATCH
-      :put -> :PUT
-      :delete -> :DELETE
-      :connect -> :CONNECT
-      :options -> :OPTIONS
-      :trace -> :TRACE
+      :get -> "GET"
+      :head -> "HEAD"
+      :post -> "POST"
+      :patch -> "PATCH"
+      :put -> "PUT"
+      :delete -> "DELETE"
+      :connect -> "CONNECT"
+      :options -> "OPTIONS"
+      :trace -> "TRACE"
     end
   end
 

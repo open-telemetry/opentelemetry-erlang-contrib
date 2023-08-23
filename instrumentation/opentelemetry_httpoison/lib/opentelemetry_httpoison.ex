@@ -15,7 +15,7 @@ defmodule OpentelemetryHTTPoison do
   require Record
   require Logger
 
-  alias HTTPoison.Request
+  alias HTTPoison.{AsyncResponse, MaybeRedirect, Request, Response}
   alias OpenTelemetry.Tracer
   alias OpentelemetryHTTPoison.Configuration
 
@@ -43,6 +43,10 @@ defmodule OpentelemetryHTTPoison do
 
   If no value is provided then the out of the box, conservative inference provided by
   `OpentelemetryHTTPoison.URI.infer_route_from_request/1` is used to determine the inference.
+
+  It is also possible to automatically add some request/response headers as attributes by using
+  the `:req_headers_to_span_attributes` and `:resp_headers_to_span_attributes` options that take
+  a list of headers to be added.
 
   This can be overridden per each call to `OpentelemetryHTTPoison.request/1`.
 
@@ -170,6 +174,7 @@ defmodule OpentelemetryHTTPoison do
     ot_attributes =
       get_standard_ot_attributes(request, host) ++
         get_ot_attributes(opts) ++
+        headers_attributes(:request, request.headers, opts) ++
         resource_route_attribute
 
     request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
@@ -181,12 +186,21 @@ defmodule OpentelemetryHTTPoison do
       case result do
         {:error, %{reason: reason}} ->
           Tracer.set_status(:error, inspect(reason))
-          end_span()
 
-        _ ->
+        {:ok, %AsyncResponse{}} ->
           :ok
+
+        {:ok, %Response{headers: headers}} ->
+          attrs = headers_attributes(:response, headers, opts)
+          Tracer.set_attributes(attrs)
+
+        {:ok, %MaybeRedirect{headers: headers}} ->
+          attrs = headers_attributes(:response, headers, opts)
+          Tracer.set_attributes(attrs)
       end
     end
+
+    end_span()
 
     result
   end
@@ -198,7 +212,6 @@ defmodule OpentelemetryHTTPoison do
     end
 
     Tracer.set_attribute(@http_status_code, status_code)
-    end_span()
     status_code
   end
 
@@ -263,5 +276,25 @@ defmodule OpentelemetryHTTPoison do
 
   defp strip_uri_credentials(uri) do
     uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
+  end
+
+  defp headers_attributes(type, headers, opts) do
+    opt_name =
+      case type do
+        :request -> :req_headers_to_span_attributes
+        :response -> :resp_headers_to_span_attributes
+      end
+
+    headers = Enum.map(headers, fn {key, value} -> {to_string(key), value} end)
+
+    opts
+    |> Keyword.get(opt_name, [])
+    |> Kernel.++(Configuration.get(opt_name))
+    |> Enum.map(&:opentelemetry_instrumentation_http.normalize_header_name/1)
+    |> then(
+      &(type
+        |> :opentelemetry_instrumentation_http.extract_headers_attributes(headers, &1)
+        |> Map.to_list())
+    )
   end
 end

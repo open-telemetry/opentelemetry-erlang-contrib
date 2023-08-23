@@ -48,7 +48,7 @@ defmodule OpentelemetryHTTPoison.Configuration do
   @doc """
   Get a configured option
   """
-  @spec get(:infer_route | :ot_attributes) :: any()
+  @spec get(:infer_route | :ot_attributes | :req_headers_to_span_attributes | :resp_headers_to_span_attributes) :: any()
   def get(key)
 
   def get(:infer_route),
@@ -59,7 +59,8 @@ defmodule OpentelemetryHTTPoison.Configuration do
         &OpentelemetryHTTPoison.URI.infer_route_from_request/1
       )
 
-  def get(:ot_attributes), do: Application.get_env(:opentelemetry_httpoison, :ot_attributes, [])
+  def get(key) when key in [:ot_attributes, :req_headers_to_span_attributes, :resp_headers_to_span_attributes],
+    do: Application.get_env(:opentelemetry_httpoison, key, [])
 
   defp set(key, value), do: Application.put_env(:opentelemetry_httpoison, key, value)
 
