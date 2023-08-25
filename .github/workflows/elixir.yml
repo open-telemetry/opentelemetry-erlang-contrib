@@ -3,12 +3,12 @@ name: Elixir
 on:
   pull_request:
     branches:
-      - 'main'
+      - "main"
     types: [opened, reopened, synchronize, labeled]
 
   push:
     branches:
-      - 'main'
+      - "main"
 
 concurrency:
   group: ci-${{ github.head_ref || github.run_id }}-elixir
@@ -24,18 +24,18 @@ jobs:
       - name: Read file
         id: set-matrix
         run: |
-          matrixStringifiedObject="{\"otp_version\":[\"25.1.2\",\"24.3.4.6\",\"23.3.4.18\"],\"elixir_version\":[\"1.14.2\",\"1.13.4\"],\"rebar3_version\":[\"3.20\"],\"os\":[\"ubuntu-20.04\"]}"
+          matrixStringifiedObject="$(jq -c . .github/elixir-test-matrix.json)"
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
-          echo "matrix_exclude="
+
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
     env:
-      app: 'opentelemetry_ecto'
+      app: "opentelemetry_ecto"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -43,7 +43,7 @@ jobs:
     services:
       postgres:
         image: circleci/postgres:13.3-ram
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_USER: postgres
@@ -70,6 +70,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -77,11 +78,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_nebulex'))
     env:
-      app: 'opentelemetry_nebulex'
+      app: "opentelemetry_nebulex"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -107,6 +108,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -114,11 +116,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_phoenix'))
     env:
-      app: 'opentelemetry_phoenix'
+      app: "opentelemetry_phoenix"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Phoenix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -144,6 +146,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -151,11 +154,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_redix'))
     env:
-      app: 'opentelemetry_redix'
+      app: "opentelemetry_redix"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -163,7 +166,7 @@ jobs:
     services:
       redis:
         image: redis:alpine
-        ports: ['6379:6379']
+        ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -185,6 +188,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -192,11 +196,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_req'))
     env:
-      app: 'opentelemetry_req'
+      app: "opentelemetry_req"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Req test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -222,6 +226,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -229,11 +234,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_finch'))
     env:
-      app: 'opentelemetry_finch'
+      app: "opentelemetry_finch"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -259,6 +264,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -266,11 +272,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_telemetry'))
     env:
-      app: 'opentelemetry_telemetry'
+      app: "opentelemetry_telemetry"
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Telemetry test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -296,6 +302,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -303,11 +310,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_oban'))
     env:
-      app: 'opentelemetry_oban'
+      app: "opentelemetry_oban"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -315,7 +322,7 @@ jobs:
     services:
       postgres:
         image: circleci/postgres:13.3-ram
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_USER: postgres
@@ -342,17 +349,19 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
+
   opentelemetry-dataloader:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_dataloader'))
     env:
-      app: 'opentelemetry_dataloader'
+      app: "opentelemetry_dataloader"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Dataloader test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -360,7 +369,7 @@ jobs:
     services:
       postgres:
         image: circleci/postgres:13.3-ram
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_USER: postgres
@@ -388,17 +397,19 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
+
   opentelemetry-process-propagator:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_process_propagator'))
     env:
-      app: 'opentelemetry_process_propagator'
+      app: "opentelemetry_process_propagator"
     defaults:
       run:
         working-directory: propagators/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Process Propagator test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -424,6 +435,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -431,11 +443,11 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_tesla'))
     env:
-      app: 'opentelemetry_tesla'
+      app: "opentelemetry_tesla"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -461,6 +473,7 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test
 
@@ -468,7 +481,7 @@ jobs:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_httpoison'))
     env:
-      app: 'opentelemetry_httpoison'
+      app: "opentelemetry_httpoison"
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
@@ -498,5 +511,6 @@ jobs:
         run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
+        if: matrix.check_formatted
       - name: Test
         run: mix test

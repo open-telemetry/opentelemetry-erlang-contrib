@@ -106,7 +106,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 end

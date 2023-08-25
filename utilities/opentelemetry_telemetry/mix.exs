@@ -78,13 +78,13 @@ defmodule OpentelemetryTelemetry.MixProject do
   end
 
   defp load_config do
-    {:ok, config} = :file.consult('rebar.config')
+    {:ok, config} = :file.consult(~c"rebar.config")
 
     config
   end
 
   defp load_app do
-    {:ok, [{:application, name, desc}]} = :file.consult('src/opentelemetry_telemetry.app.src')
+    {:ok, [{:application, name, desc}]} = :file.consult(~c"src/opentelemetry_telemetry.app.src")
 
     {name, desc}
   end

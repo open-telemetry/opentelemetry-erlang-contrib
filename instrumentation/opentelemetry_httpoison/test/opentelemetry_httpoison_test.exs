@@ -70,18 +70,14 @@ defmodule OpentelemetryHTTPoisonTest do
 
   describe "OpentelemetryHTTPoison calls with additional options" do
     test "additional span attributes can be passed to OpentelemetryHTTPoison invocation" do
-      OpentelemetryHTTPoison.get!("http://localhost:8000", [],
-        ot_attributes: [{"app.callname", "mariorossi"}]
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000", [], ot_attributes: [{"app.callname", "mariorossi"}])
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
     end
 
     test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a string" do
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: "/user/edit"
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit"})
@@ -90,18 +86,14 @@ defmodule OpentelemetryHTTPoisonTest do
     test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a function" do
       infer_fn = fn request -> URI.parse(request.url).path end
 
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: infer_fn
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
     end
 
     test "resource route inference can be explicitly ignored" do
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: :ignore
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :ignore)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       refute confirm_http_route_attribute(attributes)
@@ -116,9 +108,7 @@ defmodule OpentelemetryHTTPoisonTest do
 
     test "resource route inference fails if an incorrect value is passed to the OpentelemetryHTTPoison invocation" do
       assert_raise(ArgumentError, fn ->
-        OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-          ot_resource_route: nil
-        )
+        OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: nil)
       end)
 
       assert_raise(ArgumentError, fn ->
@@ -244,9 +234,7 @@ defmodule OpentelemetryHTTPoisonTest do
     end
 
     test "resource route can be implicitly inferred by OpentelemetryHTTPoison invocation using a default function" do
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: :infer
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "/user/:subpath")
@@ -259,9 +247,7 @@ defmodule OpentelemetryHTTPoisonTest do
 
       set_env(:infer_route, infer_fn)
 
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: :infer
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "/user/edit/24")
@@ -276,9 +262,7 @@ defmodule OpentelemetryHTTPoisonTest do
 
       set_env(:infer_route, infer_fn)
 
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: invocation_infer_fn
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "test")
@@ -291,9 +275,7 @@ defmodule OpentelemetryHTTPoisonTest do
 
       set_env(:infer_route, infer_fn)
 
-      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [],
-        ot_resource_route: "test"
-      )
+      OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
       assert confirm_http_route_attribute(attributes, "test")
