@@ -1,0 +1,177 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  opentelemetry-aws-xray-release:
+    name: '[opentelemetry-aws-xray-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-aws-xray.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-cowboy-release:
+    name: '[opentelemetry-cowboy-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-cowboy.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-dataloader-release:
+    name: '[opentelemetry-dataloader-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-dataloader.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-ecto-release:
+    name: '[opentelemetry-ecto-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-ecto.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-elli-release:
+    name: '[opentelemetry-elli-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-elli.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-finch-release:
+    name: '[opentelemetry-finch-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-finch.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-grpcbox-release:
+    name: '[opentelemetry-grpcbox-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-grpcbox.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-httpoison-release:
+    name: '[opentelemetry-httpoison-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-httpoison.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-instrumentation-http-release:
+    name: '[opentelemetry-instrument-http-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-instrumentation-http.yml
+        env:
+
+  opentelemetry-nebulex-release:
+    name: '[opentelemetry-nebulex-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-nebulex.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-oban-release:
+    name: '[opentelemetry-oban-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-oban.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-phoenix-release:
+    name: '[opentelemetry-phoenix-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-phoenix.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-process-propagator-release:
+    name: '[opentelemetry-process-propagator-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-process-propagator.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-redix-release:
+    name: '[opentelemetry-redix-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-redix.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-req-release:
+    name: '[opentelemetry-req-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-req.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-telemetry-release:
+    name: '[opentelemetry-telemetry-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-telemetry.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-tesla-release:
+    name: '[opentelemetry-tesla-release] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-templates/opentelemetry-tesla.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

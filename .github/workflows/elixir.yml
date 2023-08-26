@@ -27,6 +27,54 @@ jobs:
           matrixStringifiedObject="$(jq -c . .github/elixir-test-matrix.json)"
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
 
+  opentelemetry-dataloader:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_dataloader'))
+    env:
+      app: "opentelemetry_dataloader"
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ${{ matrix.os }}
+    name: Opentelemetry Dataloader test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    services:
+      postgres:
+        image: circleci/postgres:13.3-ram
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opentelemetry_dataloader_test
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
   opentelemetry-ecto:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_ecto'))
@@ -74,6 +122,82 @@ jobs:
       - name: Test
         run: mix test
 
+  opentelemetry-finch:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_finch'))
+    env:
+      app: "opentelemetry_finch"
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ${{ matrix.os }}
+    name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
+  opentelemetry-httpoison:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_httpoison'))
+    env:
+      app: "opentelemetry_httpoison"
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ubuntu-20.04
+    name: Opentelemetry HTTPoison test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
   opentelemetry-nebulex:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_nebulex'))
@@ -87,6 +211,53 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
+  opentelemetry-oban:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_oban'))
+    env:
+      app: "opentelemetry_oban"
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ${{ matrix.os }}
+    name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    services:
+      postgres:
+        image: circleci/postgres:13.3-ram
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opentelemetry_oban_test
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -230,44 +401,6 @@ jobs:
       - name: Test
         run: mix test
 
-  opentelemetry-finch:
-    needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_finch'))
-    env:
-      app: "opentelemetry_finch"
-    defaults:
-      run:
-        working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
-    name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp_version }}
-          elixir-version: ${{ matrix.elixir_version }}
-          rebar3-version: ${{ matrix.rebar3_version }}
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/deps
-            ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
-      - name: Fetch deps
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: mix deps.get
-      - name: Compile project
-        run: mix compile --warnings-as-errors
-      - name: Check formatting
-        run: mix format --check-formatted
-        if: matrix.check_formatted
-      - name: Test
-        run: mix test
-
   opentelemetry-telemetry:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_telemetry'))
@@ -281,101 +414,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp_version }}
-          elixir-version: ${{ matrix.elixir_version }}
-          rebar3-version: ${{ matrix.rebar3_version }}
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/deps
-            ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
-      - name: Fetch deps
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: mix deps.get
-      - name: Compile project
-        run: mix compile --warnings-as-errors
-      - name: Check formatting
-        run: mix format --check-formatted
-        if: matrix.check_formatted
-      - name: Test
-        run: mix test
-
-  opentelemetry-oban:
-    needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_oban'))
-    env:
-      app: "opentelemetry_oban"
-    defaults:
-      run:
-        working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
-    name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    services:
-      postgres:
-        image: circleci/postgres:13.3-ram
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: opentelemetry_oban_test
-    steps:
-      - uses: actions/checkout@v3
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp_version }}
-          elixir-version: ${{ matrix.elixir_version }}
-          rebar3-version: ${{ matrix.rebar3_version }}
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/deps
-            ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
-      - name: Fetch deps
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: mix deps.get
-      - name: Compile project
-        run: mix compile --warnings-as-errors
-      - name: Check formatting
-        run: mix format --check-formatted
-        if: matrix.check_formatted
-      - name: Test
-        run: mix test
-
-  opentelemetry-dataloader:
-    needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_dataloader'))
-    env:
-      app: "opentelemetry_dataloader"
-    defaults:
-      run:
-        working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
-    name: Opentelemetry Dataloader test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    services:
-      postgres:
-        image: circleci/postgres:13.3-ram
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: opentelemetry_dataloader_test
-
     steps:
       - uses: actions/checkout@v3
       - uses: erlef/setup-beam@v1
@@ -449,44 +487,6 @@ jobs:
         working-directory: instrumentation/${{ env.app }}
     runs-on: ${{ matrix.os }}
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{ matrix.otp_version }}
-          elixir-version: ${{ matrix.elixir_version }}
-          rebar3-version: ${{ matrix.rebar3_version }}
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/deps
-            ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
-      - name: Fetch deps
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: mix deps.get
-      - name: Compile project
-        run: mix compile --warnings-as-errors
-      - name: Check formatting
-        run: mix format --check-formatted
-        if: matrix.check_formatted
-      - name: Test
-        run: mix test
-
-  opentelemetry-httpoison:
-    needs: [test-matrix]
-    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_httpoison'))
-    env:
-      app: "opentelemetry_httpoison"
-    defaults:
-      run:
-        working-directory: instrumentation/${{ env.app }}
-    runs-on: ubuntu-20.04
-    name: Opentelemetry HTTPoison test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
