@@ -26,6 +26,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         # when build docs first build edocs with rebar3
         docs: ["cmd rebar3 edoc", "docs"]
       ],
+      plt_file: {:no_warn, "priv/plts/opentelemetry_process_propagator.plt"},
       package: package()
     ]
   end
@@ -44,7 +45,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       dep when is_atom(dep) -> {dep, ">= 0.0.0"}
     end)
     |> Enum.concat([
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
@@ -61,7 +62,8 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/propagators/opentelemetry_process_propagator",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -83,7 +85,8 @@ defmodule OpentelemetryProcessPropagator.MixProject do
   end
 
   defp load_app do
-    {:ok, [{:application, name, desc}]} = :file.consult(~c"src/opentelemetry_process_propagator.app.src")
+    {:ok, [{:application, name, desc}]} =
+      :file.consult(~c"src/opentelemetry_process_propagator.app.src")
 
     {name, desc}
   end
