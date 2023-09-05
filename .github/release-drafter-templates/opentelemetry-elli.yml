@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Elli - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-elli-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-elli-v
+include-paths:
+  - instrumentation/opentelemetry_elli/src/**/*
+  - instrumentation/opentelemetry_elli/rebar.*

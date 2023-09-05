@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Nebulex - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-nebulex-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-nebulex-v
+include-paths:
+  - instrumentation/opentelemetry_nebulex/lib/**/*
+  - instrumentation/opentelemetry_nebulex/lib/mix.*

@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Cowboy - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-cowboy-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-cowboy-v
+include-paths:
+  - instrumentation/opentelemetry_cowboy/src/**/*
+  - instrumentation/opentelemetry_cowboy/rebar.*

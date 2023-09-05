@@ -1,0 +1,9 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Telemetry - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-telemetry-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-telemetry-v
+include-paths:
+  - utilities/opentelemetry_telemetry/src/**/*
+  - utilities/opentelemetry_telemetry/rebar.*
+  - utilities/opentelemetry_telemetry/lib/**/*
+  - utilities/opentelemetry_telemetry/lib/mix.*
