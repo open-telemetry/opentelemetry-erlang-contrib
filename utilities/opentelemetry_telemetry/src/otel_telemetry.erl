@@ -102,6 +102,8 @@ peek_from_tracer_stack(TracerId) ->
         [SpanCtxSet | _Rest] ->
             SpanCtxSet;
         [] ->
+            ?LOG_DEBUG("`opentelemetry_telemetry` span ctx tracer stack for "
+                       "TracerId ~p in Pid ~p is empty.", [TracerId, self()]),
             undefined
     end.
 
