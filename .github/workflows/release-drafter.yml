@@ -15,7 +15,6 @@ jobs:
           config-name: release-drafter-templates/opentelemetry-aws-xray.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-cowboy-release:
     name: '[opentelemetry-cowboy-release] Draft release'
@@ -95,6 +94,7 @@ jobs:
         with:
           config-name: release-drafter-templates/opentelemetry-instrumentation-http.yml
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-nebulex-release:
     name: '[opentelemetry-nebulex-release] Draft release'
