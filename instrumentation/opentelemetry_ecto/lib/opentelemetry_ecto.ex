@@ -54,7 +54,7 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo, type: type} = metadata,
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
@@ -160,8 +160,13 @@ defmodule OpentelemetryEcto do
       })
 
     case query_result do
+      {:error, %{__exception__: true} = exception} ->
+        OpenTelemetry.Span.record_exception(s, exception, Map.get(metadata, :stacktrace))
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, Exception.message(exception)))
+
       {:error, error} ->
-        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
+        status = if utf8?(error), do: error, else: ""
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, status))
 
       {:ok, _} ->
         :ok
@@ -174,9 +179,7 @@ defmodule OpentelemetryEcto do
     end
   end
 
-  defp format_error(%{__exception__: true} = exception) do
-    Exception.message(exception)
-  end
-
-  defp format_error(_), do: ""
+  defp utf8?(<<_::utf8, rest::binary>>), do: utf8?(rest)
+  defp utf8?(<<>>), do: true
+  defp utf8?(_), do: false
 end
