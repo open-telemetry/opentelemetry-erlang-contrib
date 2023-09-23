@@ -32,7 +32,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
          } do
       defmodule TestClient do
         def get(client) do
-          params = [id: '3']
+          params = [id: ~c"3"]
 
           Tesla.get(client, "/users/:id", opts: [path_params: params])
         end
@@ -97,7 +97,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
          } do
       defmodule TestClient do
         def get(client) do
-          params = [id: '3']
+          params = [id: ~c"3"]
 
           Tesla.get(client, "/users/:id", opts: [path_params: params])
         end
@@ -131,7 +131,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
          } do
       defmodule TestClient do
         def get(client) do
-          params = [id: '3']
+          params = [id: ~c"3"]
 
           Tesla.get(client, "/users/:id", opts: [path_params: params])
         end

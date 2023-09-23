@@ -75,11 +75,14 @@ defmodule OpentelemetryEcto do
           url
       end
 
-    span_name =
+    span_prefix =
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
-      end <> if source != nil, do: ":#{source}", else: ""
+      end
+
+    span_suffix = if source != nil, do: ":#{source}", else: ""
+    span_name = span_prefix <> span_suffix
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})

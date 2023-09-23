@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry HTTPoison - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-httpoison-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-httpoison-v
+include-paths:
+  - instrumentation/opentelemetry_httpoison/lib/**/*
+  - instrumentation/opentelemetry_httpoison/lib/mix.*

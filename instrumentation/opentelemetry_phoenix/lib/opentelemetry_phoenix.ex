@@ -189,8 +189,7 @@ defmodule OpentelemetryPhoenix do
       SemanticConventions.Trace.http_target() => conn.request_path,
       SemanticConventions.Trace.http_user_agent() => user_agent,
       SemanticConventions.Trace.net_host_name() => conn.host,
-      SemanticConventions.Trace.net_sock_host_addr() =>
-        to_string(:inet_parse.ntoa(conn.remote_ip)),
+      SemanticConventions.Trace.net_sock_host_addr() => to_string(:inet_parse.ntoa(conn.remote_ip)),
       SemanticConventions.Trace.net_host_port() => conn.port,
       SemanticConventions.Trace.net_sock_peer_addr() => to_string(:inet_parse.ntoa(peer_ip)),
       SemanticConventions.Trace.net_peer_port() => peer_data.port,

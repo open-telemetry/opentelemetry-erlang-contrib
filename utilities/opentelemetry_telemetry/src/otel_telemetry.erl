@@ -1,5 +1,6 @@
 -module(otel_telemetry).
 
+-include_lib("kernel/include/logger.hrl").
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
 
 -export([
@@ -8,9 +9,8 @@
          handle_event/4,
          start_telemetry_span/4,
          set_current_telemetry_span/2,
-         end_telemetry_span/2,
-         trace_application/1,
-         trace_application/2]).
+         end_telemetry_span/2
+]).
 
 -type telemetry_span_ctx() :: opentelemetry:span_ctx().
 -type parent_span_ctx() :: opentelemetry:span_ctx().
@@ -23,16 +23,6 @@ init(Application) ->
 
 -spec init(atom(), []) -> ok.
 init(_Application, _Opts) ->
-    ok.
-
-trace_application(Application) ->
-    trace_application(Application, []).
-
-trace_application(Application, _Opts) ->
-    _ = telemetry_registry:discover_all([Application]),
-    AllEvents = telemetry_registry:list_events(),
-    SpannableEvents = telemetry_registry:spannable_events(),
-    _ = register_event_handlers(SpannableEvents, AllEvents),
     ok.
 
 -spec start_telemetry_span(atom(), opentelemetry:span_name(), telemetry:event_metadata(), otel_span:start_opts()) -> opentelemetry:span_ctx().
@@ -100,7 +90,11 @@ peek_from_tracer_stack(TracerId) ->
         undefined ->
             undefined;
         [SpanCtxSet | _Rest] ->
-            SpanCtxSet
+            SpanCtxSet;
+        [] ->
+            ?LOG_DEBUG("`opentelemetry_telemetry` span ctx tracer stack for "
+                       "TracerId ~p in Pid ~p is empty.", [TracerId, self()]),
+            undefined
     end.
 
 -spec pop_ctx(atom(), telemetry:event_metadata()) -> ctx_set().
@@ -120,29 +114,6 @@ pop_from_tracer_stack(TracerId) ->
             erlang:put({otel_telemetry, TracerId}, Rest),
             SpanCtxSet
     end.
-
-register_event_handlers(SpannableEvents, AllEvents) ->
-    lists:foldl(fun ({Prefix, Suffixes}, Handlers) ->
-                      TracerId = tracer_id_for_events(Prefix, Suffixes, AllEvents),
-                      NewHandlers = [attach_handler(Prefix, Suffix, TracerId)
-                                     || Suffix <- Suffixes],
-                      NewHandlers ++ Handlers
-              end,
-              [],
-              SpannableEvents).
-
-attach_handler(Prefix, Suffix, TracerId) ->
-    Event = Prefix ++ [Suffix],
-    SpanName = list_to_binary(lists:join("_",
-                                         [atom_to_binary(Segment, utf8) || Segment <- Prefix])),
-    Config = #{tracer_id => TracerId, type => Suffix, span_name => SpanName},
-    Handler = fun ?MODULE:handle_event/4,
-    telemetry:attach({?MODULE, Event}, Event, Handler, Config).
-
-tracer_id_for_events(Prefix, [Suffix | _], AllEvents) ->
-    Event = Prefix ++ [Suffix],
-    {Event, Module, _Metadata} = lists:keyfind(Event, 1, AllEvents),
-    Module.
 
 handle_event(_Event,
              _Measurements,
