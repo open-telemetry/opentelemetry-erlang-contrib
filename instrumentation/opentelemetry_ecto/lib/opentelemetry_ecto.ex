@@ -104,37 +104,14 @@ defmodule OpentelemetryEcto do
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
 
-    base_attributes =
-      case Keyword.fetch(config, :db_statement) do
-        {:ok, :enabled} ->
-          Map.put(base_attributes, :"db.statement", query)
-
-        {:ok, :disabled} ->
-          base_attributes
-
-        {:ok, sanitizer} ->
-          Map.put(base_attributes, :"db.statement", sanitizer.(query))
-
-        :error ->
-          base_attributes
-      end
+    db_statement_config = Keyword.get(config, :db_statement, :disabled)
 
     attributes =
-      measurements
-      |> Enum.reduce(%{}, fn
-        {k, v}, acc
-        when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
-          Map.put(
-            acc,
-            String.to_atom("#{k}_#{time_unit}s"),
-            System.convert_time_unit(v, :native, time_unit)
-          )
-
-        _, acc ->
-          acc
-      end)
-      |> Map.merge(base_attributes)
-      |> Map.merge(additional_attributes)
+      base_attributes
+      |> add_measurements(measurements, time_unit)
+      |> maybe_add_db_statement(db_statement_config, query)
+      |> maybe_add_db_system(repo.__adapter__())
+      |> add_additional_attributes(additional_attributes)
 
     parent_context =
       case OpentelemetryProcessPropagator.fetch_ctx(self()) do
@@ -179,4 +156,60 @@ defmodule OpentelemetryEcto do
   end
 
   defp format_error(_), do: ""
+
+  defp add_measurements(attributes, measurements, time_unit) do
+    measurements
+    |> Enum.reduce(attributes, fn
+      {k, v}, acc
+      when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+        Map.put(
+          acc,
+          String.to_atom("#{k}_#{time_unit}s"),
+          System.convert_time_unit(v, :native, time_unit)
+        )
+
+      _, acc ->
+        acc
+    end)
+  end
+
+  defp maybe_add_db_statement(attributes, :enabled, query) do
+    Map.put(attributes, :"db.statement", query)
+  end
+
+  defp maybe_add_db_statement(attributes, :disabled, _query) do
+    attributes
+  end
+
+  defp maybe_add_db_statement(attributes, sanitizer, query) when is_function(sanitizer, 1) do
+    Map.put(attributes, :"db.statement", sanitizer.(query))
+  end
+
+  defp maybe_add_db_statement(attributes, _, _query) do
+    attributes
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.Postgres) do
+    Map.put(attributes, :"db.system", :postgresql)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.MyXQL) do
+    Map.put(attributes, :"db.system", :mysql)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.SQLite3) do
+    Map.put(attributes, :"db.system", :sqlite)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.Tds) do
+    Map.put(attributes, :"db.system", :mssql)
+  end
+
+  defp maybe_add_db_system(attributes, _) do
+    attributes
+  end
+
+  defp add_additional_attributes(attributes, additional_attributes) do
+    Map.merge(attributes, additional_attributes)
+  end
 end
