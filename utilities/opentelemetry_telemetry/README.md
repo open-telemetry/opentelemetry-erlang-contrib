@@ -1,6 +1,6 @@
 # OpentelemetryTelemetry
 
-A utility library for creating OpenTelemery spans from telemetry events.
+A utility library for creating OpenTelemetry spans from telemetry events.
 
 ## Purpose
 
