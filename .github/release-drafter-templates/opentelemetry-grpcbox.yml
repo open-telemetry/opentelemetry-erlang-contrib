@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry GRPCBox - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-grpcbox-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-grpcbox-v
+include-paths:
+  - instrumentation/opentelemetry_grpcbox/src/**/*
+  - instrumentation/opentelemetry_grpcbox/rebar.*

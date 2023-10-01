@@ -31,7 +31,6 @@ defmodule OpentelemetryEcto do
 
     * `:time_unit` - a time unit used to convert the values of query phase
       timings, defaults to `:microsecond`. See `System.convert_time_unit/3`
-
     * `:span_prefix` - the first part of the span name, as a `String.t`,
       defaults to the concatenation of the event name with periods, e.g.
       `"blog.repo.query"`. This will always be followed with a colon and the
@@ -39,6 +38,12 @@ defmodule OpentelemetryEcto do
     * `:additional_attributes` - additional attributes to include in the span. If there
       are conflits with default provided attributes, the ones provided with
       this config will have precedence.
+    * `:db_statement` - :disabled (default) | :enabled | fun
+      Whether or not to include db statements.
+      Optionally provide a function that takes a query string and returns a
+      sanitized version of it. This is useful for removing sensitive information from the
+      query string. Unless this option is `:enabled` or a function,
+      query statements will not be recorded on spans.
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -70,11 +75,14 @@ defmodule OpentelemetryEcto do
           url
       end
 
-    span_name =
+    span_prefix =
       case Keyword.fetch(config, :span_prefix) do
         {:ok, prefix} -> prefix
         :error -> Enum.join(event, ".")
-      end <> if source != nil, do: ":#{source}", else: ""
+      end
+
+    span_suffix = if source != nil, do: ":#{source}", else: ""
+    span_name = span_prefix <> span_suffix
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})
@@ -89,7 +97,6 @@ defmodule OpentelemetryEcto do
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
       "db.type": db_type,
-      "db.statement": query,
       source: source,
       "db.instance": database,
       "db.name": database,
@@ -97,17 +104,14 @@ defmodule OpentelemetryEcto do
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
 
-    attributes =
-      measurements
-      |> Enum.reduce(%{}, fn
-        {k, v}, acc when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
-          Map.put(acc, String.to_atom("#{k}_#{time_unit}s"), System.convert_time_unit(v, :native, time_unit))
+    db_statement_config = Keyword.get(config, :db_statement, :disabled)
 
-        _, acc ->
-          acc
-      end)
-      |> Map.merge(base_attributes)
-      |> Map.merge(additional_attributes)
+    attributes =
+      base_attributes
+      |> add_measurements(measurements, time_unit)
+      |> maybe_add_db_statement(db_statement_config, query)
+      |> maybe_add_db_system(repo.__adapter__())
+      |> add_additional_attributes(additional_attributes)
 
     parent_context =
       case OpentelemetryProcessPropagator.fetch_ctx(self()) do
@@ -152,4 +156,60 @@ defmodule OpentelemetryEcto do
   end
 
   defp format_error(_), do: ""
+
+  defp add_measurements(attributes, measurements, time_unit) do
+    measurements
+    |> Enum.reduce(attributes, fn
+      {k, v}, acc
+      when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+        Map.put(
+          acc,
+          String.to_atom("#{k}_#{time_unit}s"),
+          System.convert_time_unit(v, :native, time_unit)
+        )
+
+      _, acc ->
+        acc
+    end)
+  end
+
+  defp maybe_add_db_statement(attributes, :enabled, query) do
+    Map.put(attributes, :"db.statement", query)
+  end
+
+  defp maybe_add_db_statement(attributes, :disabled, _query) do
+    attributes
+  end
+
+  defp maybe_add_db_statement(attributes, sanitizer, query) when is_function(sanitizer, 1) do
+    Map.put(attributes, :"db.statement", sanitizer.(query))
+  end
+
+  defp maybe_add_db_statement(attributes, _, _query) do
+    attributes
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.Postgres) do
+    Map.put(attributes, :"db.system", :postgresql)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.MyXQL) do
+    Map.put(attributes, :"db.system", :mysql)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.SQLite3) do
+    Map.put(attributes, :"db.system", :sqlite)
+  end
+
+  defp maybe_add_db_system(attributes, Ecto.Adapters.Tds) do
+    Map.put(attributes, :"db.system", :mssql)
+  end
+
+  defp maybe_add_db_system(attributes, _) do
+    attributes
+  end
+
+  defp add_additional_attributes(attributes, additional_attributes) do
+    Map.merge(attributes, additional_attributes)
+  end
 end

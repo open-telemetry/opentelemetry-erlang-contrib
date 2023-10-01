@@ -179,31 +179,31 @@ defmodule PhoenixMeta do
         reason: :badarith,
         stack: [
           {MyStoreWeb.PageController, :code_exception, 2,
-           [file: 'lib/my_store_web/controllers/page_controller.ex', line: 9]},
-          {MyStoreWeb.PageController, :action, 2, [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
+           [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 9]},
+          {MyStoreWeb.PageController, :action, 2, [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
           {MyStoreWeb.PageController, :phoenix_controller_pipeline, 2,
-           [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
-          {Phoenix.Router, :__call__, 2, [file: 'lib/phoenix/router.ex', line: 352]},
-          {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-          {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: 'lib/plug/debugger.ex', line: 132]},
-          {MyStoreWeb.Endpoint, :call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-          {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: 'lib/phoenix/endpoint/cowboy2_handler.ex', line: 65]},
+           [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
+          {Phoenix.Router, :__call__, 2, [file: ~c"lib/phoenix/router.ex", line: 352]},
+          {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+          {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: ~c"lib/plug/debugger.ex", line: 132]},
+          {MyStoreWeb.Endpoint, :call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+          {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: ~c"lib/phoenix/endpoint/cowboy2_handler.ex", line: 65]},
           {:cowboy_handler, :execute, 2,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl",
              line: 37
            ]},
           {:cowboy_stream_h, :execute, 3,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
              line: 300
            ]},
           {:cowboy_stream_h, :request_process, 3,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
              line: 291
            ]},
-          {:proc_lib, :init_p_do_apply, 3, [file: 'proc_lib.erl', line: 226]}
+          {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 226]}
         ]
       },
       kind: :error,
@@ -305,60 +305,60 @@ defmodule PhoenixMeta do
         reason: :badarith,
         stack: [
           {MyStoreWeb.PageController, :code_exception, 2,
-           [file: 'lib/my_store_web/controllers/page_controller.ex', line: 9]},
-          {MyStoreWeb.PageController, :action, 2, [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
+           [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 9]},
+          {MyStoreWeb.PageController, :action, 2, [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
           {MyStoreWeb.PageController, :phoenix_controller_pipeline, 2,
-           [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
-          {Phoenix.Router, :__call__, 2, [file: 'lib/phoenix/router.ex', line: 352]},
-          {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-          {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: 'lib/plug/debugger.ex', line: 132]},
-          {MyStoreWeb.Endpoint, :call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-          {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: 'lib/phoenix/endpoint/cowboy2_handler.ex', line: 65]},
+           [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
+          {Phoenix.Router, :__call__, 2, [file: ~c"lib/phoenix/router.ex", line: 352]},
+          {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+          {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: ~c"lib/plug/debugger.ex", line: 132]},
+          {MyStoreWeb.Endpoint, :call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+          {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: ~c"lib/phoenix/endpoint/cowboy2_handler.ex", line: 65]},
           {:cowboy_handler, :execute, 2,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl",
              line: 37
            ]},
           {:cowboy_stream_h, :execute, 3,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
              line: 300
            ]},
           {:cowboy_stream_h, :request_process, 3,
            [
-             file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+             file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
              line: 291
            ]},
-          {:proc_lib, :init_p_do_apply, 3, [file: 'proc_lib.erl', line: 226]}
+          {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 226]}
         ]
       },
       stacktrace: [
         {MyStoreWeb.PageController, :code_exception, 2,
-         [file: 'lib/my_store_web/controllers/page_controller.ex', line: 9]},
-        {MyStoreWeb.PageController, :action, 2, [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
+         [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 9]},
+        {MyStoreWeb.PageController, :action, 2, [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
         {MyStoreWeb.PageController, :phoenix_controller_pipeline, 2,
-         [file: 'lib/my_store_web/controllers/page_controller.ex', line: 1]},
-        {Phoenix.Router, :__call__, 2, [file: 'lib/phoenix/router.ex', line: 352]},
-        {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-        {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: 'lib/plug/debugger.ex', line: 132]},
-        {MyStoreWeb.Endpoint, :call, 2, [file: 'lib/my_store_web/endpoint.ex', line: 1]},
-        {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: 'lib/phoenix/endpoint/cowboy2_handler.ex', line: 65]},
+         [file: ~c"lib/my_store_web/controllers/page_controller.ex", line: 1]},
+        {Phoenix.Router, :__call__, 2, [file: ~c"lib/phoenix/router.ex", line: 352]},
+        {MyStoreWeb.Endpoint, :plug_builder_call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+        {MyStoreWeb.Endpoint, :"call (overridable 3)", 2, [file: ~c"lib/plug/debugger.ex", line: 132]},
+        {MyStoreWeb.Endpoint, :call, 2, [file: ~c"lib/my_store_web/endpoint.ex", line: 1]},
+        {Phoenix.Endpoint.Cowboy2Handler, :init, 4, [file: ~c"lib/phoenix/endpoint/cowboy2_handler.ex", line: 65]},
         {:cowboy_handler, :execute, 2,
          [
-           file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl',
+           file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_handler.erl",
            line: 37
          ]},
         {:cowboy_stream_h, :execute, 3,
          [
-           file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+           file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
            line: 300
          ]},
         {:cowboy_stream_h, :request_process, 3,
          [
-           file: '/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl',
+           file: ~c"/Users/bryan/dev/opentelemetry_phoenix/test/support/my_store/deps/cowboy/src/cowboy_stream_h.erl",
            line: 291
          ]},
-        {:proc_lib, :init_p_do_apply, 3, [file: 'proc_lib.erl', line: 226]}
+        {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 226]}
       ]
     }
   end
@@ -454,9 +454,9 @@ defmodule PhoenixMeta do
         }
       },
       stacktrace: [
-        {MyStore.Users, :sort_by_name, 2, [file: 'lib/my_store/users.ex', line: 159]},
-        {Enum, :"-to_sort_fun/1-fun-0-", 3, [file: 'lib/enum.ex', line: 2542]},
-        {:lists, :sort, 2, [file: 'lists.erl', line: 969]}
+        {MyStore.Users, :sort_by_name, 2, [file: ~c"lib/my_store/users.ex", line: 159]},
+        {Enum, :"-to_sort_fun/1-fun-0-", 3, [file: ~c"lib/enum.ex", line: 2542]},
+        {:lists, :sort, 2, [file: ~c"lists.erl", line: 969]}
       ]
     }
   end

@@ -1,0 +1,9 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Process Propagator - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-process-propagator-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-process-propagator-v
+include-paths:
+  - propagators/opentelemetry_process_propagator/src/**/*
+  - propagators/opentelemetry_process_propagator/rebar.*
+  - propagators/opentelemetry_process_propagator/lib/**/*
+  - propagators/opentelemetry_process_propagator/lib/mix.*

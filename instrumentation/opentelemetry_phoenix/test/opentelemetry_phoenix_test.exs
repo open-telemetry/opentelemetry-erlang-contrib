@@ -155,8 +155,8 @@ defmodule OpentelemetryPhoenixTest do
       )
     ] = :otel_events.list(events)
 
-    assert [:key, :map, "exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type", :key, :map] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
   test "records exceptions for nested Phoenix routers" do
@@ -262,8 +262,8 @@ defmodule OpentelemetryPhoenixTest do
       )
     ] = :otel_events.list(events)
 
-    assert ["exception.message", "exception.stacktrace", "exception.type"] ==
-             Map.keys(:otel_attributes.map(event_attributes))
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
   defp x_forwarded_for_request(x_forwarded_for) do

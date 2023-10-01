@@ -32,7 +32,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async/3` for more information.
   """
-  @spec async(Supervisor.supervisor(), (() -> any())) :: Task.t()
+  @spec async(Supervisor.supervisor(), (-> any())) :: Task.t()
   def async(supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -68,7 +68,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_with_span(name, start_opts, supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
@@ -120,7 +120,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_with_linked_span(name, start_opts, supervisor, fun, options \\ []) do
     parent = OpenTelemetry.Tracer.current_span_ctx()
@@ -168,7 +168,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
 
   See `Task.Supervisor.async_nolink/3` for more information.
   """
-  @spec async_nolink(Supervisor.supervisor(), (() -> any())) :: Task.t()
+  @spec async_nolink(Supervisor.supervisor(), (-> any())) :: Task.t()
   def async_nolink(supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -204,7 +204,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_nolink_with_span(name, start_opts, supervisor, fun, options \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
@@ -256,7 +256,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_nolink_with_linked_span(name, start_opts, supervisor, fun, options \\ []) do
     parent = OpenTelemetry.Tracer.current_span_ctx()
@@ -686,7 +686,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
   """
   @spec start_child(
           Supervisor.supervisor(),
-          (() -> any()),
+          (-> any()),
           keyword()
         ) :: DynamicSupervisor.on_start_child()
   def start_child(supervisor, fun, options \\ []) do
@@ -731,7 +731,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any()),
+          (-> any()),
           keyword()
         ) :: DynamicSupervisor.on_start_child()
   def start_child_with_span(name, start_opts, supervisor, fun, options \\ []) do
@@ -785,7 +785,7 @@ defmodule OpentelemetryProcessPropagator.Task.Supervisor do
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
           Supervisor.supervisor(),
-          (() -> any()),
+          (-> any()),
           keyword()
         ) :: DynamicSupervisor.on_start_child()
   def start_child_with_linked_span(name, start_opts, supervisor, fun, options \\ []) do

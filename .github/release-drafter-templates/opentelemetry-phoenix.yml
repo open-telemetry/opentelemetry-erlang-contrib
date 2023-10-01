@@ -1,0 +1,7 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Phoenix - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-phoenix-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-phoenix-v
+include-paths:
+  - instrumentation/opentelemetry_phoenix/lib/**/*
+  - instrumentation/opentelemetry_phoenix/lib/mix.*

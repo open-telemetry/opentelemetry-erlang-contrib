@@ -208,7 +208,7 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.async/1` for more information.
   """
-  @spec async((() -> any())) :: Task.t()
+  @spec async((-> any())) :: Task.t()
   def async(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -239,7 +239,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec async_with_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_with_span(name, start_opts, fun) do
     ctx = OpenTelemetry.Ctx.get_current()
@@ -279,7 +279,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec async_with_linked_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: Task.t()
   def async_with_linked_span(name, start_opts, fun) do
     parent = OpenTelemetry.Tracer.current_span_ctx()
@@ -316,7 +316,7 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start/1` for more information.
   """
-  @spec start((() -> any())) :: {:ok, pid()}
+  @spec start((-> any())) :: {:ok, pid()}
   def start(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -347,7 +347,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec start_with_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: {:ok, pid()}
   def start_with_span(name, start_opts, fun) do
     ctx = OpenTelemetry.Ctx.get_current()
@@ -387,7 +387,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec start_with_linked_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: {:ok, pid()}
   def start_with_linked_span(name, start_opts, fun) do
     parent = OpenTelemetry.Tracer.current_span_ctx()
@@ -425,7 +425,7 @@ defmodule OpentelemetryProcessPropagator.Task do
 
   See `Task.start_link/1` for more information.
   """
-  @spec start_link((() -> any())) :: {:ok, pid()}
+  @spec start_link((-> any())) :: {:ok, pid()}
   def start_link(fun) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -459,7 +459,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec start_link_with_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: {:ok, pid()}
   def start_link_with_span(name, start_opts, fun) do
     ctx = OpenTelemetry.Ctx.get_current()
@@ -501,7 +501,7 @@ defmodule OpentelemetryProcessPropagator.Task do
   @spec start_link_with_linked_span(
           OpenTelemetry.span_name(),
           OpenTelemetry.Span.start_opts(),
-          (() -> any())
+          (-> any())
         ) :: {:ok, pid()}
   def start_link_with_linked_span(name, start_opts, fun) do
     parent = OpenTelemetry.Tracer.current_span_ctx()
