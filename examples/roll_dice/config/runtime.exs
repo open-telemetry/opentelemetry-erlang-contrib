@@ -48,6 +48,15 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :opentelemetry,
+         span_processor: :batch,
+         traces_exporter: :otlp
+
+  config :opentelemetry_exporter,
+         otlp_protocol: :http_protobuf,
+         otlp_endpoint: "http://localhost:4317"
+
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

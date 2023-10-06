@@ -7,6 +7,9 @@ defmodule RollDice.Application do
 
   @impl true
   def start(_type, _args) do
+    :opentelemetry_cowboy.setup()
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
     children = [
       # Start the Telemetry supervisor
       RollDiceWeb.Telemetry,
