@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+### Changed
+
+* Add measurements as attributes on span.
+
 ## 1.0.0
 
 ### Changed
