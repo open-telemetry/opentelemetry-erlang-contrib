@@ -107,8 +107,8 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp set_measurements_attributes(%{duration: duration, queue_time: queue_time}) do
     OpenTelemetry.Tracer.set_attributes(%{
-      :"messaging.oban.duration" => System.convert_time_unit(duration, :native, :microsecond),
-      :"messaging.oban.queue_time" =>
+      :"messaging.oban.duration_us" => System.convert_time_unit(duration, :native, :microsecond),
+      :"messaging.oban.queue_time_us" =>
         System.convert_time_unit(queue_time, :nanosecond, :microsecond)
     })
   end
