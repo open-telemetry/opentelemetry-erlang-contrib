@@ -145,13 +145,15 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
              "messaging.destination_kind": :queue,
+             "messaging.destination": "events",
              "messaging.oban.attempt": 1,
+             "messaging.oban.duration": _duration,
              "messaging.oban.inserted_at": _inserted_at,
              "messaging.oban.job_id": _job_id,
              "messaging.oban.max_attempts": 1,
              "messaging.oban.priority": 0,
+             "messaging.oban.queue_time": _queue_time,
              "messaging.oban.scheduled_at": _scheduled_at,
              "messaging.oban.worker": "TestJob",
              "messaging.operation": :process,
@@ -175,13 +177,15 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
              "messaging.destination_kind": :queue,
+             "messaging.destination": "events",
              "messaging.oban.attempt": 1,
+             "messaging.oban.duration": _duration,
              "messaging.oban.inserted_at": _inserted_at,
              "messaging.oban.job_id": _job_id,
              "messaging.oban.max_attempts": 1,
              "messaging.oban.priority": 0,
+             "messaging.oban.queue_time": _queue_time,
              "messaging.oban.scheduled_at": _scheduled_at,
              "messaging.oban.worker": "TestJobThatReturnsError",
              "messaging.operation": :process,
