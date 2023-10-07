@@ -4,7 +4,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   When used with `Tesla.Middleware.PathParams`, the span name will be created
   based on the provided path. Without it, the span name follow OpenTelemetry
-  standards and use just the method name, if not being overriden by opts.
+  standards and use just the method name, if not being overridden by opts.
 
   NOTE: This middleware needs to come before `Tesla.Middleware.PathParams`
 
