@@ -83,7 +83,7 @@ defmodule OpentelemetryOban.JobHandler do
     })
   end
 
-  def handle_job_stop(_event, measurements, metadata, config) do
+  def handle_job_stop(_event, measurements, metadata, _config) do
     set_measurements_attributes(measurements)
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
