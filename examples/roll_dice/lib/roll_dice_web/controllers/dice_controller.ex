@@ -7,10 +7,10 @@ defmodule RollDiceWeb.DiceController do
   end
 
   defp roll_dice do
-    Tracer.with_span("roll_dice") do
+    Tracer.with_span "roll_dice" do
       roll = Enum.random(1..6)
 
-      Tracer.set_attribute(:roll, roll)
+      Tracer.set_attribute("roll.value", roll)
 
       to_string(roll)
     end
