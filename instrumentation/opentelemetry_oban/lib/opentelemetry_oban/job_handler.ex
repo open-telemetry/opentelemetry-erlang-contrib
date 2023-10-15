@@ -6,10 +6,10 @@ defmodule OpentelemetryOban.JobHandler do
 
   @tracer_id __MODULE__
 
-  def attach() do
+  def attach(config) do
     attach_job_start_handler()
-    attach_job_stop_handler()
-    attach_job_exception_handler()
+    attach_job_stop_handler(config)
+    attach_job_exception_handler(config)
   end
 
   defp attach_job_start_handler() do
@@ -21,21 +21,21 @@ defmodule OpentelemetryOban.JobHandler do
     )
   end
 
-  defp attach_job_stop_handler() do
+  defp attach_job_stop_handler(config) do
     :telemetry.attach(
       "#{__MODULE__}.job_stop",
       [:oban, :job, :stop],
       &__MODULE__.handle_job_stop/4,
-      []
+      config
     )
   end
 
-  defp attach_job_exception_handler() do
+  defp attach_job_exception_handler(config) do
     :telemetry.attach(
       "#{__MODULE__}.job_exception",
       [:oban, :job, :exception],
       &__MODULE__.handle_job_exception/4,
-      []
+      config
     )
   end
 
@@ -83,8 +83,8 @@ defmodule OpentelemetryOban.JobHandler do
     })
   end
 
-  def handle_job_stop(_event, measurements, metadata, _config) do
-    set_measurements_attributes(measurements)
+  def handle_job_stop(_event, measurements, metadata, config) do
+    set_measurements_attributes(measurements, config)
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
@@ -92,7 +92,7 @@ defmodule OpentelemetryOban.JobHandler do
         _event,
         measurements,
         %{stacktrace: stacktrace, error: error} = metadata,
-        _config
+        config
       ) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
@@ -100,16 +100,19 @@ defmodule OpentelemetryOban.JobHandler do
     Span.record_exception(ctx, error, stacktrace)
     Span.set_status(ctx, OpenTelemetry.status(:error, ""))
 
-    set_measurements_attributes(measurements)
+    set_measurements_attributes(measurements, config)
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
-  defp set_measurements_attributes(%{duration: duration, queue_time: queue_time}) do
+  defp set_measurements_attributes(%{duration: duration, queue_time: queue_time}, %{
+         time_unit: time_unit
+       }) do
     OpenTelemetry.Tracer.set_attributes(%{
-      :"messaging.oban.duration_us" => System.convert_time_unit(duration, :native, :microsecond),
-      :"messaging.oban.queue_time_us" =>
-        System.convert_time_unit(queue_time, :nanosecond, :microsecond)
+      :"messaging.oban.duration_#{time_unit}" =>
+        System.convert_time_unit(duration, :native, time_unit),
+      :"messaging.oban.queue_time_#{time_unit}" =>
+        System.convert_time_unit(queue_time, :nanosecond, time_unit)
     })
   end
 end
