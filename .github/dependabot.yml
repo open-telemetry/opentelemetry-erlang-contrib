@@ -10,117 +10,117 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_ecto"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_ecto"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_finch"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_finch"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_httpoison"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_httpoison"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_nebulex"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_nebulex"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_oban"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_oban"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_phoenix"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_phoenix"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_redix"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_redix"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_req"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_req"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/instrumentation/opentelemetry_tesla"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/instrumentation/opentelemetry_tesla"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/propagators/opentelemetry_process_propagator"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/propagators/opentelemetry_process_propagator"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/utilities/opentelemetry_telemetry"
-      versioning-strategy: "lockfile-only"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/utilities/opentelemetry_telemetry"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/examples/basic_phoenix_ecto"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/examples/basic_phoenix_ecto"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "mix"
-      directory: "/examples/basic_elixir"
-      labels:
-        - "chore"
-        - "dependencies"
-        - "skip-changelog"
-      schedule:
-        interval: "weekly"
+    directory: "/examples/basic_elixir"
+    labels:
+      - "chore"
+      - "dependencies"
+      - "skip-changelog"
+    schedule:
+      interval: "weekly"
