@@ -38,7 +38,7 @@ defmodule OpentelemetryReqTest do
       )
 
     assert resp.status == 204
-    assert_receive {:span, span(name: "GET /users/:id")}
+    assert_receive {:span, span(name: "/users/:id")}
     refute_receive _
   end
 
