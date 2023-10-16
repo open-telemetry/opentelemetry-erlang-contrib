@@ -25,9 +25,7 @@ defmodule OpentelemetryReq.MixProject do
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: [:logger]
-    ]
+    []
   end
 
   defp description do
@@ -56,11 +54,12 @@ defmodule OpentelemetryReq.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:jason, "~> 1.3"},
+      {:ex_doc, "~> 0.30", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:req, ">= 0.3.5"},
-      {:ex_doc, "~> 0.29", only: [:dev, :test]}
+      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
+      {:opentelemetry_semantic_conventions, "~> 0.2.0"},
+      {:req, "~> 0.3.5"}
     ]
   end
 end
