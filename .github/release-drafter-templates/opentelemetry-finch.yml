@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Finch - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-finch-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-finch-v
 include-paths:
-  - instrumentation/opentelemetry_finch/lib/**/*
-  - instrumentation/opentelemetry_finch/lib/mix.*
+  - instrumentation/opentelemetry_finch/
