@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Tesla - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-tesla-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-tesla-v
 include-paths:
-  - instrumentation/opentelemetry_tesla/lib/**/*
-  - instrumentation/opentelemetry_tesla/lib/mix.*
+  - instrumentation/opentelemetry_tesla/

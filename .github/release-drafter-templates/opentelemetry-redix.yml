@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Redix - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-redix-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-redix-v
 include-paths:
-  - instrumentation/opentelemetry_redix/lib/**/*
-  - instrumentation/opentelemetry_redix/lib/mix.*
+  - instrumentation/opentelemetry_redix/

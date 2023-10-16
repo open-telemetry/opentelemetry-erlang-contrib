@@ -3,5 +3,4 @@ name-template: 'Opentelemetry AWS X-Ray - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-aws-xray-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-aws-xray-v
 include-paths:
-  - utilities/opentelemetry_aws_xray/src/**/*
-  - utilities/opentelemetry_aws_xray/rebar.*
+  - utilities/opentelemetry_aws_xray/

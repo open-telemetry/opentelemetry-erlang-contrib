@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Dataloader - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-dataloader-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-dataloader-v
 include-paths:
-  - instrumentation/opentelemetry_dataloader/lib/**/*
-  - instrumentation/opentelemetry_dataloader/lib/mix.*
+  - instrumentation/opentelemetry_dataloader/
