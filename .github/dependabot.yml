@@ -1,0 +1,75 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_dataloader"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_ecto"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_finch"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_httpoison"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_nebulex"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_oban"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_phoenix"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_redix"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_req"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/instrumentation/opentelemetry_tesla"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/propagators/opentelemetry_process_propagator"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/utilities/opentelemetry_telemetry"
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/examples/basic_phoenix_ecto"
+    schedule:
+      interval: "weekly"
+- package-ecosystem: "mix"
+    directory: "/examples/basic_elixir"
+    schedule:
+      interval: "weekly"
