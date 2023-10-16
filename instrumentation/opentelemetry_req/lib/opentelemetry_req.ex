@@ -127,8 +127,8 @@ defmodule OpentelemetryReq do
         method = http_method(request.method)
 
         case Req.Request.get_private(request, :path_params_template) do
-          nil -> method
-          params_template -> "#{method} #{params_template}"
+          nil -> "HTTP #{method}"
+          params_template -> "#{params_template}"
         end
 
       span_name ->
