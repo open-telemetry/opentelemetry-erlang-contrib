@@ -50,7 +50,7 @@ defmodule OpentelemetryProcessPropagator do
     # you don't control, e.g. Ecto preloads
 
     Task.async(fn ->
-      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(:"$callers")
+      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
       OpenTelemetry.Ctx.attach(parent_ctx)
 
