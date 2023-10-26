@@ -3,10 +3,10 @@ defmodule OpentelemetryOban.PluginHandler do
 
   @tracer_id __MODULE__
 
-  def attach(config) do
+  def attach() do
     attach_plugin_start_handler()
-    attach_plugin_stop_handler(config)
-    attach_plugin_exception_handler(config)
+    attach_plugin_stop_handler()
+    attach_plugin_exception_handler()
   end
 
   defp attach_plugin_start_handler() do
@@ -18,21 +18,21 @@ defmodule OpentelemetryOban.PluginHandler do
     )
   end
 
-  defp attach_plugin_stop_handler(config) do
+  defp attach_plugin_stop_handler() do
     :telemetry.attach(
       "#{__MODULE__}.plugin_stop",
       [:oban, :plugin, :stop],
       &__MODULE__.handle_plugin_stop/4,
-      config
+      []
     )
   end
 
-  defp attach_plugin_exception_handler(config) do
+  defp attach_plugin_exception_handler() do
     :telemetry.attach(
       "#{__MODULE__}.plugin_exception",
       [:oban, :plugin, :exception],
       &__MODULE__.handle_plugin_exception/4,
-      config
+      []
     )
   end
 
@@ -45,16 +45,15 @@ defmodule OpentelemetryOban.PluginHandler do
     )
   end
 
-  def handle_plugin_stop(_event, measurements, metadata, config) do
-    set_measurements_attributes(measurements, config)
+  def handle_plugin_stop(_event, _measurements, metadata, _config) do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
   def handle_plugin_exception(
         _event,
-        measurements,
+        _measurements,
         %{stacktrace: stacktrace, error: error} = metadata,
-        config
+        _config
       ) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
@@ -62,15 +61,6 @@ defmodule OpentelemetryOban.PluginHandler do
     Span.record_exception(ctx, error, stacktrace)
     Span.set_status(ctx, OpenTelemetry.status(:error, ""))
 
-    set_measurements_attributes(measurements, config)
-
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
-  end
-
-  defp set_measurements_attributes(%{duration: duration}, %{time_unit: time_unit}) do
-    OpenTelemetry.Tracer.set_attributes(%{
-      :"messaging.oban.duration_#{time_unit}" =>
-        System.convert_time_unit(duration, :native, time_unit)
-    })
   end
 end

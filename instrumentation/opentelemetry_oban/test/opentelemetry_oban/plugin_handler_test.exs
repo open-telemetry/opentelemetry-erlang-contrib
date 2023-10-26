@@ -24,109 +24,14 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     :application.start(:opentelemetry)
 
     TestHelpers.remove_oban_handlers()
+    OpentelemetryOban.setup()
 
     :ok
   end
 
-  describe "with the default config" do
-    setup do
-      OpentelemetryOban.setup()
-    end
-
-    test "does not create spans when tracing plugins is disabled" do
-      TestHelpers.remove_oban_handlers()
-      OpentelemetryOban.setup(trace: [:jobs])
-
-      :telemetry.execute(
-        [:oban, :plugin, :start],
-        %{system_time: System.system_time()},
-        %{plugin: Elixir.Oban.Plugins.Stager}
-      )
-
-      :telemetry.execute(
-        [:oban, :plugin, :stop],
-        %{duration: 444},
-        %{plugin: Elixir.Oban.Plugins.Stager}
-      )
-
-      refute_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
-    end
-
-    test "records span on plugin execution" do
-      :telemetry.execute(
-        [:oban, :plugin, :start],
-        %{system_time: System.system_time()},
-        %{plugin: Elixir.Oban.Plugins.Stager}
-      )
-
-      :telemetry.execute(
-        [:oban, :plugin, :stop],
-        %{duration: 444},
-        %{plugin: Elixir.Oban.Plugins.Stager}
-      )
-
-      assert_receive {:span,
-                      span(name: "Elixir.Oban.Plugins.Stager process", attributes: attributes)}
-
-      assert %{
-               "messaging.oban.duration_microsecond": _duration
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "records span on plugin error" do
-      :telemetry.execute(
-        [:oban, :plugin, :start],
-        %{system_time: System.system_time()},
-        %{plugin: Elixir.Oban.Plugins.Stager}
-      )
-
-      :telemetry.execute(
-        [:oban, :plugin, :exception],
-        %{duration: 444},
-        %{
-          plugin: Elixir.Oban.Plugins.Stager,
-          kind: :error,
-          stacktrace: [
-            {Some, :error, [], []}
-          ],
-          error: %UndefinedFunctionError{
-            arity: 0,
-            function: :error,
-            message: nil,
-            module: Some,
-            reason: nil
-          }
-        }
-      )
-
-      expected_status = OpenTelemetry.status(:error, "")
-
-      assert_receive {:span,
-                      span(
-                        name: "Elixir.Oban.Plugins.Stager process",
-                        attributes: attributes,
-                        events: events,
-                        status: ^expected_status
-                      )}
-
-      assert %{
-               "messaging.oban.duration_microsecond": _duration
-             } = :otel_attributes.map(attributes)
-
-      [
-        event(
-          name: "exception",
-          attributes: event_attributes
-        )
-      ] = :otel_events.list(events)
-
-      assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
-               Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
-    end
-  end
-
-  test "can configure time_unit" do
-    OpentelemetryOban.setup(time_unit: :second)
+  test "does not create spans when tracing plugins is disabled" do
+    TestHelpers.remove_oban_handlers()
+    OpentelemetryOban.setup(trace: [:jobs])
 
     :telemetry.execute(
       [:oban, :plugin, :start],
@@ -140,11 +45,68 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{plugin: Elixir.Oban.Plugins.Stager}
     )
 
-    assert_receive {:span,
-                    span(name: "Elixir.Oban.Plugins.Stager process", attributes: attributes)}
+    refute_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+  end
 
-    assert %{
-             "messaging.oban.duration_second": _duration
-           } = :otel_attributes.map(attributes)
+  test "records span on plugin execution" do
+    :telemetry.execute(
+      [:oban, :plugin, :start],
+      %{system_time: System.system_time()},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    :telemetry.execute(
+      [:oban, :plugin, :stop],
+      %{duration: 444},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    assert_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+  end
+
+  test "records span on plugin error" do
+    :telemetry.execute(
+      [:oban, :plugin, :start],
+      %{system_time: System.system_time()},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    :telemetry.execute(
+      [:oban, :plugin, :exception],
+      %{duration: 444},
+      %{
+        plugin: Elixir.Oban.Plugins.Stager,
+        kind: :error,
+        stacktrace: [
+          {Some, :error, [], []}
+        ],
+        error: %UndefinedFunctionError{
+          arity: 0,
+          function: :error,
+          message: nil,
+          module: Some,
+          reason: nil
+        }
+      }
+    )
+
+    expected_status = OpenTelemetry.status(:error, "")
+
+    assert_receive {:span,
+                    span(
+                      name: "Elixir.Oban.Plugins.Stager process",
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 end
