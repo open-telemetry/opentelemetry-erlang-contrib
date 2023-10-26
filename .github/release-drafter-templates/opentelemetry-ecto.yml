@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Ecto - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-ecto-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-ecto-v
 include-paths:
-  - instrumentation/opentelemetry_ecto/lib/**/*
-  - instrumentation/opentelemetry_ecto/lib/mix.*
+  - instrumentation/opentelemetry_ecto/

@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Instrumentation HTTP - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-instrumentation-http-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-instrumentation-http-v
 include-paths:
-  - utilities/opentelemetry_instrumentation-http/src/**/*
-  - utilities/opentelemetry_instrumentation-http/rebar.*
+  - utilities/opentelemetry_instrumentation-http/

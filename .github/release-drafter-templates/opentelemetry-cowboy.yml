@@ -3,5 +3,4 @@ name-template: 'Opentelemetry Cowboy - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-cowboy-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-cowboy-v
 include-paths:
-  - instrumentation/opentelemetry_cowboy/src/**/*
-  - instrumentation/opentelemetry_cowboy/rebar.*
+  - instrumentation/opentelemetry_cowboy/
