@@ -50,7 +50,7 @@ defmodule OpentelemetryProcessPropagator do
     # you don't control, e.g. Ecto preloads
 
     Task.async(fn ->
-      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(:"$callers")
+      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
       OpenTelemetry.Ctx.attach(parent_ctx)
 
@@ -82,7 +82,7 @@ defmodule OpentelemetryProcessPropagator do
   """
 
   @doc """
-  Attempt to fetch an otel context from a give pid.
+  Attempt to fetch an otel context from a given pid.
   """
   @spec fetch_ctx(pid) :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_ctx(pid), to: :opentelemetry_process_propagator
@@ -97,7 +97,7 @@ defmodule OpentelemetryProcessPropagator do
 
   @doc """
   Attempt to find an otel context in a spawning process within `n` number of parent
-  processes
+  processes.
   """
   @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_parent_ctx(depth), to: :opentelemetry_process_propagator
