@@ -7,6 +7,7 @@ defmodule OpentelemetryPhoenixTest do
   require Record
 
   alias PhoenixMeta, as: Meta
+  alias PhoenixLiveViewMeta, as: LiveViewMeta
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
@@ -254,6 +255,168 @@ defmodule OpentelemetryPhoenixTest do
              "phoenix.action": :code_exception,
              "phoenix.plug": MyStoreWeb.PageController
            } == :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "records spans for Phoenix LiveView mount" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_stop()
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.mount",
+                      attributes: attributes
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "records spans for Phoenix LiveView handle_params" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_params, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_params_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_params, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_params_stop()
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      attributes: attributes
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "records spans for Phoenix LiveView handle_event" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_event, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_event_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_event, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_event_stop()
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      attributes: attributes
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "handles exception during Phoenix LiveView handle_params" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_stop(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_params, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_params_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_params, :exception],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_params_exception(:exception)
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.mount",
+                      attributes: attributes
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      attributes: attributes,
+                      events: events
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: "exception",
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "handles exceptions during Phoenix LiveView handle_event" do
+    OpentelemetryPhoenix.setup()
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_event, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_event_start(:exception)
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :handle_event, :exception],
+      %{system_time: System.system_time()},
+      LiveViewMeta.handle_event_exception(:exception)
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      attributes: attributes,
+                      events: events
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
 
     [
       event(
