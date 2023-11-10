@@ -5,7 +5,7 @@ defmodule OpentelemetryReq.MixProject do
     [
       app: :opentelemetry_req,
       description: description(),
-      version: "0.1.2",
+      version: "0.2.0",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
