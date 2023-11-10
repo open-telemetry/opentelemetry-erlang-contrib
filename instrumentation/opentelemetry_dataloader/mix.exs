@@ -6,7 +6,7 @@ defmodule OpentelemetryDataloader.MixProject do
       app: :opentelemetry_dataloader,
       description: "Trace Dataloader with OpenTelemetry.",
       version: "1.0.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
