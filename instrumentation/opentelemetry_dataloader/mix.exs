@@ -55,7 +55,7 @@ defmodule OpentelemetryDataloader.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
-      {:dataloader, "~> 2.0.0"},
+      {:dataloader, "~> 2.0.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.29", only: [:dev], runtime: false},
