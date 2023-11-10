@@ -1,8 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "dependencyDashboard": true,
   "extends": [
-    "config:recommended",
-    "group:monorepos"
+    "config:recommended"
   ],
   "packageRules": [
     {
