@@ -6,8 +6,8 @@
    [kernel,
     stdlib,
     opentelemetry_api,
-    telemetry,
-    telemetry_registry
+    opentelemetry_telemetry,
+    telemetry
    ]},
   {env,[]},
   {modules, []},
