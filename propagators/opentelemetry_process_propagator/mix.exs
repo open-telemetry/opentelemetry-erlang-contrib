@@ -9,7 +9,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       app: app,
       version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
-      elixir: "~> 1.12",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(Keyword.fetch!(config, :deps)),
       name: "Opentelemetry Process Propagator",
@@ -26,7 +26,6 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         # when build docs first build edocs with rebar3
         docs: ["cmd rebar3 edoc", "docs"]
       ],
-      plt_file: {:no_warn, "priv/plts/opentelemetry_process_propagator.plt"},
       package: package()
     ]
   end
@@ -45,7 +44,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       dep when is_atom(dep) -> {dep, ">= 0.0.0"}
     end)
     |> Enum.concat([
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
