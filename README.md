@@ -3,7 +3,7 @@
   <strong>
     <a href="https://opentelemetry.io/docs/instrumentation/erlang/getting-started/">Getting Started<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://hexdocs.pm/opentelemetry_api/1.0.0-rc.2/OpenTelemetry.html">API Documentation<a/>
+    <a href="https://hexdocs.pm/opentelemetry_api">API Documentation<a/>
   </strong>
 </p>
 
@@ -15,6 +15,8 @@
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="propagators/">Propagators<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    <a href="utilities/">Utilities<a/>
+    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="examples/">Examples<a/>
   </strong>
 </p>
@@ -25,7 +27,7 @@
 
 ## About this project
 
-This is a repository for OpenTelemetry Erlang & Elixir contributions that are not part of the
+This is a repository for OpenTelemetry Erlang & Elixir contribution libraries that are not part of the
 [core repository](https://github.com/open-telemetry/opentelemetry-erlang) and
 core distribution of the API and SDK.
 
@@ -40,9 +42,9 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 
 ## Supported Runtimes
 
-OpenTelemetry requires OTP v21.3 and above.
+OpenTelemetry Contribution libraries are verified to support the last 5 Elixir versions and at least 3 OTP versions.
 
-See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
+See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.15/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
 
 ## Contributing
 
