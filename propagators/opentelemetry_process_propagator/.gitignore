@@ -19,5 +19,3 @@ rebar3.crashdump
 *~
 doc
 edoc
-/priv/plts/opentelemetry_process_propagator.plt
-/priv/plts/opentelemetry_process_propagator.plt.hash
