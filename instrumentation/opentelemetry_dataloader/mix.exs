@@ -52,10 +52,10 @@ defmodule OpentelemetryDataloader.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
+      {:telemetry, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.0"},
-      {:dataloader, "~> 1.0.8"},
+      {:dataloader, "~> 2.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.29", only: [:dev], runtime: false},
