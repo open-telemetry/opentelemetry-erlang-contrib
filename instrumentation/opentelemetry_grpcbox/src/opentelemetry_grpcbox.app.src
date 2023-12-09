@@ -1,6 +1,6 @@
 {application, opentelemetry_grpcbox,
  [{description, "grpcbox interceptor for OpenTelemetry instrumentation"},
-  {vsn, "0.2.0"},
+  {vsn, "0.3.0"},
   {registered, []},
   {applications,
    [kernel,
