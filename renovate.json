@@ -6,8 +6,7 @@
   "packageRules": [
     {
       "matchDatasources": ["hex"],
-      "matchUpdateTypes": ["patch", "pin", "digest"],
-      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "addLabels": ["skip-changelog"]
     }
   ]
