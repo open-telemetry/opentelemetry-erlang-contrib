@@ -26,6 +26,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
         # when build docs first build edocs with rebar3
         docs: ["cmd rebar3 edoc", "docs"]
       ],
+      plt_file: {:no_warn, "priv/plts/opentelemetry_process_propagator.plt"},
       package: package()
     ]
   end
