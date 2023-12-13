@@ -5,8 +5,8 @@ defmodule OpentelemetryPhoenix.MixProject do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.1.1",
-      elixir: "~> 1.10",
+      version: "1.2.0",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_add_apps: [:ex_unit, :mix],
