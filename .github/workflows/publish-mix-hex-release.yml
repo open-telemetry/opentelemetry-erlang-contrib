@@ -1,4 +1,4 @@
-name: "Publish Mix Release to Hex"
+name: "Publish Release to Hex"
 
 on:
   workflow_dispatch:
