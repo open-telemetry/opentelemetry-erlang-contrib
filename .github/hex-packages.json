@@ -1,4 +1,13 @@
 {
+  "aws_xray": {
+    "workingDirectory": "utilities/opentelemetry_aws_xray",
+    "name": "AWS Xray Utility",
+    "packageName": "opentelemetry_aws_xray",
+    "tagPrefix": "opentelemetry-aws-xray-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
   "cowboy": {
     "workingDirectory": "instrumentation/opentelemetry_cowboy",
     "name": "Cowboy Instrumentation",
@@ -53,6 +62,15 @@
     "language": "erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]
   },
+  "http_instrumentation": {
+    "workingDirectory": "utilities/opentelemetry_instrumentation_http",
+    "name": "HTTP Utilities",
+    "packageName": "opentelemetry_instrumentation_http",
+    "tagPrefix": "opentelemetry-instrumentation-http-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
   "httpoison": {
     "workingDirectory": "instrumentation/opentelemetry_httpoison",
     "name": "HTTPoison Instrumentation",
@@ -78,6 +96,15 @@
     "tagPrefix": "opentelemetry-oban-v",
     "buildTool": "mix",
     "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "opentelemetry_telemetry": {
+    "workingDirectory": "utilities/opentelemetry_telemetry",
+    "name": "Opentelemetry Telemetry",
+    "packageName": "opentelemetry_telemetry",
+    "tagPrefix": "opentelemetry-telemetry-v",
+    "buildTool": "mix",
+    "language": "elixir-erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]
   },
   "phoenix": {
@@ -116,38 +143,11 @@
     "language": "elixir",
     "authorizedUsers": ["bryannaegele","tsloughter"]
   },
-  "opentelemetry_process_propagator": {
+  "process_propagator": {
     "workingDirectory": "propagators/opentelemetry_process_propagator",
     "name": "Opentelemetry Process Propagator",
     "packageName": "opentelemetry_process_propagator",
     "tagPrefix": "opentelemetry-process-propagator-v",
-    "buildTool": "mix",
-    "language": "elixir-erlang",
-    "authorizedUsers": ["bryannaegele","tsloughter"]
-  },
-  "aws_xray": {
-    "workingDirectory": "utilities/opentelemetry_aws_xray",
-    "name": "AWS Xray Utility",
-    "packageName": "opentelemetry_aws_xray",
-    "tagPrefix": "opentelemetry-aws-xray-v",
-    "buildTool": "rebar3",
-    "language": "erlang",
-    "authorizedUsers": ["bryannaegele","tsloughter"]
-  },
-  "http_instrumentation": {
-    "workingDirectory": "utilities/opentelemetry_instrumentation_http",
-    "name": "HTTP Utilities",
-    "packageName": "opentelemetry_instrumentation_http",
-    "tagPrefix": "opentelemetry-instrumentation-http-v",
-    "buildTool": "rebar3",
-    "language": "erlang",
-    "authorizedUsers": ["bryannaegele","tsloughter"]
-  },
-  "opentelemetry_telemetry": {
-    "workingDirectory": "utilities/opentelemetry_telemetry",
-    "name": "Opentelemetry Telemetry",
-    "packageName": "opentelemetry_telemetry",
-    "tagPrefix": "opentelemetry-telemetry-v",
     "buildTool": "mix",
     "language": "elixir-erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]

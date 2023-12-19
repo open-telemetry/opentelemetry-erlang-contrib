@@ -7,9 +7,23 @@ on:
         description: "Package"
         type: choice
         options:
+          - "aws_xray"
           - "cowboy"
-          - "opa"
-          - "sb_policies"
+          - "dataloader"
+          - "ecto"
+          - "elli"
+          - "finch"
+          - "grpcbox"
+          - "http_instrumentation"
+          - "httpoison"
+          - "nebulex"
+          - "oban"
+          - "otel_telemetry"
+          - "phoenix"
+          - "process_propagator"
+          - "redix"
+          - "req"
+          - "tesla"
         required: true
       action:
         description: "Publish release"
