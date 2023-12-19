@@ -86,9 +86,6 @@ jobs:
   publish:
     needs: [authorized_publisher, config]
     runs-on: ubuntu-latest
-    outputs:
-      package_version: ${{ steps.update-mix-file.outputs.package_version }}
-      release_url: ${{ (steps.publish-gh-release.outcome != 'success' || '') || steps.publish-gh-release.outputs.html_url }}
 
     permissions:
       # write permission is required to create a github release
@@ -125,8 +122,8 @@ jobs:
             let version = match.groups.tagvsn;
 
             core.exportVariable('package_version', version);
-            core.setOutput('package_version', version)
             core.exportVariable('gh_release_tag_name', ghRelease.tag_name)
+
             core.info(`Draft release tag to be created: ${version}`)
 
             var srcFilePath = "";
