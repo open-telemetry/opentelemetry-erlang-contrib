@@ -1,12 +1,14 @@
 defmodule OpentelemetryEcto.MixProject do
   use Mix.Project
 
+  @version "1.1.1"
+
   def project do
     [
       app: :opentelemetry_ecto,
       description: description(),
-      version: "1.1.1",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),

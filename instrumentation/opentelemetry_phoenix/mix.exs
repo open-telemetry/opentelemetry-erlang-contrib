@@ -1,12 +1,14 @@
 defmodule OpentelemetryPhoenix.MixProject do
   use Mix.Project
 
+  @version "1.1.1"
+
   def project do
     [
       app: :opentelemetry_phoenix,
       description: description(),
-      version: "1.1.1",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       dialyzer: [
         plt_add_apps: [:ex_unit, :mix],
