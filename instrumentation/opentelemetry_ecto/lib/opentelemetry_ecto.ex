@@ -19,6 +19,61 @@ defmodule OpentelemetryEcto do
 
   require OpenTelemetry.Tracer
 
+  @db_systems [
+    "other_sql",
+    "mssql",
+    "mssqlcompact",
+    "mysql",
+    "oracle",
+    "db2",
+    "postgresql",
+    "redshift",
+    "hive",
+    "cloudscape",
+    "hsqldb",
+    "progress",
+    "maxdb",
+    "hanadb",
+    "ingres",
+    "firstsql",
+    "edb",
+    "cache",
+    "adabas",
+    "firebird",
+    "derby",
+    "filemaker",
+    "informix",
+    "instantdb",
+    "interbase",
+    "mariadb",
+    "netezza",
+    "pervasive",
+    "pointbase",
+    "sqlite",
+    "sybase",
+    "teradata",
+    "vertica",
+    "h2",
+    "coldfusion",
+    "cassandra",
+    "hbase",
+    "mongodb",
+    "redis",
+    "couchbase",
+    "couchdb",
+    "cosmosdb",
+    "dynamodb",
+    "neo4j",
+    "geode",
+    "elasticsearch",
+    "memcached",
+    "cockroachdb",
+    "opensearch",
+    "clickhouse",
+    "spanner",
+    "trino"
+  ]
+
   @doc """
   Attaches the OpentelemetryEcto handler to your repo events. This should be called
   from your application behaviour on startup.
@@ -44,6 +99,10 @@ defmodule OpentelemetryEcto do
       sanitized version of it. This is useful for removing sensitive information from the
       query string. Unless this option is `:enabled` or a function,
       query statements will not be recorded on spans.
+    * `:db_system` - The identifier for the database management system (DBMS).
+      defaults to the mapped value of the ecto adapter used.
+      Must follow the list of well-known db systems from semantic conventions.
+      See `https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/database.md`
   """
   def setup(event_prefix, config \\ []) do
     event = event_prefix ++ [:query]
@@ -54,7 +113,7 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo},
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
@@ -64,16 +123,7 @@ defmodule OpentelemetryEcto do
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
     database = repo.config()[:database]
-
-    url =
-      case repo.config()[:url] do
-        nil ->
-          # TODO: add port
-          URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
-
-        url ->
-          url
-      end
+    adapter = repo.__adapter__()
 
     span_prefix =
       case Keyword.fetch(config, :span_prefix) do
@@ -87,20 +137,13 @@ defmodule OpentelemetryEcto do
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})
 
-    db_type =
-      case type do
-        :ecto_sql_query -> :sql
-        _ -> type
-      end
-
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.type": db_type,
-      source: source,
-      "db.instance": database,
+      "ecto.db.adapter": to_string(adapter),
+      "db.system": db_system(config[:db_system], adapter),
       "db.name": database,
-      "db.url": url,
+      "db.sql.table": source,
       "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
     }
 
@@ -110,7 +153,6 @@ defmodule OpentelemetryEcto do
       base_attributes
       |> add_measurements(measurements, time_unit)
       |> maybe_add_db_statement(db_statement_config, query)
-      |> maybe_add_db_system(repo.__adapter__())
       |> add_additional_attributes(additional_attributes)
 
     parent_context =
@@ -189,27 +231,15 @@ defmodule OpentelemetryEcto do
     attributes
   end
 
-  defp maybe_add_db_system(attributes, Ecto.Adapters.Postgres) do
-    Map.put(attributes, :"db.system", :postgresql)
-  end
-
-  defp maybe_add_db_system(attributes, Ecto.Adapters.MyXQL) do
-    Map.put(attributes, :"db.system", :mysql)
-  end
-
-  defp maybe_add_db_system(attributes, Ecto.Adapters.SQLite3) do
-    Map.put(attributes, :"db.system", :sqlite)
-  end
-
-  defp maybe_add_db_system(attributes, Ecto.Adapters.Tds) do
-    Map.put(attributes, :"db.system", :mssql)
-  end
-
-  defp maybe_add_db_system(attributes, _) do
-    attributes
-  end
-
   defp add_additional_attributes(attributes, additional_attributes) do
     Map.merge(attributes, additional_attributes)
   end
+
+  defp db_system(db_system) when db_system in @db_systems, do: db_system
+  defp db_system(_), do: "other_sql"
+
+  defp db_system(nil, Ecto.Adapters.Postgres), do: "postgresql"
+  defp db_system(nil, Ecto.Adapters.MyXQL), do: "mysql"
+  defp db_system(nil, Ecto.Adapters.Tds), do: "mssql"
+  defp db_system(db_system, _), do: db_system(db_system)
 end

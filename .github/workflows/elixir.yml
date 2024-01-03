@@ -98,6 +98,15 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
+      mariadb:
+        image: mariadb:11.0
+        ports: ['3306:3306']
+        options: --health-cmd "healthcheck.sh --connect --innodb_initialized" --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+          MARIADB_USER: mariadb
+          MARIADB_PASSWORD: mariadb
+          MARIADB_DATABASE: opentelemetry_ecto_test
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
