@@ -49,6 +49,6 @@ After:
   |> OpentelemetryOban.insert()
 ```
 
-Oban also supports inserting jobs using `Oban.insert/4`, `Oban.insert_all/2`
-and `Oban.insert_all/4`. These are currently not supported by OpentelemetryOban
-and are just proxied through to Oban.
+Oban also supports inserting jobs using `Oban.insert/4`, and 
+`Oban.insert_all/4`. These are currently not supported by OpentelemetryOban and
+are just proxied through to Oban.
