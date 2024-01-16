@@ -278,6 +278,13 @@ defmodule OpentelemetryPhoenix do
 
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
+      inspect(live_view),
+      meta,
+      %{kind: :server}
+    )
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
       "#{inspect(live_view)}.mount",
       meta,
       %{kind: :server}
