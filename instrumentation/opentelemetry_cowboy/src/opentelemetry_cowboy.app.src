@@ -1,13 +1,13 @@
 {application, opentelemetry_cowboy,
  [{description, "OpenTelemetry Cowboy Instrumentation"},
-  {vsn, "0.2.1"},
+  {vsn, "0.3.0"},
   {registered, []},
   {applications,
    [kernel,
     stdlib,
     opentelemetry_api,
-    telemetry,
-    telemetry_registry
+    opentelemetry_telemetry,
+    telemetry
    ]},
   {env,[]},
   {modules, []},

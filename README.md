@@ -15,6 +15,8 @@
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="propagators/">Propagators<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    <a href="utilities/">Utilities<a/>
+    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="examples/">Examples<a/>
   </strong>
 </p>
@@ -25,7 +27,7 @@
 
 ## About this project
 
-This is a repository for OpenTelemetry Erlang & Elixir contributions that are not part of the
+This is a repository for OpenTelemetry Erlang & Elixir contribution libraries that are not part of the
 [core repository](https://github.com/open-telemetry/opentelemetry-erlang) and
 core distribution of the API and SDK.
 
@@ -40,9 +42,15 @@ OpenTelemetry can collect tracing data using instrumentation. Vendors/Users can 
 
 ## Supported Runtimes
 
-OpenTelemetry requires OTP v21.3 and above.
+OpenTelemetry Contribution libraries are verified to support the last 3 OTP versions
+to match the supported runtimes of the OpenTelemetry API and SDK.
 
-See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.12/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
+For Elixir libraries, all versions that support the last 3 OTP versions are verified.
+
+See [Elixir OTP Compatibility](https://hexdocs.pm/elixir/1.16/compatibility-and-deprecations.html#compatibility-between-elixir-and-erlang-otp) for supported OTP/Elixir combinations.
+
+Elixir libraries should aim for the minimum supported version to be the lowest possible
+it can for the code in the library, but must at least support versions outlined above.
 
 ## Contributing
 

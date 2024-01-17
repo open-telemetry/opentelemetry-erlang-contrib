@@ -35,7 +35,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Dataloader test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -59,7 +59,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -84,7 +84,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Ecto test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -107,7 +107,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -132,7 +132,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Finch test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -146,7 +146,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -185,7 +185,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -210,7 +210,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -224,7 +224,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -249,7 +249,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -272,7 +272,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -297,7 +297,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Phoenix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -311,7 +311,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -336,7 +336,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Redix test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -354,7 +354,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -379,7 +379,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Req test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -393,7 +393,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -418,7 +418,7 @@ jobs:
     defaults:
       run:
         working-directory: utilities/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Telemetry test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -432,7 +432,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -457,7 +457,7 @@ jobs:
     defaults:
       run:
         working-directory: propagators/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Process Propagator test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -471,7 +471,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -496,7 +496,7 @@ jobs:
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
     name: Opentelemetry Tesla test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
@@ -510,7 +510,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
