@@ -1,11 +1,11 @@
 {application, opentelemetry_aws_xray, [
     {description, "OpenTelemetry AWS X-Ray TraceId Generator"},
-    {vsn, "0.1.0"},
+    {vsn, "0.2.0"},
     {registered, []},
     {applications, [
         kernel,
         stdlib,
-        opentelemetry
+        opentelemetry_api
     ]},
     {env, []},
     {modules, []},
