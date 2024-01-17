@@ -22,7 +22,7 @@
     },
     {
       "elixir_version": "1.12.3",
-      "otp_version": "25.3.2.8"
+      "otp_version": "24.3.4.15"
     }
   ],
   "exclude": []
