@@ -70,7 +70,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.28", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:plug_cowboy, "~> 2.4", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
