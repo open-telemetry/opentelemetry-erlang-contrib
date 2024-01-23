@@ -90,7 +90,7 @@ defmodule OpentelemetryFinchTest do
                     span(
                       name: "HTTP GET",
                       kind: :client,
-                      status: {:status, :error, "Internal Server Error"},
+                      status: {:status, :error, ""},
                       attributes: attributes
                     )}
 

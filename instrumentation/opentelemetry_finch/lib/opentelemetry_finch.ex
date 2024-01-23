@@ -68,10 +68,7 @@ defmodule OpentelemetryFinch do
       })
 
     if status >= 500 && status < 600 do
-      OpenTelemetry.Span.set_status(
-        s,
-        OpenTelemetry.status(:error, :opentelemetry_instrumentation_http.code_to_phrase(status))
-      )
+      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error))
     end
 
     if meta.result |> elem(0) == :error do
