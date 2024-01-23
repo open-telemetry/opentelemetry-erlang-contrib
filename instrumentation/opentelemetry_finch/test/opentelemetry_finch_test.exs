@@ -51,7 +51,7 @@ defmodule OpentelemetryFinchTest do
            } = :otel_attributes.map(attributes)
   end
 
-  test "records span on requests failed", %{bypass: _} do
+  test "records span on requests failed" do
     OpentelemetryFinch.setup()
 
     _conn = start_supervised!({Finch, name: HttpFinch})
@@ -72,6 +72,34 @@ defmodule OpentelemetryFinchTest do
              "http.target": "/",
              "http.scheme": :http,
              "http.status_code": 0
+           } = :otel_attributes.map(attributes)
+  end
+
+  # https://opentelemetry.io/docs/specs/semconv/http/http-spans/#status
+  # > For HTTP status codes in the 5xx range, as well as any other code the client failed to interpret, span status MUST be set to Error.
+  test "records span on 500 error from server", %{bypass: bypass} do
+    Bypass.expect(bypass, fn conn -> Plug.Conn.resp(conn, 500, "Internal Server Error") end)
+
+    OpentelemetryFinch.setup()
+
+    _conn = start_supervised!({Finch, name: HttpFinch})
+
+    {:ok, _} = Finch.build(:get, endpoint_url(bypass.port)) |> Finch.request(HttpFinch)
+
+    assert_receive {:span,
+                    span(
+                      name: "HTTP GET",
+                      kind: :client,
+                      status: {:status, :error, "Internal Server Error"},
+                      attributes: attributes
+                    )}
+
+    assert %{
+             "net.peer.name": "localhost",
+             "http.method": "GET",
+             "http.target": "/",
+             "http.scheme": :http,
+             "http.status_code": 500
            } = :otel_attributes.map(attributes)
   end
 
