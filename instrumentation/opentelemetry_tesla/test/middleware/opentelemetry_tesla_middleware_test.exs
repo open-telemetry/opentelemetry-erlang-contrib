@@ -318,6 +318,47 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(status: {:status, :ok, ""})}
   end
 
+  test "Marks Span status as :error on timeouts and includes attributes", %{bypass: bypass} do
+    defmodule TestClient do
+      def get(client) do
+        Tesla.get(client, "/timeout")
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          Tesla.Middleware.OpenTelemetry,
+          {Tesla.Middleware.Timeout, timeout: 50}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/timeout", fn conn ->
+      :timer.sleep(100)
+      Plug.Conn.resp(conn, 200, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> TestClient.client()
+    |> TestClient.get()
+
+    assert_receive {:span, span(status: {:status, :error, ""}, attributes: attributes)}
+
+    mapped_attributes =
+      :otel_attributes.map(attributes)
+
+    assert %{
+             "http.method": "GET",
+             "http.url": "http://localhost:#{bypass.port}/timeout",
+             "http.target": "/timeout",
+             "net.host.name": "localhost",
+             "http.scheme": "http"
+           } == mapped_attributes
+  end
+
   test "Marks Span status as :ok unless error status is within `mark_status_ok` opt list",
        %{bypass: bypass} do
     defmodule TestClient do
