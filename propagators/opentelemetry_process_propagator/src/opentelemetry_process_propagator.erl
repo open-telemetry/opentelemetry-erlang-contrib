@@ -39,7 +39,12 @@ fetch_ctx(Pid) ->
             otel_ctx(Dictionary)
     end.
 
--spec pdict(pid()) -> [{term(), term()}] | undefined.
+-spec pdict(pid() | atom()) -> [{term(), term()}] | undefined.
+pdict(Name) when is_atom(Name) ->
+    case whereis(Name) of
+        undefined -> undefined;
+        Pid -> pdict(Pid)
+    end;
 pdict(Pid) ->
     case process_info(Pid, dictionary) of
         {dictionary, Dict} ->
