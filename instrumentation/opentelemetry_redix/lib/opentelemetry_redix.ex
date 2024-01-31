@@ -62,6 +62,7 @@ defmodule OpentelemetryRedix do
       }
       |> Map.merge(net_attributes(connection))
       |> Map.merge(redix_attributes(meta))
+      |> Map.merge(meta.extra_metadata)
 
     parent_context =
       case OpentelemetryProcessPropagator.fetch_ctx(self()) do

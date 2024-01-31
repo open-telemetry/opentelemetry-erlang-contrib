@@ -30,7 +30,7 @@ defmodule OpentelemetryRedixTest do
 
     conn = start_supervised!({Redix, []})
 
-    {:ok, "OK"} = Redix.command(conn, ["SET", "foo", "bar"])
+    {:ok, "OK"} = Redix.command(conn, ["SET", "foo", "bar"], telemetry_metadata: %{foo: "bar", baz: :extra})
 
     assert_receive {:span,
                     span(
@@ -44,7 +44,9 @@ defmodule OpentelemetryRedixTest do
              "db.statement": "SET foo ?",
              "db.system": "redis",
              "net.peer.name": "localhost",
-             "net.peer.port": "6379"
+             "net.peer.port": "6379",
+             foo: "bar",
+             baz: :extra
            } = :otel_attributes.map(attributes)
   end
 
