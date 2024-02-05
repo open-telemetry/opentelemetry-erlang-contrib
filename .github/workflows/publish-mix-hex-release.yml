@@ -150,7 +150,7 @@ jobs:
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
                 core.debug(`Source file path: ${srcFilePath}`)
                 
-                srcVersionRegex = /{vsn, \s+"[^"]+"},/;
+                srcVersionRegex = /{vsn,\s+"[^"]+"},/;
                 core.debug(`Source version regex: ${srcVersionRegex}`)
                 
                 vsnLineTemplate = `{vsn, "${version}"},`;
