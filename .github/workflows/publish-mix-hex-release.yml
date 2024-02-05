@@ -18,7 +18,7 @@ on:
           - "httpoison"
           - "nebulex"
           - "oban"
-          - "otel_telemetry"
+          - "opentelemetry_telemetry"
           - "phoenix"
           - "process_propagator"
           - "redix"
