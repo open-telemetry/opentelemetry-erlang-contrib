@@ -130,24 +130,36 @@ jobs:
             var srcVersionRegex = "";
             var vsnLineTemplate = "";
 
+            core.debug(`Language: ${needs.config.outputs.language`)
             switch(needs.config.outputs.language) {
               case 'elixir':
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
+                core.debug(`Source file path: ${srcFilePath}`)
+                
                 srcVersionRegex = /@version\s+"[^"]+"/;
+                core.debug(`Source version regex: ${srcVersionRegex}`)
+                
                 vsnLineTemplate = `@version "${version}"`;
+                core.debug(`Version line template: ${vsnLineTemplate}`)
+                
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               case 'elixir-erlang':
               case 'erlang':
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
+                core.debug(`Source file path: ${srcFilePath}`)
+                
                 srcVersionRegex = /{vsn:\s+"[^"]+"},/;
-                vsnLineTemplate = `{vsn: "${version}"},`;
+                core.debug(`Source version regex: ${srcVersionRegex}`)
+                
+                vsnLineTemplate = `{vsn, "${version}"},`;
+                core.debug(`Version line template: ${vsnLineTemplate}`)
+                
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               default:
                 core.setFailed('Language not recognized');
             }
-
 
             core.info(`srcFilePath: ${srcFilePath}`)
 
