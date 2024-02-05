@@ -184,9 +184,8 @@ jobs:
         if: ${{ needs.config.outputs.build_tool == 'mix' }}
         working-directory: ${{ needs.config.outputs.working_directory }}
         env:
-          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+          HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
           mix deps.get
           mix hex.publish --dry-run --yes
 
@@ -194,9 +193,8 @@ jobs:
         if: ${{ needs.config.outputs.build_tool == 'rebar3' }}
         working-directory: ${{ needs.config.outputs.working_directory }}
         env:
-          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+          HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 hex organization auth hexpm:opentelemetry -k $HEX_ORG_KEY
           rebar3 update
           rebar3 hex publish --dry-run --yes
 
@@ -233,9 +231,8 @@ jobs:
         if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' && needs.config.outputs.build_tool == 'mix' }}
         working-directory: ${{ needs.config.outputs.working_directory }}
         env:
-          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+          HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
           mix hex.publish --yes
           echo "published=true" >> $GITHUB_ENV
 
@@ -244,9 +241,8 @@ jobs:
         if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' && needs.config.outputs.build_tool == 'rebar3' }}
         working-directory: ${{ needs.config.outputs.working_directory }}
         env:
-          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+          HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 hex organization auth hexpm:opentelemetry -k $HEX_ORG_KEY
           rebar3 update
           rebar3 hex publish --dry-run --yes
           echo "published=true" >> $GITHUB_ENV
@@ -255,10 +251,8 @@ jobs:
         if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' }}
         working-directory: ${{ needs.config.outputs.working_directory }}
         env:
-          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sleep 5
-          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
           mix hex.package fetch ${{ needs.config.outputs.package_name }} ${{ env.package_version }} --organization opentelemetry
           gh release upload ${{ env.gh_release_tag_name}} ${{ needs.config.outputs.package_name }}-${{ env.package_version }}.tar
