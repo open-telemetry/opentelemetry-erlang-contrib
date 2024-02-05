@@ -10,7 +10,7 @@ jobs:
     name: '[opentelemetry-aws-xray-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-aws-xray.yml
         env:
@@ -20,7 +20,7 @@ jobs:
     name: '[opentelemetry-cowboy-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-cowboy.yml
         env:
@@ -30,7 +30,7 @@ jobs:
     name: '[opentelemetry-dataloader-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-dataloader.yml
         env:
@@ -40,7 +40,7 @@ jobs:
     name: '[opentelemetry-ecto-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-ecto.yml
         env:
@@ -50,7 +50,7 @@ jobs:
     name: '[opentelemetry-elli-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-elli.yml
         env:
@@ -60,7 +60,7 @@ jobs:
     name: '[opentelemetry-finch-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-finch.yml
         env:
@@ -70,7 +70,7 @@ jobs:
     name: '[opentelemetry-grpcbox-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-grpcbox.yml
         env:
@@ -80,7 +80,7 @@ jobs:
     name: '[opentelemetry-httpoison-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-httpoison.yml
         env:
@@ -90,7 +90,7 @@ jobs:
     name: '[opentelemetry-instrument-http-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-instrumentation-http.yml
         env:
@@ -100,7 +100,7 @@ jobs:
     name: '[opentelemetry-nebulex-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-nebulex.yml
         env:
@@ -110,7 +110,7 @@ jobs:
     name: '[opentelemetry-oban-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-oban.yml
         env:
@@ -120,7 +120,7 @@ jobs:
     name: '[opentelemetry-phoenix-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-phoenix.yml
         env:
@@ -130,7 +130,7 @@ jobs:
     name: '[opentelemetry-process-propagator-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-process-propagator.yml
         env:
@@ -140,7 +140,7 @@ jobs:
     name: '[opentelemetry-redix-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-redix.yml
         env:
@@ -150,7 +150,7 @@ jobs:
     name: '[opentelemetry-req-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-req.yml
         env:
@@ -160,7 +160,7 @@ jobs:
     name: '[opentelemetry-telemetry-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-telemetry.yml
         env:
@@ -170,7 +170,7 @@ jobs:
     name: '[opentelemetry-tesla-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-tesla.yml
         env:
