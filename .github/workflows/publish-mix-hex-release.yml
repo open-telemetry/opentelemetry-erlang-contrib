@@ -158,7 +158,7 @@ jobs:
             core.exportVariable('releasePrepped', true)
             core.setOutput('srcFileUpdated', false)
 
-            if (!semver.eq(version, mixVersion)) {
+            if (!semver.eq(version, srcVersion)) {
               core.exportVariable('releasePrepped', false)
               core.exportVariable('published', false)
 
