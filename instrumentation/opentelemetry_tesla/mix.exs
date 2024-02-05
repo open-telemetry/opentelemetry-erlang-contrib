@@ -1,11 +1,13 @@
 defmodule OpentelemetryTesla.MixProject do
   use Mix.Project
 
+  @version "2.3.0"
+
   def project do
     [
       app: :opentelemetry_tesla,
-      version: "2.3.0",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),

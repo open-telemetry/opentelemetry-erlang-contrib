@@ -1,11 +1,13 @@
 defmodule OpentelemetryOban.MixProject do
   use Mix.Project
 
+  @version "1.0.0"
+
   def project do
     [
       app: :opentelemetry_oban,
-      version: "1.0.0",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [

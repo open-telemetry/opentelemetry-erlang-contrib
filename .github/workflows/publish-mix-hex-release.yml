@@ -1,0 +1,262 @@
+name: "Publish Hex Release"
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package"
+        type: choice
+        options:
+          - "aws_xray"
+          - "cowboy"
+          - "dataloader"
+          - "ecto"
+          - "elli"
+          - "finch"
+          - "grpcbox"
+          - "http_instrumentation"
+          - "httpoison"
+          - "nebulex"
+          - "oban"
+          - "otel_telemetry"
+          - "phoenix"
+          - "process_propagator"
+          - "redix"
+          - "req"
+          - "tesla"
+        required: true
+      action:
+        description: "Publish release"
+        required: true
+        type: choice
+        options:
+          - prep
+          - publish
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      authorized_users: ${{ steps.set-config.outputs.authorized_users }}
+      build_tool: ${{ steps.set-config.outputs.build_tool }}
+      language: ${{ steps.set-config.outputs.language }}
+      name: ${{ steps.set-config.outputs.name }}
+      package_name: ${{ steps.set-config.outputs.package_name }}
+      tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
+      working_directory: ${{ steps.set-config.outputs.working_directory }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - name: Read file
+        id: set-config
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        env:
+          package: ${{ inputs.package }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const steps = ${{ toJson(steps) }};
+
+            const configFile = JSON.parse(fs.readFileSync('.github/hex-packages.json', 'UTF8'))
+            const packageConfig = configFile[process.env.package]
+
+            const workingDir = packageConfig['workingDirectory']
+            switch(workingDir) {
+              case undefined:
+              case '':
+                core.setOutput('working_directory', './')
+                break;
+              default:
+                core.setOutput('working_directory', workingDir)
+            }
+
+            core.setOutput('name', packageConfig.name)
+            core.setOutput('package_name', packageConfig.packageName)
+            core.setOutput('tag_prefix', packageConfig.tagPrefix)
+            core.setOutput('build_tool', packageConfig.buildTool)
+            core.setOutput('language', packageConfig.buildTool)
+            core.setOutput('authorized_users', packageConfig.authorizedUsers)
+
+  authorized_publisher:
+    needs: config
+    runs-on: ubuntu-latest
+    steps:
+      - run: ${{ contains(fromJson(needs.config.outputs.authorized_users), github.actor) }}
+
+  publish:
+    needs: [authorized_publisher, config]
+    runs-on: ubuntu-latest
+
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      pull-requests: write
+    steps:
+      - name: "Fetch Github Draft Release"
+        id: fetch-release
+        run: |
+          release="$(gh api repos/${{ github.repository }}/releases --jq '.[] | select(.draft == true)  | select(.tag_name | test("^${{ needs.config.outputs.tag_prefix }}"))')"
+
+          echo "gh_release=$release" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - run: npm install semver
+      - name: "Update Files"
+        id: update-files
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const semver = require('semver');
+            const needs = ${{ toJson(needs) }};
+            const steps = ${{ toJson(steps) }};
+
+            const ghRelease = JSON.parse(steps["fetch-release"]["outputs"]["gh_release"])
+
+            const semverRegex = /v(?<tagvsn>\d+\.\d+\.\d+)$/;
+
+            let match = ghRelease.tag_name.match(semverRegex);
+            let version = match.groups.tagvsn;
+
+            core.exportVariable('package_version', version);
+            core.exportVariable('gh_release_tag_name', ghRelease.tag_name)
+
+            core.info(`Draft release tag to be created: ${version}`)
+
+            var srcFilePath = "";
+            var srcVersionRegex = "";
+            var vsnLineTemplate = "";
+
+            switch(needs.config.outputs.language) {
+              case 'elixir':
+                srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
+                srcVersionRegex = /@version\s+"[^"]+"/;
+                vsnLineTemplate = `@version "${version}"`;
+              case 'elixir-erlang':
+              case 'erlang':
+                srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
+                srcVersionRegex = /{vsn:\s+"[^"]+"},/;
+                vsnLineTemplate = `{vsn: "${version}"},`;
+              default:
+                core.setFailed('Language not recognized');
+            }
+
+
+            core.info(`srcFilePath: ${srcFilePath}`)
+
+            let srcFile = fs.readFileSync(srcFilePath, 'UTF8')
+
+            var srcVersion = srcFile.match(srcVersionRegex)[0].split('"')[1]
+            core.exportVariable('src_file_version', srcVersion)
+            core.info(`Source file version: ${srcVersion}`)
+
+            core.exportVariable('releasePrepped', true)
+            core.setOutput('srcFileUpdated', false)
+
+            if (!semver.eq(version, mixVersion)) {
+              core.exportVariable('releasePrepped', false)
+              core.exportVariable('published', false)
+
+              if (semver.lt(version, srcVersion)) {
+                core.setFailed(`Proposed package version does not increment the current version`)
+              } else {
+                core.setOutput('prRequired')
+                core.notice('Release not ready. Creating PR.')
+
+                let updatedSrcFile = srcFile.replace(srcVersionRegex, vsnLineTemplate);
+                fs.writeFileSync(srcFilePath, updatedSrcFile);
+
+                core.setOutput('srcFileUpdated', true)
+              }
+            }
+
+      - uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1
+        with:
+          otp-version: "25.3.2.5"
+          elixir-version: "1.14.5"
+
+      - name: "Mix Hex Publish Dry-run"
+        if: ${{ needs.config.outputs.build_tool == 'mix' }}
+        working-directory: ${{ needs.config.outputs.working_directory }}
+        env:
+          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+        run: |
+          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
+          mix deps.get
+          mix hex.publish --dry-run --yes
+
+      - name: "Rebar3 Hex Publish Dry-run"
+        if: ${{ needs.config.outputs.build_tool == 'rebar3' }}
+        working-directory: ${{ needs.config.outputs.working_directory }}
+        env:
+          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+        run: |
+          rebar3 hex organization auth hexpm:opentelemetry -k $HEX_ORG_KEY
+          rebar3 update
+          rebar3 hex publish --dry-run --yes
+
+      - name: "Open a Version Update PR"
+        if: ${{ env.releasePrepped == 'false' }}
+        id: version-update-pr
+        uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # v5
+        with:
+          add-paths: |
+            ${{ needs.config.outputs.working_directory }}/mix.exs
+            ${{ needs.config.outputs.working_directory }}/src/${{ needs.config.outputs.package_name }}.app.src
+          base: main
+          branch: "${{ needs.config.outputs.tag_prefix }}${{ env.package_version }}-release"
+          commit-message: "Prep release v${{ env.package_version }}"
+          body: |
+            Prepare hex release v${{ env.package_version }}
+          labels: |
+            automated-pr
+            release
+            skip-changelog
+          title: "${{ needs.config.outputs.name }} v${{ env.package_version }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Publish Github Release"
+        if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' }}
+        id: publish-gh-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit ${{ env.gh_release_tag_name }} --draft=false --latest
+
+      - name: "Mix Publish to Hex"
+        id: mix-hex-publish
+        if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' && needs.config.outputs.build_tool == 'mix' }}
+        working-directory: ${{ needs.config.outputs.working_directory }}
+        env:
+          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+        run: |
+          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
+          mix hex.publish --yes
+          echo "published=true" >> $GITHUB_ENV
+
+      - name: "Rebar3 Publish to Hex"
+        id: rebar3-hex-publish
+        if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' && needs.config.outputs.build_tool == 'rebar3' }}
+        working-directory: ${{ needs.config.outputs.working_directory }}
+        env:
+          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+        run: |
+          rebar3 hex organization auth hexpm:opentelemetry -k $HEX_ORG_KEY
+          rebar3 update
+          rebar3 hex publish --dry-run --yes
+          echo "published=true" >> $GITHUB_ENV
+
+      - name: "Pull Hex Package and Upload to Release"
+        if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' }}
+        working-directory: ${{ needs.config.outputs.working_directory }}
+        env:
+          HEX_ORG_KEY: ${{ secrets.OTEL_HEX_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sleep 5
+          mix hex.organization auth opentelemetry --key $HEX_ORG_KEY
+          mix hex.package fetch ${{ needs.config.outputs.package_name }} ${{ env.package_version }} --organization opentelemetry
+          gh release upload ${{ env.gh_release_tag_name}} ${{ needs.config.outputs.package_name }}-${{ env.package_version }}.tar

@@ -1,12 +1,14 @@
 defmodule OpentelemetryRedix.MixProject do
   use Mix.Project
 
+  @version "0.1.1"
+
   def project do
     [
       app: :opentelemetry_redix,
       description: description(),
-      version: "0.1.1",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),

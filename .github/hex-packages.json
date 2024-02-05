@@ -1,0 +1,155 @@
+{
+  "aws_xray": {
+    "workingDirectory": "utilities/opentelemetry_aws_xray",
+    "name": "AWS Xray Utility",
+    "packageName": "opentelemetry_aws_xray",
+    "tagPrefix": "opentelemetry-aws-xray-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "cowboy": {
+    "workingDirectory": "instrumentation/opentelemetry_cowboy",
+    "name": "Cowboy Instrumentation",
+    "packageName": "opentelemetry_cowboy",
+    "tagPrefix": "opentelemetry-cowboy-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "dataloader": {
+    "workingDirectory": "instrumentation/opentelemetry_dataloader",
+    "name": "Dataloader Instrumentation",
+    "packageName": "opentelemetry_dataloader",
+    "tagPrefix": "opentelemetry-dataloader-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "ecto": {
+    "workingDirectory": "instrumentation/opentelemetry_ecto",
+    "name": "Ecto Instrumentation",
+    "packageName": "opentelemetry_ecto",
+    "tagPrefix": "opentelemetry-ecto-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "elli": {
+    "workingDirectory": "instrumentation/opentelemetry_elli",
+    "name": "Elli Instrumentation",
+    "packageName": "opentelemetry_elli",
+    "tagPrefix": "opentelemetry-elli-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "finch": {
+    "workingDirectory": "instrumentation/opentelemetry_finch",
+    "name": "Finch Instrumentation",
+    "packageName": "opentelemetry_finch",
+    "tagPrefix": "opentelemetry-finch-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "grpcbox": {
+    "workingDirectory": "instrumentation/opentelemetry_grpcbox",
+    "name": "GRPCBox Instrumentation",
+    "packageName": "opentelemetry_grpcbox",
+    "tagPrefix": "opentelemetry-grpcbox-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "http_instrumentation": {
+    "workingDirectory": "utilities/opentelemetry_instrumentation_http",
+    "name": "HTTP Utilities",
+    "packageName": "opentelemetry_instrumentation_http",
+    "tagPrefix": "opentelemetry-instrumentation-http-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "httpoison": {
+    "workingDirectory": "instrumentation/opentelemetry_httpoison",
+    "name": "HTTPoison Instrumentation",
+    "packageName": "opentelemetry_httpoison",
+    "tagPrefix": "opentelemetry-httpoison-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "nebulex": {
+    "workingDirectory": "instrumentation/opentelemetry_nebulex",
+    "name": "Nebulex Instrumentation",
+    "packageName": "opentelemetry_nebulex",
+    "tagPrefix": "opentelemetry-nebulex-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "oban": {
+    "workingDirectory": "instrumentation/opentelemetry_oban",
+    "name": "Oban Instrumentation",
+    "packageName": "opentelemetry_oban",
+    "tagPrefix": "opentelemetry-oban-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "opentelemetry_telemetry": {
+    "workingDirectory": "utilities/opentelemetry_telemetry",
+    "name": "Opentelemetry Telemetry",
+    "packageName": "opentelemetry_telemetry",
+    "tagPrefix": "opentelemetry-telemetry-v",
+    "buildTool": "mix",
+    "language": "elixir-erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "phoenix": {
+    "workingDirectory": "instrumentation/opentelemetry_phoenix",
+    "name": "Phoenix Instrumentation",
+    "packageName": "opentelemetry_phoenix",
+    "tagPrefix": "opentelemetry-phoenix-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "redix": {
+    "workingDirectory": "instrumentation/opentelemetry_redix",
+    "name": "Redix Instrumentation",
+    "packageName": "opentelemetry_redix",
+    "tagPrefix": "opentelemetry-redix-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "req": {
+    "workingDirectory": "instrumentation/opentelemetry_req",
+    "name": "Req Instrumentation",
+    "packageName": "opentelemetry_req",
+    "tagPrefix": "opentelemetry-req-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "tesla": {
+    "workingDirectory": "instrumentation/opentelemetry_tesla",
+    "name": "Tesla Instrumentation",
+    "packageName": "opentelemetry_tesla",
+    "tagPrefix": "opentelemetry-tesla-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "process_propagator": {
+    "workingDirectory": "propagators/opentelemetry_process_propagator",
+    "name": "Opentelemetry Process Propagator",
+    "packageName": "opentelemetry_process_propagator",
+    "tagPrefix": "opentelemetry-process-propagator-v",
+    "buildTool": "mix",
+    "language": "elixir-erlang",
+    "authorizedUsers": ["bryannaegele","tsloughter"]
+  }
+}
