@@ -124,7 +124,7 @@ jobs:
             core.exportVariable('package_version', version);
             core.exportVariable('gh_release_tag_name', ghRelease.tag_name)
 
-            core.info(needs)
+            core.info(`language: ${needs.config.outputs.language}`)
             core.info(`Draft release tag to be created: ${version}`)
 
             var srcFilePath = "";
