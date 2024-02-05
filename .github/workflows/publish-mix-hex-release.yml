@@ -247,13 +247,3 @@ jobs:
           rebar3 update
           rebar3 hex publish --dry-run --yes
           echo "published=true" >> $GITHUB_ENV
-
-      - name: "Pull Hex Package and Upload to Release"
-        if: ${{ env.releasePrepped == 'true' && inputs.action == 'publish' }}
-        working-directory: ${{ needs.config.outputs.working_directory }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          sleep 5
-          mix hex.package fetch ${{ needs.config.outputs.package_name }} ${{ env.package_version }} --organization opentelemetry
-          gh release upload ${{ env.gh_release_tag_name}} ${{ needs.config.outputs.package_name }}-${{ env.package_version }}.tar
