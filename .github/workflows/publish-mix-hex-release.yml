@@ -124,7 +124,6 @@ jobs:
             core.exportVariable('package_version', version);
             core.exportVariable('gh_release_tag_name', ghRelease.tag_name)
 
-            core.info(`language: ${needs.config.outputs.language}`)
             core.info(`Draft release tag to be created: ${version}`)
 
             var srcFilePath = "";
@@ -136,11 +135,13 @@ jobs:
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
                 srcVersionRegex = /@version\s+"[^"]+"/;
                 vsnLineTemplate = `@version "${version}"`;
+                break;
               case 'elixir-erlang':
               case 'erlang':
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
                 srcVersionRegex = /{vsn:\s+"[^"]+"},/;
                 vsnLineTemplate = `{vsn: "${version}"},`;
+                break;
               default:
                 core.setFailed('Language not recognized');
             }
