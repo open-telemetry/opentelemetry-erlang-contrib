@@ -130,7 +130,8 @@ jobs:
             var srcVersionRegex = "";
             var vsnLineTemplate = "";
 
-            core.debug(`Language: ${needs.config.outputs.language`)
+            core.debug(`Language: ${needs.config.outputs.language}`)
+
             switch(needs.config.outputs.language) {
               case 'elixir':
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
