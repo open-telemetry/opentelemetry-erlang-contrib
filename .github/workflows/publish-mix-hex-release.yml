@@ -135,12 +135,14 @@ jobs:
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
                 srcVersionRegex = /@version\s+"[^"]+"/;
                 vsnLineTemplate = `@version "${version}"`;
+                core.setOutput('srcFilePath', srcFilePath);
                 break;
               case 'elixir-erlang':
               case 'erlang':
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
                 srcVersionRegex = /{vsn:\s+"[^"]+"},/;
                 vsnLineTemplate = `{vsn: "${version}"},`;
+                core.setOutput('srcFilePath', srcFilePath);
                 break;
               default:
                 core.setFailed('Language not recognized');
@@ -204,8 +206,7 @@ jobs:
         uses: peter-evans/create-pull-request@b1ddad2c994a25fbc81a28b3ec0e368bb2021c50 # v6
         with:
           add-paths: |
-            ${{ needs.config.outputs.working_directory }}/mix.exs
-            ${{ needs.config.outputs.working_directory }}/src/${{ needs.config.outputs.package_name }}.app.src
+            ${{ steps.update-files.outputs.srcFilePath }}
           base: main
           branch: "${{ needs.config.outputs.tag_prefix }}${{ env.package_version }}-release"
           commit-message: "Prep release v${{ env.package_version }}"
