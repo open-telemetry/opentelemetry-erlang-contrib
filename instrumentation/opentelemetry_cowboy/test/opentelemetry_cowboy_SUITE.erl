@@ -126,7 +126,7 @@ failed_request(_Config) ->
     receive
         {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
             [Event] = otel_events:list(Events),
-            #event{name= <<"exception">>} = Event,
+            #event{name=exception} = Event,
             ?assertEqual(<<"HTTP GET">>, Name),
             ?assertEqual(?SPAN_KIND_SERVER, Kind),
             ExpectedAttrs = #{

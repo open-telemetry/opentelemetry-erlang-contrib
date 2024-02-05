@@ -1,11 +1,13 @@
 defmodule OpentelemetryNebulex.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :opentelemetry_nebulex,
       description: description(),
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -53,7 +55,7 @@ defmodule OpentelemetryNebulex.MixProject do
   defp deps do
     [
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.28.0", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.31.0", only: [:dev], runtime: false},
       {:nebulex, "~> 2.1", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.0"},

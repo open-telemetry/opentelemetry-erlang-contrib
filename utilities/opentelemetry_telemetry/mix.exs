@@ -9,7 +9,7 @@ defmodule OpentelemetryTelemetry.MixProject do
       app: app,
       version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(Keyword.fetch!(config, :deps)),
       name: "Opentelemetry Telemetry",
@@ -45,7 +45,7 @@ defmodule OpentelemetryTelemetry.MixProject do
     end)
     |> Enum.concat([
       {:dialyxir, "~> 1.4.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
     ])
