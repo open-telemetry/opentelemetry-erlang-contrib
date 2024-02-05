@@ -192,8 +192,10 @@ jobs:
 
       - uses: erlef/setup-beam@8b9cac4c04dbcd7bf8fd673e16f988225d89b09b # v1
         with:
+          version-type: strict
           otp-version: "25.3.2.5"
           elixir-version: "1.14.5"
+          rebar3-version: "3.22.1"
 
       - name: "Mix Hex Publish Dry-run"
         if: ${{ needs.config.outputs.build_tool == 'mix' }}
