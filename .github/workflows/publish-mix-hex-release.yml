@@ -74,7 +74,7 @@ jobs:
             core.setOutput('package_name', packageConfig.packageName)
             core.setOutput('tag_prefix', packageConfig.tagPrefix)
             core.setOutput('build_tool', packageConfig.buildTool)
-            core.setOutput('language', packageConfig.buildTool)
+            core.setOutput('language', packageConfig.language)
             core.setOutput('authorized_users', packageConfig.authorizedUsers)
 
   authorized_publisher:
