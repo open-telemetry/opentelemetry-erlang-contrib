@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0
+
+### Features
+
+* Add support for LiveView courtesy of @derekkraan
+
+### Fixes
+
+* Do not set a span as errored for exceptions, only based on 5xx HTTP status
+
+### Changed
+
+* Minimum supported Elixir version changed to 1.11.
+
 ## 1.1.1
 
 ### Fixes
