@@ -85,6 +85,9 @@ opentelemetry_oban:
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
 
+opentelemetry_bandit:
+  - instrumentation/opentelemetry_bandit/**/*
+
 opentelemetry_process_propagator:
   - propagators/opentelemetry_process_propagator/**/*
 
