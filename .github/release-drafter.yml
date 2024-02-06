@@ -1,4 +1,7 @@
 categories:
+  - title: '❗️ Breaking Changes'
+    labels:
+      - 'breaking-change'
   - title: '🚀 Features'
     labels:
       - 'feature'
@@ -25,4 +28,6 @@ version-resolver:
 exclude-labels:
   - 'skip-changelog'
 template: |
+  ## What's Changed
+  
   $CHANGES
