@@ -24,7 +24,7 @@ version-resolver:
   patch:
     labels:
       - 'patch'
-  default: patch
+  default: minor
 exclude-labels:
   - 'skip-changelog'
 template: |
