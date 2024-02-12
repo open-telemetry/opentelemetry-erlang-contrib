@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.3.0
 
-## Fixes
+### Fixes
 
 - Process Propagator: Allow looking up parent when parent is a named process @jeffutter (#261)
 
-## Maintenance
+### Maintenance
 
 - Support for Elixir 1.15 and OTP 26 @tomtaylor (#188)
 - Fix documentation example for OpentelemetryProcessPropagator @bamorim (#220)
