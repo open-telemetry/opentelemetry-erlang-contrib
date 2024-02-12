@@ -1,6 +1,6 @@
 {application, opentelemetry_process_propagator,
  [{description, "Tools for OpenTelemetry context propagation across process boundaries"},
-  {vsn, "0.2.2"},
+  {vsn, "0.3.0"},
   {registered, []},
   {applications,
    [kernel,

@@ -4,3 +4,8 @@ tag-template: 'opentelemetry-process-propagator-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-process-propagator-v
 include-paths:
   - propagators/opentelemetry_process_propagator/
+
+footer: |
+
+  ---
+  [Changelog](https://$REPOSITORY/blob/main/propagators/opentelemetry_process_propagator/CHANGELOG.MD)
