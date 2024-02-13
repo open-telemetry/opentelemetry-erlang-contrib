@@ -55,8 +55,8 @@ defmodule OpentelemetryTesla.MixProject do
   defp deps do
     [
       {:opentelemetry, "~> 1.0", only: :test},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_telemetry, "~> 1.1.0"},
+      {:opentelemetry_api, "~> 1.2"},
+      {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:tesla, "~> 1.4"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
