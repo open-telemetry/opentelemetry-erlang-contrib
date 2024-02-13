@@ -65,7 +65,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:nimble_options, "~> 0.5 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
-      {:opentelemetry_process_propagator, "~> 0.2"},
+      {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:plug, ">= 1.11.0"},
