@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0
+
+### Changed
+
+* Dependency maintenance release
+
 ## v0.2.1
 
 ### Fixes
