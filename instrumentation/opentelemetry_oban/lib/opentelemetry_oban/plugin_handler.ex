@@ -1,4 +1,5 @@
 defmodule OpentelemetryOban.PluginHandler do
+  alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
 
   @tracer_id __MODULE__
@@ -41,11 +42,12 @@ defmodule OpentelemetryOban.PluginHandler do
       @tracer_id,
       "#{plugin} process",
       metadata,
-      %{}
+      %{attributes: %{"oban.plugin": plugin}}
     )
   end
 
   def handle_plugin_stop(_event, _measurements, metadata, _config) do
+    Tracer.set_attributes(end_span_plugin_attrs(metadata))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
@@ -62,5 +64,55 @@ defmodule OpentelemetryOban.PluginHandler do
     Span.set_status(ctx, OpenTelemetry.status(:error, ""))
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Cron} = metadata) do
+    %{"oban.plugins.cron.jobs_count": length(metadata[:jobs])}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Gossip} = metadata) do
+    %{"oban.plugins.gossip.gossip_count": metadata[:gossip_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Lifeline} = metadata) do
+    %{
+      "oban.plugins.lifeline.discarded_count": metadata[:discarded_count],
+      "oban.plugins.lifeline.rescued_count": metadata[:rescued_count]
+    }
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Pruner} = metadata) do
+    %{"oban.plugins.pruner.pruned_count": metadata[:pruned_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicCron} = metadata) do
+    %{"oban.pro.plugins.dynamic_cron.jobs_count": length(metadata[:jobs])}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicLifeline} = metadata) do
+    %{
+      "oban.pro.plugins.dynamic_lifeline.discarded_count": metadata[:discarded_count],
+      "oban.pro.plugins.dynamic_lifeline.rescued_count": metadata[:rescued_count]
+    }
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPrioritizer} = metadata) do
+    %{"oban.pro.plugins.dynamic_prioritizer.reprioritized_count": metadata[:reprioritized_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPruner} = metadata) do
+    %{"oban.pro.plugins.dynamic_pruner.pruned_count": metadata[:pruned_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicScaler} = metadata) do
+    %{
+      "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_to": metadata[:scaler][:last_scaled_to],
+      "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_at":
+        DateTime.to_iso8601(metadata[:scaler][:last_scaled_at])
+    }
+  end
+
+  defp end_span_plugin_attrs(_) do
+    %{}
   end
 end

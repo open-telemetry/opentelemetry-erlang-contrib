@@ -133,15 +133,15 @@ defmodule OpentelemetryOban do
       Trace.messaging_system() => :oban,
       Trace.messaging_destination() => queue,
       Trace.messaging_destination_kind() => :queue,
-      :"messaging.oban.worker" => worker
+      :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
-      "messaging.oban.job_id": job.id,
-      "messaging.oban.priority": job.priority,
-      "messaging.oban.max_attempts": job.max_attempts
+      "oban.job.job_id": job.id,
+      "oban.job.priority": job.priority,
+      "oban.job.max_attempts": job.max_attempts
     }
   end
 end
