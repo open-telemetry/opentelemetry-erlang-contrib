@@ -2,5 +2,10 @@ _extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
 name-template: 'Opentelemetry Ecto - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-ecto-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-ecto-v
+footer: |
+
+  ---
+  [Changelog](https://$REPOSITORY/blob/main/instrumentation/opentelemetry_ecto/CHANGELOG.MD)
+  
 include-paths:
   - instrumentation/opentelemetry_ecto/

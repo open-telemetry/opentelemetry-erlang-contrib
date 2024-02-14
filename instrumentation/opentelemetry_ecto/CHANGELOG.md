@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0
+
+### Breaking Changes
+
+* `db.statement` attribute is now marked as optional. Add `db_statement: enabled` when calling `setup`
+
+### Fixes
+
+* Don't record DB statements without sanitizaiton
+
+### Changed
+
+* Add support for Elixir 1.15 and OTP 26
+* Add required `db.system` attribute
+
 ## 1.1.1
 
 ### Changed
