@@ -212,7 +212,7 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 update
+          rebar3 upgrade
           rebar3 hex publish --dry-run --yes
 
       - name: "Open a Version Update PR"
@@ -259,6 +259,6 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 update
-          rebar3 hex publish --dry-run --yes
+          rebar3 upgrade
+          rebar3 hex publish --yes
           echo "published=true" >> $GITHUB_ENV
