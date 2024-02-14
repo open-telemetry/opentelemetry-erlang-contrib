@@ -30,7 +30,8 @@ defmodule OpentelemetryRedixTest do
 
     conn = start_supervised!({Redix, []})
 
-    {:ok, "OK"} = Redix.command(conn, ["SET", "foo", "bar"], telemetry_metadata: %{foo: "bar", baz: :extra})
+    {:ok, "OK"} =
+      Redix.command(conn, ["SET", "foo", "bar"], telemetry_metadata: %{foo: "bar", baz: :extra})
 
     assert_receive {:span,
                     span(
