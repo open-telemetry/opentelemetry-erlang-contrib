@@ -4,3 +4,8 @@ tag-template: 'opentelemetry-bandit-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-bandit-v
 include-paths:
   - instrumentation/opentelemetry_bandit/
+
+footer: |
+
+  ---
+  [Changelog](https://$REPOSITORY/blob/main/instrumentation/opentelemetry_bandit/CHANGELOG.MD)
