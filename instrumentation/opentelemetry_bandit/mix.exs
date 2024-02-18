@@ -1,10 +1,12 @@
 defmodule OpentelemetryBandit.MixProject do
   use Mix.Project
 
+  @version "0.1.4"
+
   def project do
     [
       app: :opentelemetry_bandit,
-      version: "0.1.4",
+      version: @version,
       elixir: "~> 1.14",
       aliases: aliases(),
       start_permanent: Mix.env() == :prod,
@@ -44,10 +46,15 @@ defmodule OpentelemetryBandit.MixProject do
     [
       files: ~w(lib .formatter.exs mix.exs LICENSE* README* CHANGELOG*),
       maintainers: ["Artem Solomatin"],
+      licenses: ["Apache-2.0"],
       links: %{
-        "GitHub" => "https://github.com/samokat-oss/opentelemetry-bandit"
-      },
-      licenses: ["Apache-2.0"]
+        "GitHub" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_bandit",
+        "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
+        "OpenTelemetry Erlang Contrib" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry.io" => "https://opentelemetry.io"
+      }
     ]
   end
 
