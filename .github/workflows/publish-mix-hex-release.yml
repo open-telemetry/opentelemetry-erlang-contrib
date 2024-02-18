@@ -190,7 +190,7 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@8b9cac4c04dbcd7bf8fd673e16f988225d89b09b # v1
+      - uses: erlef/setup-beam@a23b1fc4452a892cf3e92cbc2c405256cd6c27ec # v1
         with:
           version-type: strict
           otp-version: "25.3.2.5"
