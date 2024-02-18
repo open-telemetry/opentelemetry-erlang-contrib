@@ -47,6 +47,7 @@ defmodule OpentelemetryBandit.MixProject do
       files: ~w(lib .formatter.exs mix.exs LICENSE* README* CHANGELOG*),
       maintainers: ["Artem Solomatin"],
       licenses: ["Apache-2.0"],
+
       links: %{
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_bandit",
@@ -67,7 +68,7 @@ defmodule OpentelemetryBandit.MixProject do
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:opentelemetry_telemetry, "~> 1.0"},
-      {:plug, "~> 1.15"},
+      {:plug, ">= 1.15.0"},
       {:telemetry, "~> 1.2"},
 
       # dev dependencies
