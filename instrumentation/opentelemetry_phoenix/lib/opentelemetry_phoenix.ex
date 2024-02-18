@@ -6,7 +6,7 @@ defmodule OpentelemetryPhoenix do
                       doc: "The endpoint prefix in your endpoint."
                     ],
                     adapter: [
-                      type: {:in, [:cowboy2, nil]},
+                      type: {:in, [:cowboy2, :bandit, nil]},
                       default: nil,
                       doc: "The phoenix server adapter being used.",
                       type_doc: ":atom"
@@ -31,8 +31,6 @@ defmodule OpentelemetryPhoenix do
   and pass the `:adapter` option when calling setup. Setting this option will prevent a new
   span from being started and the existing cowboy span to be continued. This is the recommended
   setup for measuring accurate latencies.
-
-  `Bandit.PhoenixAdapter` is not currently supported.
 
   ## Usage
 
@@ -69,7 +67,7 @@ defmodule OpentelemetryPhoenix do
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
 
   @typedoc "The phoenix server adapter being used. Optional"
-  @type adapter :: {:adapter, :cowboy2 | term()}
+  @type adapter :: {:adapter, :cowboy2 | :bandit | term()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -162,12 +160,20 @@ defmodule OpentelemetryPhoenix do
       :cowboy2 ->
         cowboy2_start()
 
+      :bandit ->
+        bandit_start()
+
       _ ->
         default_start(meta)
     end
   end
 
   defp cowboy2_start do
+    OpentelemetryProcessPropagator.fetch_parent_ctx()
+    |> OpenTelemetry.Ctx.attach()
+  end
+
+  defp bandit_start() do
     OpentelemetryProcessPropagator.fetch_parent_ctx()
     |> OpenTelemetry.Ctx.attach()
   end
@@ -207,6 +213,9 @@ defmodule OpentelemetryPhoenix do
   def handle_endpoint_stop(_event, _measurements, meta, _config) do
     case adapter() do
       :cowboy2 ->
+        :ok
+
+      :bandit ->
         :ok
 
       _ ->
