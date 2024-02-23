@@ -130,7 +130,7 @@ jobs:
     name: '[opentelemetry-bandit-release] Draft release'
     runs-on: ubuntu-22.04
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-bandit.yml
         env:
