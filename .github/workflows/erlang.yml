@@ -20,7 +20,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Read file
         id: set-matrix
         run: |
@@ -41,14 +41,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build
@@ -73,14 +73,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build
@@ -105,14 +105,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build
@@ -137,14 +137,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build
@@ -169,14 +169,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build
@@ -201,14 +201,14 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/_build

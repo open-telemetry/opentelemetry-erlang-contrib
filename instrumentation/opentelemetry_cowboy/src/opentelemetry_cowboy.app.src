@@ -1,17 +1,17 @@
 {application, opentelemetry_cowboy,
  [{description, "OpenTelemetry Cowboy Instrumentation"},
-  {vsn, "0.2.1"},
+  {vsn, "0.3.0"},
   {registered, []},
   {applications,
    [kernel,
     stdlib,
     opentelemetry_api,
-    telemetry,
-    telemetry_registry
+    opentelemetry_telemetry,
+    telemetry
    ]},
+  {exclude_paths, ["rebar.lock"]},
   {env,[]},
   {modules, []},
-
   {doc, "doc"},
   {licenses, ["Apache 2.0"]},
   {links, [{"GitHub", "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_cowboy"}]}

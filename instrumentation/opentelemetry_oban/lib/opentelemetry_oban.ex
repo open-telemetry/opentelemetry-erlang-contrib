@@ -53,7 +53,7 @@ defmodule OpentelemetryOban do
 
   def insert(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker, "unknown")
+    worker = Changeset.get_field(changeset, :worker)
 
     OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
@@ -75,7 +75,7 @@ defmodule OpentelemetryOban do
 
   def insert!(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker, "unknown")
+    worker = Changeset.get_field(changeset, :worker)
 
     OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
@@ -126,22 +126,22 @@ defmodule OpentelemetryOban do
   end
 
   defp attributes_before_insert(changeset) do
-    queue = Changeset.get_field(changeset, :queue, "unknown")
-    worker = Changeset.get_field(changeset, :worker, "unknown")
+    queue = Changeset.get_field(changeset, :queue)
+    worker = Changeset.get_field(changeset, :worker)
 
     %{
       Trace.messaging_system() => :oban,
       Trace.messaging_destination() => queue,
       Trace.messaging_destination_kind() => :queue,
-      :"messaging.oban.worker" => worker
+      :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
-      "messaging.oban.job_id": job.id,
-      "messaging.oban.priority": job.priority,
-      "messaging.oban.max_attempts": job.max_attempts
+      "oban.job.job_id": job.id,
+      "oban.job.priority": job.priority,
+      "oban.job.max_attempts": job.max_attempts
     }
   end
 end

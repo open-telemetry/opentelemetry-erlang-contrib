@@ -1,58 +1,29 @@
 {
   "otp_version": [
-    "26.0.2",
-    "25.3.2.5",
-    "24.3.4.13",
-    "23.3.4.19"
+    "26.2.1",
+    "25.3.2.8",
+    "24.3.4.15"
   ],
   "elixir_version": [
-    "1.15.4",
-    "1.14.4",
-    "1.13.4",
-    "1.12.3",
-    "1.11.4"
+    "1.16.0",
+    "1.14.5"
   ],
   "rebar3_version": [
-    "3.20.0"
+    "3.22.1"
   ],
   "os": [
     "ubuntu-20.04"
   ],
   "include": [
     {
-      "elixir_version": "1.15.4",
-      "otp_version": "26.0.2",
+      "elixir_version": "1.16.0",
+      "otp_version": "26.2.1",
       "check_formatted": true
+    },
+    {
+      "elixir_version": "1.12.3",
+      "otp_version": "24.3.4.15"
     }
   ],
-  "exclude": [
-    {
-      "elixir_version": "1.15.4",
-      "otp_version": "23.3.4.19"
-    },
-    {
-      "elixir_version": "1.14.4",
-      "otp_version": "26.0.2"
-    },
-    {
-      "elixir_version": "1.13.4",
-      "otp_version": "26.0.2"
-    },
-    {
-      "elixir_version": "1.12.3",
-      "otp_version": "25.3.2.5"
-    },
-    {
-      "elixir_version": "1.12.3",
-      "otp_version": "26.0.2"
-    },
-    {
-      "elixir_version": "1.11.4",
-      "otp_version": "25.3.2.5"
-    },
-    {
-      "elixir_version": "1.11.4",
-      "otp_version": "26.0.2"
-    }
-  ]
+  "exclude": []
 }

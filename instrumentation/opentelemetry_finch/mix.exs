@@ -1,12 +1,14 @@
 defmodule OpentelemetryFinch.MixProject do
   use Mix.Project
 
+  @version "0.2.0"
+
   def project do
     [
       app: :opentelemetry_finch,
       description: description(),
-      version: "0.2.0",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -57,8 +59,8 @@ defmodule OpentelemetryFinch.MixProject do
       {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.29.0", only: [:dev], runtime: false},
-      {:finch, "~> 0.13", only: [:dev, :test]},
+      {:ex_doc, "~> 0.31.0", only: [:dev], runtime: false},
+      {:finch, "~> 0.18", only: [:dev, :test]},
       {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
       {:bypass, "~> 2.0", only: :test}
     ]

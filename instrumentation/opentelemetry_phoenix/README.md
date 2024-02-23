@@ -22,10 +22,15 @@ may be supplied.
 ```elixir
 def deps do
   [
-    {:opentelemetry_phoenix, "~> 1.1"}
+    {:opentelemetry_phoenix, "~> 1.2"}
   ]
 end
 ```
+
+It is high recommended to also install [OpentelemetryCowboy](https://hex.pm/packages/opentelemetry_cowboy) to capture the full
+request lifecycle. Phoenix only handles part of the request lifecycle which can lead
+to incomplete request durations and lost traces for requests terminated at the socket
+level or before reaching Phoenix.
 
 ## Compatibility Matrix
 

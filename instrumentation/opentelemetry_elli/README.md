@@ -73,7 +73,7 @@ be added to `sys.config` to exclude the URLs `/health` and `/metrics`:
 
 ``` erlang
 
-{opentelemetry_elli, [{excluded_urls, ["/health", "/metrics"]}]}
+{opentelemetry_elli, [{excluded_paths, ["/health", "/metrics"]}]}
 ```
 
 An OS environment variable, `OTEL_ELLI_EXCLUDED_URLS`, is also read and is a

@@ -1,12 +1,14 @@
 defmodule OpentelemetryDataloader.MixProject do
   use Mix.Project
 
+  @version "1.0.0"
+
   def project do
     [
       app: :opentelemetry_dataloader,
       description: "Trace Dataloader with OpenTelemetry.",
-      version: "1.0.0",
-      elixir: "~> 1.14",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -52,17 +54,17 @@ defmodule OpentelemetryDataloader.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
+      {:telemetry, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.0"},
-      {:dataloader, "~> 1.0.8"},
+      {:dataloader, "~> 2.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.29", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
       {:postgrex, ">= 0.15.0", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:opentelemetry_process_propagator, "~> 0.2"}
+      {:opentelemetry_process_propagator, "~> 0.2.1"}
     ]
   end
 end

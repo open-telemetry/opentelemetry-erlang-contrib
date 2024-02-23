@@ -64,14 +64,13 @@ defmodule OpentelemetryOban.JobHandler do
       Trace.messaging_destination() => queue,
       Trace.messaging_destination_kind() => :queue,
       Trace.messaging_operation() => :process,
-      :"messaging.oban.job_id" => id,
-      :"messaging.oban.worker" => worker,
-      :"messaging.oban.priority" => priority,
-      :"messaging.oban.attempt" => attempt,
-      :"messaging.oban.max_attempts" => max_attempts,
-      :"messaging.oban.inserted_at" =>
-        if(inserted_at, do: DateTime.to_iso8601(inserted_at), else: nil),
-      :"messaging.oban.scheduled_at" => DateTime.to_iso8601(scheduled_at)
+      :"oban.job.job_id" => id,
+      :"oban.job.worker" => worker,
+      :"oban.job.priority" => priority,
+      :"oban.job.attempt" => attempt,
+      :"oban.job.max_attempts" => max_attempts,
+      :"oban.job.inserted_at" => DateTime.to_iso8601(inserted_at),
+      :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
     }
 
     span_name = "#{worker} process"

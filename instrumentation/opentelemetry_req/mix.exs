@@ -1,11 +1,13 @@
 defmodule OpentelemetryReq.MixProject do
   use Mix.Project
 
+  @version "0.2.0"
+
   def project do
     [
       app: :opentelemetry_req,
       description: description(),
-      version: "0.1.2",
+      version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -60,7 +62,8 @@ defmodule OpentelemetryReq.MixProject do
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:req, ">= 0.3.5"},
-      {:ex_doc, "~> 0.29", only: [:dev, :test]}
+      {:ex_doc, "~> 0.31", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.0", only: :test}
     ]
   end
 end

@@ -1,4 +1,5 @@
 elixir:
+  - .github/elixir-test-matrix.json
   - instrumentation/**/*.ex
   - instrumentation/**/*.exs
   - instrumentation/**/mix.lock
@@ -16,6 +17,7 @@ elixir:
   - utilities/**/mix.lock
 
 erlang:
+  - .github/erlang-test-matrix.json
   - instrumentation/**/*.erl
   - instrumentation/**/*.hrl
   - instrumentation/**/rebar.*
@@ -82,6 +84,9 @@ opentelemetry_oban:
 
 opentelemetry_phoenix:
   - instrumentation/opentelemetry_phoenix/**/*
+
+opentelemetry_bandit:
+  - instrumentation/opentelemetry_bandit/**/*
 
 opentelemetry_process_propagator:
   - propagators/opentelemetry_process_propagator/**/*
