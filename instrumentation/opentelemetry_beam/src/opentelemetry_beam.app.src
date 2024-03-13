@@ -1,0 +1,15 @@
+{application, opentelemetry_beam,
+ [{description, "OpenTelemetry BEAM VM Instrumentation"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    opentelemetry_api,
+    opentelemetry_api_experimental
+   ]},
+  {env,[]},
+  {modules, []},
+  {licenses, ["Apache-2.0"]},
+  {links, []}
+ ]}.
