@@ -53,6 +53,7 @@ defmodule OpentelemetryPhoenix do
   require OpenTelemetry.Tracer
   alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Tracer
+  alias OpenTelemetry.Ctx
   alias OpentelemetryPhoenix.Reason
 
   require SemanticConventions.Trace
@@ -203,10 +204,15 @@ defmodule OpentelemetryPhoenix do
     }
 
     # start the span with a default name. Route name isn't known until router dispatch
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
-      kind: :server,
-      attributes: attributes
-    })
+    span_ctx =
+      OpentelemetryTelemetry.start_telemetry_span(@tracer_id, "HTTP #{conn.method}", meta, %{
+       kind: :server,
+       attributes: attributes
+      })
+
+    # Create a context to store attributes and sets the current span in the context.
+    ctx = Ctx.set_value(:attributes, attributes)
+    Tracer.set_current_span(ctx, span_ctx)
   end
 
   @doc false
@@ -234,6 +240,9 @@ defmodule OpentelemetryPhoenix do
     if conn.status >= 500 do
       Tracer.set_status(OpenTelemetry.status(:error, ""))
     end
+
+    # clear the context from the current process.
+    Ctx.clear()
 
     # end the Phoenix span
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
