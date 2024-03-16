@@ -1,13 +1,18 @@
 -module(opentelemetry_cowboy).
 
 -export([
+         get_current_span/0,
          setup/0,
          setup/1,
          handle_event/4]).
 
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
+%%-include_lib("opentelemetry_api/include/otel_tracer.hrl").
 
 -define(TRACER_ID, ?MODULE).
+
+get_current_span() ->
+    otel_telemetry:current_span_ctx().
 
 -spec setup() -> ok.
 setup() ->
@@ -47,10 +52,11 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, _Con
                  },
     SpanName = iolist_to_binary([<<"HTTP ">>, Method]),
     Opts = #{attributes => Attributes, kind => ?SPAN_KIND_SERVER},
-    otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, Opts);
+    otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, Opts),
+    otel_telemetry:set_current_telemetry_span(?TRACER_ID,  Meta);
 
 handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
-    Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
+    Ctx = otel_telemetry:current_span_ctx(),
     Status = maps:get(resp_status, Meta),
     Attributes = #{
                   'http.request_content_length' => maps:get(req_body_length, Measurements),
@@ -80,7 +86,7 @@ handle_event([cowboy, request, stop], Measurements, Meta, _Config) ->
     otel_ctx:clear();
 
 handle_event([cowboy, request, exception], Measurements, Meta, _Config) ->
-    Ctx = otel_telemetry:set_current_telemetry_span(?TRACER_ID, Meta),
+    Ctx = otel_telemetry:current_span_ctx(),
     #{
       kind := Kind,
       reason := Reason,
