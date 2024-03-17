@@ -7,7 +7,11 @@ defmodule OtelTelemetryMetrics.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      source_url: "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+      homepage_url: "http://github.com/open-telemetry/opentelemetry-erlang-contrib",
+      docs: [main: "OtelTelemetryMetrics",
+             extras: ["README.md"]]
     ]
   end
 
@@ -27,6 +31,7 @@ defmodule OtelTelemetryMetrics.MixProject do
       {:opentelemetry_api_experimental, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry_api_experimental", override: true},
       {:opentelemetry, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry", override: true},
       {:opentelemetry_experimental, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry_experimental"},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
 end

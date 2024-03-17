@@ -1,6 +1,38 @@
 defmodule OtelTelemetryMetrics do
   @moduledoc """
-  Documentation for `OtelTelemetryMetrics`.
+  `OtelTelemetryMetrics.start_link/1` creates OpenTelemetry Instruments for
+  `Telemetry.Metric` metrics and records to them when their corresponding
+  events are triggered.
+
+      metrics = [
+        last_value("vm.memory.binary", unit: :byte),
+        counter("vm.memory.total"),
+        counter("db.query.duration", tags: [:table, :operation]),
+        summary("http.request.response_time",
+          tag_values: fn
+            %{foo: :bar} -> %{bar: :baz}
+          end,
+          tags: [:bar],
+          drop: fn metadata ->
+            metadata[:boom] == :pow
+          end
+        ),
+        sum("telemetry.event_size.metadata",
+          measurement: &__MODULE__.metadata_measurement/2
+        ),
+        distribution("phoenix.endpoint.stop.duration",
+          measurement: &__MODULE__.measurement/1
+        )
+      ]
+
+      {:ok, _} = OtelTelemetryMetrics.start_link([metrics: metrics])
+
+  Then either in your Application code or a dependency execute `telemetry`
+  events conataining the measurements. For example, an event that will result
+  in the metrics `vm.memory.total` and `vm.memory.binary` being recorded to:
+
+      :telemetry.execute([:vm, :memory], %{binary: 100, total: 200}, %{})
+
   """
 
   require Logger
@@ -14,6 +46,8 @@ defmodule OtelTelemetryMetrics do
 
   @impl true
   def init(options) do
+    Process.flag(:trap_exit, true)
+
     meter = options[:meter] || :opentelemetry_experimental.get_meter()
     metrics = options[:metrics] || []
 
@@ -22,6 +56,11 @@ defmodule OtelTelemetryMetrics do
     {:ok, %{handler_ids: handler_ids}}
   end
 
+  @impl true
+  def terminate(_, %{handler_ids: handler_ids}) do
+    detach(handler_ids)
+    :ok
+  end
 
   defp create_instruments_and_attach(meter, metrics) do
     metrics_by_event = Enum.group_by(metrics, & &1.event_name)
@@ -33,7 +72,7 @@ defmodule OtelTelemetryMetrics do
     end
   end
 
-  def create_instruments(meter, metrics) do
+  defp create_instruments(meter, metrics) do
     for metric <- metrics,
       instrument = create_instrument(metric, meter),
       instrument != nil, into: %{} do
@@ -41,36 +80,36 @@ defmodule OtelTelemetryMetrics do
     end
   end
 
-  def create_instrument(%Telemetry.Metrics.Counter{}=metric, meter) do
+  defp create_instrument(%Telemetry.Metrics.Counter{}=metric, meter) do
     :otel_counter.create(meter, format_name(metric), %{})
   end
 
   # a summary is represented as an explicit histogram with a single bucket
-  def create_instrument(%Telemetry.Metrics.Summary{}=metric, meter) do
+  defp create_instrument(%Telemetry.Metrics.Summary{}=metric, meter) do
     :otel_histogram.create(meter, format_name(metric), %{explicit_bucket_boundaries: []})
   end
 
-  def create_instrument(%Telemetry.Metrics.Distribution{}=metric, meter) do
+  defp create_instrument(%Telemetry.Metrics.Distribution{}=metric, meter) do
     :otel_histogram.create(meter, format_name(metric), %{})
   end
 
-  def create_instrument(%Telemetry.Metrics.Sum{}=metric, meter) do
+  defp create_instrument(%Telemetry.Metrics.Sum{}=metric, meter) do
     :otel_counter.create(meter, format_name(metric), %{})
   end
 
   # waiting on
-  def create_instrument(%Telemetry.Metrics.LastValue{}=metric, _meter) do
+  defp create_instrument(%Telemetry.Metrics.LastValue{}=metric, _meter) do
     Logger.info("Ignoring metric #{inspect(metric.name)} because LastValue aggregation is not supported in this version of OpenTelemetry Elixir")
     nil
   end
 
   defp format_name(metric) do
     metric.name
-    |> Enum.join("_")
+    |> Enum.join(".")
     |> String.to_atom
   end
 
-  def attach(meter, event_name, instruments) do
+  defp attach(meter, event_name, instruments) do
     handler_id = handler_id(event_name)
 
     :ok =
@@ -78,24 +117,23 @@ defmodule OtelTelemetryMetrics do
         %{meter: meter,
           instruments: instruments})
 
-      handler_id
+    handler_id
   end
 
-  def detach(handler_ids) do
+  defp detach(handler_ids) do
     Enum.each(handler_ids, fn id -> :telemetry.detach(id) end)
   end
 
-  def handler_id(event_name) do
+  defp handler_id(event_name) do
     {__MODULE__, event_name, self()}
   end
-
 
   def handle_event(_event_name, measurements, metadata, %{meter: meter,
                                                           instruments: instruments}) do
     for {metric, instrument} <- instruments do
       if value = keep?(metric, metadata) && fetch_measurement(metric, measurements, metadata) do
-          ctx = OpenTelemetry.Ctx.get_current()
-          :otel_meter.record(ctx, meter, instrument, value, metadata)
+        ctx = OpenTelemetry.Ctx.get_current()
+        :otel_meter.record(ctx, meter, instrument, value, metadata)
       end
     end
   end
