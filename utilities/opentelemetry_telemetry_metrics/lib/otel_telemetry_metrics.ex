@@ -33,6 +33,17 @@ defmodule OtelTelemetryMetrics do
 
       :telemetry.execute([:vm, :memory], %{binary: 100, total: 200}, %{})
 
+  OpenTelemetry does not support a `summary` type metric, the `summary`
+  `http.request.response_time` is recorded as a single bucket histogram.
+
+  In `Telemetry.Metrics` the `counter` type refers to counting the number of
+  times an event is triggered, this is represented as a `sum` in OpenTelemetry
+  and when recording the value is sent as a `1` every time.
+
+  Metrics of type `last_value` are ignored because `last_value` is not yet an
+  aggregation supported on synchronous instruments in Erlang/Elixir
+  OpenTelemetry. When it is added to the SDK this library will be updated to
+  no longer ignore metrics of this type.
   """
 
   require Logger
@@ -74,34 +85,37 @@ defmodule OtelTelemetryMetrics do
 
   defp create_instruments(meter, metrics) do
     for metric <- metrics,
-      instrument = create_instrument(metric, meter),
+      instrument = create_instrument(metric, meter, %{unit: unit(metric.unit)}),
       instrument != nil, into: %{} do
         {metric, instrument}
     end
   end
 
-  defp create_instrument(%Telemetry.Metrics.Counter{}=metric, meter) do
-    :otel_counter.create(meter, format_name(metric), %{})
+  defp create_instrument(%Telemetry.Metrics.Counter{}=metric, meter, opts) do
+    :otel_counter.create(meter, format_name(metric), opts)
   end
 
   # a summary is represented as an explicit histogram with a single bucket
-  defp create_instrument(%Telemetry.Metrics.Summary{}=metric, meter) do
-    :otel_histogram.create(meter, format_name(metric), %{explicit_bucket_boundaries: []})
+  defp create_instrument(%Telemetry.Metrics.Summary{}=metric, meter, opts) do
+    :otel_histogram.create(meter, format_name(metric), Map.put(opts, :advisory_params, %{explicit_bucket_boundaries: []}))
   end
 
-  defp create_instrument(%Telemetry.Metrics.Distribution{}=metric, meter) do
-    :otel_histogram.create(meter, format_name(metric), %{})
+  defp create_instrument(%Telemetry.Metrics.Distribution{}=metric, meter, opts) do
+    :otel_histogram.create(meter, format_name(metric), opts)
   end
 
-  defp create_instrument(%Telemetry.Metrics.Sum{}=metric, meter) do
-    :otel_counter.create(meter, format_name(metric), %{})
+  defp create_instrument(%Telemetry.Metrics.Sum{}=metric, meter, opts) do
+    :otel_counter.create(meter, format_name(metric), opts)
   end
 
   # waiting on
-  defp create_instrument(%Telemetry.Metrics.LastValue{}=metric, _meter) do
+  defp create_instrument(%Telemetry.Metrics.LastValue{}=metric, _meter, _) do
     Logger.info("Ignoring metric #{inspect(metric.name)} because LastValue aggregation is not supported in this version of OpenTelemetry Elixir")
     nil
   end
+
+  defp unit(:unit), do: 1
+  defp unit(unit), do: unit
 
   defp format_name(metric) do
     metric.name
@@ -131,9 +145,10 @@ defmodule OtelTelemetryMetrics do
   def handle_event(_event_name, measurements, metadata, %{meter: meter,
                                                           instruments: instruments}) do
     for {metric, instrument} <- instruments do
-      if value = keep?(metric, metadata) && fetch_measurement(metric, measurements, metadata) do
+      if value = keep?(metric, metadata) && extract_measurement(metric, measurements, metadata) do
         ctx = OpenTelemetry.Ctx.get_current()
-        :otel_meter.record(ctx, meter, instrument, value, metadata)
+        tags = extract_tags(metric, metadata)
+        :otel_meter.record(ctx, meter, instrument, value, tags)
       end
     end
   end
@@ -142,11 +157,11 @@ defmodule OtelTelemetryMetrics do
   defp keep?(%{keep: nil}, _metadata), do: true
   defp keep?(%{keep: keep}, metadata), do: keep.(metadata)
 
-  defp fetch_measurement(%Telemetry.Metrics.Counter{}, _measurements, _metadata) do
+  defp extract_measurement(%Telemetry.Metrics.Counter{}, _measurements, _metadata) do
     1
   end
 
-  defp fetch_measurement(metric, measurements, metadata) do
+  defp extract_measurement(metric, measurements, metadata) do
     case metric.measurement do
       nil ->
         nil
@@ -162,4 +177,8 @@ defmodule OtelTelemetryMetrics do
     end
   end
 
+  defp extract_tags(metric, metadata) do
+    tag_values = metric.tag_values.(metadata)
+    Map.take(tag_values, metric.tags)
+  end
 end

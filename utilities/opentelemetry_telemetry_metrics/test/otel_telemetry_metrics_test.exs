@@ -21,6 +21,9 @@ defmodule OtelTelemetryMetricsTest do
           )
   Record.defrecordp(:histogram, @fields)
 
+  @fields Record.extract(:histogram_datapoint, from_lib: "opentelemetry_experimental/include/otel_metrics.hrl")
+  Record.defrecordp(:histogram_datapoint, @fields)
+
   def metadata_measurement(_measurements, metadata) do
     map_size(metadata)
   end
@@ -44,6 +47,7 @@ defmodule OtelTelemetryMetricsTest do
         end
       ),
       Metrics.sum("telemetry.event_size.metadata",
+        unit: {:byte, :megabyte},
         measurement: &__MODULE__.metadata_measurement/2
       ),
       Metrics.distribution("phoenix.endpoint.stop.duration",
@@ -91,10 +95,52 @@ defmodule OtelTelemetryMetricsTest do
     :telemetry.execute([:telemetry, :event_size], %{}, %{key1: :value1,
                                                          key2: :value2})
 
-    # :telemetry.execute([:db, :query], %{duration: 112}, %{table: "users", operation: "select"})
-    # :telemetry.execute([:db, :query], %{duration: 201}, %{table: "sessions", operation: "insert"})
+    :telemetry.execute([:http, :request], %{response_time: 1000}, %{foo: :bar})
+
+    # this one gets ignored
+    :telemetry.execute([:http, :request], %{response_time: 2000}, %{boom: :pow,
+                                                                    foo: :bar})
+
+    :telemetry.execute([:db, :query], %{duration: 112}, %{table: "users", operation: "select"})
+    :telemetry.execute([:db, :query], %{duration: 201}, %{table: "sessions", operation: "insert"})
+
+    :telemetry.execute([:phoenix, :endpoint, :stop], %{duration: 100}, %{})
 
     :otel_meter_server.force_flush()
+
+    # last_value type metrics are ignored at this time
+    refute_receive {:metric, metric( name: :'vm.memory.binary')}
+
+    assert_receive {:metric,
+                    metric(
+                      name: :'phoenix.endpoint.stop.duration',
+                      data: histogram(datapoints: [histogram_datapoint(
+                                                      attributes: %{},
+                                                      count: 1,
+                                                      sum: 100,
+                                                      min: 100,
+                                                      max: 100,
+                                                      bucket_counts: [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                                                  ]
+                      )
+                    )}
+
+    receive do
+      {:metric,
+       metric(
+         name: :'db.query.duration',
+         data: sum(datapoints: datapoints))} ->
+        assert [datapoint(
+                   attributes: %{table: "sessions", operation: "insert"},
+                   value: 1),
+                datapoint(
+                  attributes: %{table: "users", operation: "select"},
+                  value: 1)] = Enum.sort(datapoints)
+    after
+      1000 ->
+        flunk(:timeout_query_duration)
+    end
+
 
     # Metric for vm_memory_total is their form of Counter, a metric that increments
     # by 1 on each recording. So should be only 1 here
@@ -106,7 +152,24 @@ defmodule OtelTelemetryMetricsTest do
     assert_receive {:metric,
                     metric(
                       name: :'telemetry.event_size.metadata',
-                      data: sum(datapoints: [datapoint(value: 4)])
+                      unit: :megabyte,
+                      data: sum(datapoints: [datapoint(value: 4.0e-6)])
+                    )}
+
+    # response_time is a summary, which gets represented as a single bucket histogram
+    # since the second event had metadata boom: pow it is ignored and count is just 1
+    assert_receive {:metric,
+                    metric(
+                      name: :'http.request.response_time',
+                      data: histogram(datapoints: [histogram_datapoint(
+                                                      attributes: %{bar: :baz},
+                                                      count: 1,
+                                                      sum: 1000,
+                                                      min: 1000,
+                                                      max: 1000,
+                                                      bucket_counts: [1])
+                                                  ]
+                      )
                     )}
 
     :telemetry.execute([:vm, :memory], %{binary: 100, total: 500}, %{})
