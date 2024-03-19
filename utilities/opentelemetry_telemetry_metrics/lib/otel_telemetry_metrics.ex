@@ -85,9 +85,9 @@ defmodule OtelTelemetryMetrics do
 
   defp create_instruments(meter, metrics) do
     for metric <- metrics,
-      instrument = create_instrument(metric, meter, %{unit: unit(metric.unit)}),
-      instrument != nil, into: %{} do
-        {metric, instrument}
+        instrument = create_instrument(metric, meter, %{unit: unit(metric.unit)}),
+        into: %{} do
+      {metric, instrument}
     end
   end
 
