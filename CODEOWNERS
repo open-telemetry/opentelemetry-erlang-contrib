@@ -21,5 +21,6 @@
 /instrumentation/opentelemetry_phoenix          @bryannaegele @tsloughter
 /instrumentation/opentelemetry_redix            @andrewhr
 /utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
+/utilities/opentelemetry_telemetry_metrics      @tsloughter
 /utilities/opentelemetry_instrumentation_http   @tsloughter
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva
