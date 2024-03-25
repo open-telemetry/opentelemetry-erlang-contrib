@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-* `db.statement` attribute is now marked as optional. Add `db_statement: enabled` when calling `setup`
+* `db.statement` attribute is now marked as optional. Add `db_statement: :enabled` when calling `setup`
 
 ### Fixes
 
