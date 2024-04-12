@@ -90,7 +90,9 @@ defmodule OpentelemetryEctoTest do
   end
 
   test "include additional_attributes" do
-    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+    attach_handler(
+      additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"}
+    )
 
     Repo.all(User)
 
@@ -130,6 +132,25 @@ defmodule OpentelemetryEctoTest do
     Repo.all(User)
 
     assert_receive {:span, span(name: "Ecto:users")}
+  end
+
+  test "can use the :span_name option to calculate span names" do
+    test_pid = self()
+    ref = make_ref()
+
+    attach_handler(
+      span_name: fn meta ->
+        send(test_pid, {:meta, ref, meta})
+        "Ecto:#{meta.source}"
+      end
+    )
+
+    Repo.all(User)
+
+    assert_receive {:span, span(name: "Ecto:users")}
+    assert_receive {:meta, ^ref, meta}
+    assert meta.source == "users"
+    assert meta.repo == Repo
   end
 
   test "collects multiple spans" do

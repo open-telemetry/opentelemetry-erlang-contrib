@@ -29,6 +29,7 @@ defmodule OpentelemetryEcto do
           | {:span_prefix, String.t()}
           | {:additional_attributes, %{String.t() => term()}}
           | {:db_statement, :enabled | :disabled | (String.t() -> String.t())}
+          | {:span_name, (:telemetry.event_metadata() -> String.t())}
 
   @doc """
   Attaches the `OpentelemetryEcto` handler to your repo events.
@@ -70,6 +71,11 @@ defmodule OpentelemetryEcto do
       sanitized version of it. This is useful for removing sensitive information from the
       query string. Unless this option is `:enabled` or a function,
       query statements will not be recorded on spans.
+    * `:span_name` (*since v1.3.0*) - a function that takes the Telemetry metadata
+      for the query event and must return the span name as a string. For information
+      on the available metadata, consult the [Ecto
+      documentation](https://hexdocs.pm/ecto/Ecto.Repo.html#module-telemetry-events).
+      If this option is set, `:span_prefix` will be ignored.
 
   """
   @spec setup(:telemetry.event_name(), [setup_option()]) :: :ok | {:error, :already_exists}
@@ -82,19 +88,21 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo, type: type} = metadata,
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
     # could technically use the attributes to decide if it should sample or not
 
+    repo_config = repo.config()
+
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
-    database = repo.config()[:database]
+    database = repo_config[:database]
 
     url =
-      case repo.config()[:url] do
+      case repo_config[:url] do
         nil ->
           # TODO: add port
           URI.to_string(%URI{scheme: "ecto", host: repo.config()[:hostname]})
@@ -103,14 +111,16 @@ defmodule OpentelemetryEcto do
           url
       end
 
-    span_prefix =
-      case Keyword.fetch(config, :span_prefix) do
-        {:ok, prefix} -> prefix
-        :error -> Enum.join(event, ".")
-      end
+    span_name =
+      case Keyword.fetch(config, :span_name) do
+        {:ok, fun} when is_function(fun, 1) ->
+          fun.(metadata)
 
-    span_suffix = if source != nil, do: ":#{source}", else: ""
-    span_name = span_prefix <> span_suffix
+        _other ->
+          span_prefix = Keyword.get_lazy(config, :span_prefix, fn -> Enum.join(event, ".") end)
+          span_suffix = if source != nil, do: ":#{source}", else: ""
+          span_prefix <> span_suffix
+      end
 
     time_unit = Keyword.get(config, :time_unit, :microsecond)
     additional_attributes = Keyword.get(config, :additional_attributes, %{})
@@ -179,10 +189,7 @@ defmodule OpentelemetryEcto do
     end
   end
 
-  defp format_error(%{__exception__: true} = exception) do
-    Exception.message(exception)
-  end
-
+  defp format_error(exception) when is_exception(exception), do: Exception.message(exception)
   defp format_error(_), do: ""
 
   defp add_measurements(attributes, measurements, time_unit) do
