@@ -22,6 +22,7 @@ defmodule OpentelemetryRedixTest do
 
     on_exit(fn ->
       OpenTelemetry.Tracer.end_span()
+      :telemetry.detach({OpentelemetryRedix, :pipeline_stop})
     end)
   end
 
