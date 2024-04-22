@@ -30,7 +30,7 @@ defmodule OpentelemetryXandraTest do
 
       Xandra.execute!(conn, "SELECT * FROM system.local", [])
 
-      assert_receive {:span, span(name: "SELECT TODO") = span}
+      assert_receive {:span, span(name: "SELECT") = span}
 
       assert span(span, :kind) == :client
       assert span(span, :status) == OpenTelemetry.status(:ok)
@@ -51,7 +51,7 @@ defmodule OpentelemetryXandraTest do
       prepared = Xandra.prepare!(conn, "SELECT * FROM system.local")
       Xandra.execute!(conn, prepared, [])
 
-      assert_receive {:span, span(name: "SELECT TODO") = span}
+      assert_receive {:span, span(name: "SELECT") = span}
 
       assert span(span, :kind) == :client
       assert span(span, :status) == OpenTelemetry.status(:ok)

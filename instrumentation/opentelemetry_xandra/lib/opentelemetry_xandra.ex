@@ -104,7 +104,7 @@ defmodule OpenTelemetryXandra do
 
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{Map.fetch!(attributes, :db_operation)} TODO",
+      "#{Map.fetch!(attributes, :db_operation)}",
       metadata,
       %{
         kind: :client,
@@ -138,7 +138,7 @@ defmodule OpenTelemetryXandra do
   defp handle_event(:exception, metadata, _config) do
     span_ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
-    status = OpenTelemetry.status(:error, "TODO")
+    status = OpenTelemetry.status(:error, inspect(metadata.reason))
     OpenTelemetry.Span.set_status(span_ctx, status)
 
     :otel_span.record_exception(span_ctx, metadata.kind, metadata.reason, metadata.stacktrace, [])
