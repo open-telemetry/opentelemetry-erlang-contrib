@@ -1,21 +1,22 @@
-# OpentelemetryXandra
+# OpenTelemetryXandra
 
-**TODO: Add description**
+This library uses [Telemetry](https://github.com/beam-telemetry/telemetry/) events to create OpenTelemetry Spans for [Xandra](https://github.com/whatyouhide/xandra) queries.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `opentelemetry_xandra` to your list of dependencies in `mix.exs`:
+Add `opentelemetry_xandra` to your list of dependencies in `mix.exs`:
 
 ```elixir
-def deps do
+defp deps do
   [
-    {:opentelemetry_xandra, "~> 0.1.0"}
+    # Other opentelemetry_* deps...,
+    {:opentelemetry_xandra, "~> 0.1"}
   ]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/opentelemetry_xandra>.
+## Compatibility Matrix
 
+| OpenTelemetryXandra Version | OpenTelemetry Version |
+| :-------------------------- | :-------------------- |
+| v0.1.0                      | v1.0.0                |
