@@ -30,8 +30,12 @@ defmodule OpentelemetryRedix do
 
   You may also supply the following options:
 
-    * `db_statement` - a boolean used to set whether a sanitized `db.statement`
-      attribute is included in each span. Defaults to `true`.
+    * `db_statement` - `:enabled`, `:disabled` or a single arity function. If
+      `:enabled`, the DB statement is sanitized of sensitive values, such as
+      AUTH crendentials, but otherwise logged. If `:disabled`, the statement is
+      not logged. If you pass in a single arity function, the list of commands
+      will be passed through that function for your own processing. Defaults to
+      `:enabled`.
   """
   @spec setup(opts()) :: :ok
   def setup(config \\ []) do
@@ -45,7 +49,7 @@ defmodule OpentelemetryRedix do
 
   @doc false
   def handle_pipeline_stop(_event, measurements, meta, config) do
-    add_db_statement = Keyword.get(config, :db_statement, true)
+    add_db_statement = Keyword.get(config, :db_statement, :enabled)
 
     duration = measurements.duration
     end_time = :opentelemetry.timestamp()
@@ -113,13 +117,17 @@ defmodule OpentelemetryRedix do
   defp redix_attributes(%{connection_name: name}), do: %{"db.redix.connection_name": name}
   defp redix_attributes(_), do: %{}
 
-  defp db_statement_attributes(meta, true) do
+  defp db_statement_attributes(meta, :enabled) do
     db_statement = Enum.map_join(meta.commands, "\n", &Command.sanitize/1)
-
     %{Trace.db_statement() => db_statement}
   end
 
-  defp db_statement_attributes(_meta, false), do: %{}
+  defp db_statement_attributes(_meta, :disabled), do: %{}
+
+  defp db_statement_attributes(meta, fun) when is_function(fun, 1) do
+    db_statement = fun.(meta.commands)
+    %{Trace.db_statement() => db_statement}
+  end
 
   defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
   defp format_error(reason), do: inspect(reason)
