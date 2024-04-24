@@ -100,11 +100,12 @@ defmodule OpentelemetryBanditTest do
         [:bandit, :request, :stop],
         %{duration: 444, resp_body_bytes: 10},
         %{
-          conn: nil,
-          status: 500,
-          error: "Internal Server Error",
-          method: "GET",
-          request_target: {nil, nil, nil, "/not_existing_route"}
+          conn: %{
+            status: 500,
+            method: "GET",
+            request_target: {nil, nil, nil, "/not_existing_route"}
+          },
+          error: "Internal Server Error"
         }
       )
 
@@ -130,11 +131,8 @@ defmodule OpentelemetryBanditTest do
         [:bandit, :request, :stop],
         %{duration: 444, resp_body_bytes: 10},
         %{
-          conn: nil,
-          status: 500,
-          error: "Internal Server Error",
-          method: "GET",
-          request_target: nil
+          conn: %{status: 500, method: "GET", request_target: nil},
+          error: "Internal Server Error"
         }
       )
 
