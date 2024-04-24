@@ -44,6 +44,7 @@ defmodule OpentelemetryBandit do
     duration = measurements.duration
     end_time = :opentelemetry.timestamp()
     start_time = end_time - duration
+    resp_body_bytes = Map.get(measurements, :resp_body_bytes, 0)
 
     url = extract_url(meta, conn)
     request_path = extract_request_path(meta, conn)
@@ -52,10 +53,10 @@ defmodule OpentelemetryBandit do
       if Map.has_key?(meta, :error) do
         %{
           Trace.http_url() => url,
-          Trace.http_method() => meta.method,
+          Trace.http_method() => conn.method,
           Trace.net_transport() => :"IP.TCP",
-          Trace.http_response_content_length() => measurements.resp_body_bytes,
-          Trace.http_status_code() => meta.status
+          Trace.http_response_content_length() => resp_body_bytes,
+          Trace.http_status_code() => conn.status
         }
       else
         %{
@@ -65,9 +66,9 @@ defmodule OpentelemetryBandit do
           Trace.net_peer_name() => conn.host,
           Trace.net_peer_port() => conn.port,
           Trace.http_target() => conn.request_path,
-          Trace.http_method() => meta.method,
-          Trace.http_status_code() => meta.status,
-          Trace.http_response_content_length() => measurements.resp_body_bytes,
+          Trace.http_method() => conn.method,
+          Trace.http_status_code() => conn.status,
+          Trace.http_response_content_length() => resp_body_bytes,
           Trace.net_transport() => :"IP.TCP",
           Trace.http_user_agent() => user_agent(conn)
         }
@@ -75,7 +76,7 @@ defmodule OpentelemetryBandit do
 
     span_kind = if Map.has_key?(meta, :error), do: :error, else: :server
 
-    span_id = "HTTP #{meta.method} #{request_path}" |> String.trim()
+    span_id = "HTTP #{conn.method} #{request_path}" |> String.trim()
 
     OpenTelemetry.Tracer.start_span(span_id, %{
       attributes: attributes,
@@ -132,8 +133,8 @@ defmodule OpentelemetryBandit do
     span
   end
 
-  defp extract_url(%{error: _} = meta, _conn) do
-    case Map.get(meta, :request_target) do
+  defp extract_url(%{error: _}, conn) do
+    case Map.get(conn, :request_target) do
       nil -> ""
       {scheme, host, port, path} -> build_url(scheme, host, port, path)
     end
@@ -143,8 +144,8 @@ defmodule OpentelemetryBandit do
     build_url(conn.scheme, conn.host, conn.port, conn.request_path)
   end
 
-  defp extract_request_path(%{error: _} = meta, _conn) do
-    case Map.get(meta, :request_target) do
+  defp extract_request_path(%{error: _}, conn) do
+    case Map.get(conn, :request_target) do
       nil -> ""
       {_, _, _, path} -> path || ""
     end
