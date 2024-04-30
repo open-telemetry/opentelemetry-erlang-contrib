@@ -1,0 +1,11 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Broadway - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-broadway-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-broadway-v
+include-paths:
+  - instrumentation/opentelemetry_broadway/
+
+footer: |
+
+  ---
+  [Changelog](https://$REPOSITORY/blob/main/instrumentation/opentelemetry_broadway/CHANGELOG.MD)
