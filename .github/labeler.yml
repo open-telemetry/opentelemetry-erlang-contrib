@@ -52,6 +52,9 @@ scope-ci:
 opentelemetry_aws_xray:
   - utilities/opentelemetry_aws_xray/**/*
 
+opentelemetry_broadway:
+  - instrumentation/opentelemetry_broadway/**/*
+
 opentelemetry_cowboy:
   - instrumentation/opentelemetry_cowboy/**/*
 
