@@ -50,6 +50,7 @@ defmodule OpentelemetryExAws.MixProject do
       {:opentelemetry_telemetry, "~> 1.0"},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
+      {:ex_aws_dynamo, "~> 4.2", only: :test},
       {:ex_aws_s3, "~> 2.5", only: :test},
       {:sweet_xml, "~> 0.7", only: :test},
       {:hackney, "~> 1.16", only: :test},

@@ -105,7 +105,6 @@ defmodule OpenTelemetryExAws.DynamoDB do
         %{attribute: Conventions.aws_dynamodb_projection(), path: "$.ProjectionExpression"},
         %{attribute: Conventions.aws_dynamodb_select(), path: "$.Select"},
         %{attribute: Conventions.aws_dynamodb_table_names(), path: "$.TableName", process: &List.wrap/1}
-        
       ],
       response: [
         %{attribute: Conventions.aws_dynamodb_count(), path: "$.Count"},
@@ -141,10 +140,20 @@ defmodule OpenTelemetryExAws.DynamoDB do
 
     attribute_definition = Map.get(@attributes, method, %{})
 
-    extract_attributes(metadata.request_body, Map.get(attribute_definition, :request, []))
-    |> Map.merge(extract_attributes(metadata.response_body, Map.get(attribute_definition, :response, [])))
+    request_attributes(metadata, attribute_definition)
+    |> Map.merge(response_attributes(metadata, attribute_definition))
     |> Map.put(Conventions.db_system(), "dynamodb")
   end
+
+  defp request_attributes(%{request_body: request_body}, attribute_definition) do
+    extract_attributes(request_body, Map.get(attribute_definition, :request, []))
+  end
+
+  defp response_attributes(%{response_body: response_body}, attribute_definition) do
+    extract_attributes(response_body, Map.get(attribute_definition, :response, []))
+  end
+
+  defp response_attributes(%{result: :error}, _), do: %{}
 
   defp extract_attributes(_body, []), do: %{}
 
@@ -152,13 +161,13 @@ defmodule OpenTelemetryExAws.DynamoDB do
     body = Jason.decode!(body)
 
     Map.new(attribute_definitions, fn %{attribute: attr_key, path: json_path} = definition ->
-      process_fun = Map.get(definition, :process, fn x -> x end) 
+      process_fun = Map.get(definition, :process, fn x -> x end)
 
       val =
         evaluate_json_path(body, json_path)
         |> process_fun.()
         |> Jason.encode!()
-    
+
       {attr_key, val}
     end)
   end
@@ -166,6 +175,6 @@ defmodule OpenTelemetryExAws.DynamoDB do
   defp evaluate_json_path(json, path) do
     ["$" | path] = String.split(path, ".")
 
-    get_in(json, path) 
+    get_in(json, path)
   end
 end
