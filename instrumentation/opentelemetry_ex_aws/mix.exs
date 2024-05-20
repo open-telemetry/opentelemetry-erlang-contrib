@@ -44,12 +44,14 @@ defmodule OpentelemetryExAws.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_aws, "~> 2.5.2"},
+      {:ex_aws, "~> 2.5"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
+      {:ex_aws_s3, "~> 2.5", only: :test},
+      {:sweet_xml, "~> 0.7", only: :test},
       {:hackney, "~> 1.16", only: :test},
       {:jason, "~> 1.1", only: :test},
       {:ex_doc, "~> 0.29", only: [:dev], runtime: false},

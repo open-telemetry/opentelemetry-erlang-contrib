@@ -46,16 +46,15 @@ defmodule OpentelemetryExAws do
   end
 
   def handle_request_start(_event, _measurements, metadata, _config) do
-    operation = Map.fetch!(metadata, :operation)
-    [service, method] = String.split(operation, ".", parts: 2)
-
     attributes = %{
-      Trace.rpc_method() => method,
-      Trace.rpc_service() => service,
+      Trace.rpc_method() => method(metadata),
+      Trace.rpc_service() => service(metadata),
       Trace.rpc_system() => "aws-api"
     }
 
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, operation, metadata, %{
+    span_name = span_name(metadata)
+
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       attributes: attributes,
       kind: :client
     })
@@ -67,5 +66,39 @@ defmodule OpentelemetryExAws do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
-  defp get_attributes(%{operation: "DynamoDB" <> _rest} = metadata), do: DynamoDB.get_attributes(metadata)
+  defp get_attributes(%{operation: "DynamoDB" <> _rest} = metadata),
+    do: DynamoDB.get_attributes(metadata)
+
+  defp get_attributes(_metadata), do: %{}
+
+  defp span_name(%{service: service_id, operation: nil}), do: Atom.to_string(service_id)
+  defp span_name(%{service: service_id, operation: ""}), do: Atom.to_string(service_id)
+  defp span_name(%{operation: operation}), do: operation
+
+  defp method(%{operation: nil}), do: ""
+
+  defp method(%{operation: operation}) do
+    splits = String.split(operation, ".", parts: 2)
+
+    if length(splits) == 2 do
+      [_service, method] = splits
+      method
+    else
+      ""
+    end
+  end
+
+  defp service(%{operation: nil, service: service}), do: Atom.to_string(service)
+
+  defp service(%{operation: operation} = metadata) do
+    splits = String.split(operation, ".", parts: 2)
+
+    if length(splits) == 2 do
+      [service, _method] = splits
+      service
+    else
+      %{service: service} = metadata
+      Atom.to_string(service)
+    end
+  end
 end

@@ -1,5 +1,5 @@
 defmodule OpentelemetryExAwsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   doctest OpentelemetryExAws
 
   require OpenTelemetry.Tracer
@@ -50,6 +50,26 @@ defmodule OpentelemetryExAwsTest do
     assert %{
              "rpc.method": "ListTables",
              "rpc.service": "DynamoDB_20120810",
+             "rpc.system": "aws-api"
+           } = :otel_attributes.map(attributes)
+  end
+
+  test "does not crash for unimplemented service calls" do
+    OpentelemetryExAws.setup()
+
+    assert {:ok, %{body: %{buckets: []}}} =
+             ExAws.S3.list_buckets()
+             |> ExAws.request()
+
+    assert_receive {:span,
+                    span(
+                      name: "s3",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    assert %{
+             "rpc.service": "s3",
              "rpc.system": "aws-api"
            } = :otel_attributes.map(attributes)
   end

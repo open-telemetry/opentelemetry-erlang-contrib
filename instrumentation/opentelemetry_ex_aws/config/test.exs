@@ -21,3 +21,9 @@ config :ex_aws, :dynamodb_streams,
   host: "localhost",
   port: 8000,
   region: "us-east-1"
+
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  port: 9000,
+  region: "us-east-1"

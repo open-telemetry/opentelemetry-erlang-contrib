@@ -5,3 +5,12 @@ services:
     command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
     ports:
       - "8000:8000"
+  s3:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: testkeyid
+      MINIO_SECRET_KEY: secretaccesskey
+    command: server /data
+
