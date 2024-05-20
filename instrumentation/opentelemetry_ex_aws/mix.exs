@@ -44,7 +44,7 @@ defmodule OpentelemetryExAws.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_aws, github: "ex-aws/ex_aws"},
+      {:ex_aws, "~> 2.5.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
