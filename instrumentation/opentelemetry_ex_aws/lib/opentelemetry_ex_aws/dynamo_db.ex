@@ -73,7 +73,7 @@ defmodule OpenTelemetryExAws.DynamoDB do
     },
     "PutItem" => %{
       request: [
-        %{attribute: Conventions.aws_dynamodb_table_names(), path: "$.Item", process: &Map.keys/1}
+        %{attribute: Conventions.aws_dynamodb_table_names(), path: "$.TableName", process: &List.wrap/1},
       ],
       response: [
         %{attribute: Conventions.aws_dynamodb_consumed_capacity(), path: "$.ConsumedCapacity"},
@@ -124,9 +124,9 @@ defmodule OpenTelemetryExAws.DynamoDB do
     "UpdateTable" => %{
       request: [
         %{attribute: Conventions.aws_dynamodb_attribute_definitions(), path: "$.AttributeDefinitions"},
-        %{attribute: Conventions.aws_dynamodb_global_secondary_index_updates(), path: "$.GlobalSecondaryIndexUpdates"},
-        %{attribute: Conventions.aws_dynamodb_provisioned_read_capacity(), path: "$.ProvisionedThroughput.ReadCapacityUnits"},
-        %{attribute: Conventions.aws_dynamodb_provisioned_write_capacity(), path: "$.ProvisionedThroughput.WriteCapacityUnits"},
+        %{attribute: Conventions.aws_dynamodb_global_secondary_index_updates(), path: "$.GlobalIndexes"},
+        %{attribute: Conventions.aws_dynamodb_provisioned_read_capacity(), path: "$.ReadCapacity"},
+        %{attribute: Conventions.aws_dynamodb_provisioned_write_capacity(), path: "$.WriteCapacity"},
         %{attribute: Conventions.aws_dynamodb_table_names(), path: "$.TableName", process: &List.wrap/1}
       ],
       response: [
