@@ -48,7 +48,7 @@ defmodule OpentelemetryRedixTest do
            } = :otel_attributes.map(attributes)
   end
 
-  test "records span on piplines" do
+  test "records span on pipelines" do
     OpentelemetryRedix.setup()
 
     conn = start_supervised!({Redix, []})
