@@ -66,3 +66,13 @@ Metrics of type `last_value` are ignored because `last_value` is not yet an
 aggregation supported on synchronous instruments in Erlang/Elixir OpenTelemetry.
 When it is added to the SDK this library will be updated to no longer ignore
 metrics of this type.
+
+## Dealing with InstrumentationScope
+
+In OpenTelemetry [Instrumentation
+Scope](https://opentelemetry.io/docs/concepts/instrumentation-scope/) is used to
+associate emitted telemetry with the code it comes from. In Elixir this is
+usually an OTP Application. Since the Scope needs to be defined when creating
+the OpenTelemetry Instrument we must include it when creating a
+`Telemetry.Metric` as a `reporter_opt`.
+
