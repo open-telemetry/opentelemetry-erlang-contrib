@@ -37,7 +37,7 @@ defmodule OpentelemetryEcto do
   before starting the application's top-level supervisor.
 
   `event_prefix` must be the prefix configured in the `Ecto.Repo` Telemetry configuration.
-  By default, it's the snake-cased name of the repository module. For `MyApp.Repo`, it would
+  By default, it's the camel_case name of the repository module. For `MyApp.Repo`, it would
   be `[:my_app, :repo]`.
 
   For example:
