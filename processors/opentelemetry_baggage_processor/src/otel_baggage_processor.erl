@@ -12,18 +12,18 @@
 -spec on_start(otel_ctx:t(), opentelemetry:span(), processor_config()) ->
                 opentelemetry:span().
 on_start(Ctx, Span, Config) ->
-    Baggage = otel_baggage:get_all(Ctx),
-    Prefix = maps:get(prefix, Config, undefined),
-    Attributes =
-      maps:fold(fun(Key, {Value, Metadata}, Attributes) ->
-                   NewKey = add_prefix(Key, Prefix),
-                   case filter(Metadata, Config) of
-                     false -> Attributes;
-                     true -> [{NewKey, Value}] ++ Attributes
-                   end
-                end,
-                [],
-                Baggage),
+  Baggage = otel_baggage:get_all(Ctx),
+  Prefix = maps:get(prefix, Config, undefined),
+  Attributes =
+    maps:fold(fun(Key, {Value, Metadata}, Attributes) ->
+                 NewKey = add_prefix(Key, Prefix),
+                 case filter(Metadata, Config) of
+                   false -> Attributes;
+                   true -> [{NewKey, Value}] ++ Attributes
+                 end
+              end,
+              [],
+              Baggage),
   add_attributes(Span, Attributes).
 
 -spec on_end(opentelemetry:span(), processor_config()) ->
@@ -43,11 +43,12 @@ add_attributes(Span = #span{attributes = SpanAttributes}, AttributesMap) ->
 -spec filter(otel_baggage:metadata(), map()) -> boolean().
 filter(Metadata, #{filter := FilterKey}) ->
   case lists:search(fun (Key) when Key == FilterKey ->
-                         true;
-                       (_) ->
-                         false
-                   end,
-                   Metadata) of
+                          true;
+                        (_) ->
+                          false
+                    end,
+                    Metadata)
+  of
     false ->
       false;
     {value, _} ->
