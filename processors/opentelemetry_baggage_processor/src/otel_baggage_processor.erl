@@ -12,17 +12,18 @@
 -spec on_start(otel_ctx:t(), opentelemetry:span(), processor_config()) ->
                 opentelemetry:span().
 on_start(Ctx, Span, Config) ->
-  Baggage = otel_baggage:get_all(Ctx),
-  Attributes =
-    maps:fold(fun(Key, {Value, Metadata}, Attributes) ->
-                 NewKey = add_prefix(Key, Config),
-                 case filter(Metadata, Config) of
-                   false -> Attributes;
-                   true -> [{NewKey, Value} | Attributes]
-                 end
-              end,
-              [],
-              Baggage),
+    Baggage = otel_baggage:get_all(Ctx),
+    Prefix = maps:get(prefix, Config, undefined),
+    Attributes =
+      maps:fold(fun(Key, {Value, Metadata}, Attributes) ->
+                   NewKey = add_prefix(Key, Prefix),
+                   case filter(Metadata, Config) of
+                     false -> Attributes;
+                     true -> [{NewKey, Value}] ++ Attributes
+                   end
+                end,
+                [],
+                Baggage),
   add_attributes(Span, Attributes).
 
 -spec on_end(opentelemetry:span(), processor_config()) ->
@@ -56,10 +57,10 @@ filter(_Metadata, _Config) ->
   true.
 
 -spec add_prefix(opentelemetry:attribute_key(), map()) -> opentelemetry:attribute_key().
-add_prefix(Key, #{prefix := Prefix}) when is_binary(Key), is_binary(Prefix) ->
+add_prefix(Key, Prefix) when is_binary(Key), is_binary(Prefix) ->
   <<Prefix/binary, Key/binary>>;
-add_prefix(Key, #{prefix := Prefix}) when is_atom(Key), is_binary(Prefix) ->
+add_prefix(Key, Prefix) when is_atom(Key), is_binary(Prefix) ->
   Key2 = atom_to_binary(Key),
   <<Prefix/binary, Key2/binary>>;
-add_prefix(Key, _Config) ->
+add_prefix(Key, _Prefix) ->
   Key.
