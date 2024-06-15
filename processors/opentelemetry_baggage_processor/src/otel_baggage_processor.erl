@@ -18,7 +18,7 @@ on_start(Ctx, Span, Config) ->
                  NewKey = add_prefix(Key, Config),
                  case filter(Metadata, Config) of
                    false -> Attributes;
-                   true -> [{NewKey, Value}] ++ Attributes
+                   true -> [{NewKey, Value} | Attributes]
                  end
               end,
               [],
