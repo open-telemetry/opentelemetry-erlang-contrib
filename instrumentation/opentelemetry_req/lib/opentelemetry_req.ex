@@ -1,6 +1,6 @@
 defmodule OpentelemetryReq do
   @moduledoc """
-  Wraps the request in an opentelemetry span. Span names must be paramaterized, so the
+  Wraps the request in an opentelemetry span. Span names must be parameterized, so the
   `req_path_params` module and step should be registered before this step. This step is
   expected by default and an error will be raised if the path params option is
   not set for the request.
