@@ -5,7 +5,7 @@
  {<<"gproc">>,{pkg,<<"gproc">>,<<"0.9.1">>},1},
  {<<"grpcbox">>,{pkg,<<"grpcbox">>,<<"0.17.1">>},0},
  {<<"hpack">>,{pkg,<<"hpack_erl">>,<<"0.3.0">>},2},
- {<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.2.2">>},0},
+ {<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.3.0">>},0},
  {<<"opentelemetry_semantic_conventions">>,
   {pkg,<<"opentelemetry_semantic_conventions">>,<<"0.2.0">>},
   0}]}.
@@ -17,7 +17,7 @@
  {<<"gproc">>, <<"F1DF0364423539CF0B80E8201C8B1839E229E5F9B3CCB944C5834626998F5B8C">>},
  {<<"grpcbox">>, <<"6E040AB3EF16FE699FFB513B0EF8E2E896DA7B18931A1EF817143037C454BCCE">>},
  {<<"hpack">>, <<"2461899CC4AB6A0EF8E970C1661C5FC6A52D3C25580BC6DD204F84CE94669926">>},
- {<<"opentelemetry_api">>, <<"693F47B0D8C76DA2095FE858204CFD6350C27FE85D00E4B763DEECC9588CF27A">>},
+ {<<"opentelemetry_api">>, <<"03E2177F28DD8D11AAA88E8522C81C2F6A788170FE52F7A65262340961E663F9">>},
  {<<"opentelemetry_semantic_conventions">>, <<"B67FE459C2938FCAB341CB0951C44860C62347C005ACE1B50F8402576F241435">>}]},
 {pkg_hash_ext,[
  {<<"acceptor_pool">>, <<"0CBCD83FDC8B9AD2EEE2067EF8B91A14858A5883CB7CD800E6FCD5803E158788">>},
@@ -26,6 +26,6 @@
  {<<"gproc">>, <<"905088E32E72127ED9466F0BAC0D8E65704CA5E73EE5A62CB073C3117916D507">>},
  {<<"grpcbox">>, <<"4A3B5D7111DAABC569DC9CBD9B202A3237D81C80BF97212FBC676832CB0CEB17">>},
  {<<"hpack">>, <<"D6137D7079169D8C485C6962DFE261AF5B9EF60FBC557344511C1E65E3D95FB0">>},
- {<<"opentelemetry_api">>, <<"DC77B9A00F137A858E60A852F14007BB66EDA1FFBEB6C05D5FE6C9E678B05E9D">>},
+ {<<"opentelemetry_api">>, <<"B9E5FF775FD064FA098DBA3C398490B77649A352B40B0B730A6B7DC0BDD68858">>},
  {<<"opentelemetry_semantic_conventions">>, <<"D61FA1F5639EE8668D74B527E6806E0503EFC55A42DB7B5F39939D84C07D6895">>}]}
 ].
