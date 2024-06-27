@@ -112,7 +112,11 @@ pop_from_tracer_stack(TracerId) ->
             undefined;
         [SpanCtxSet | Rest] ->
             erlang:put({otel_telemetry, TracerId}, Rest),
-            SpanCtxSet
+            SpanCtxSet;
+        [] ->
+            ?LOG_DEBUG("`opentelemetry_telemetry` span ctx tracer stack for "
+                       "TracerId ~p in Pid ~p is empty.", [TracerId, self()]),
+            undefined
     end.
 
 handle_event(_Event,
