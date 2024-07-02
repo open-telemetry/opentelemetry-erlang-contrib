@@ -1,0 +1,6 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: "Opentelemetry Xandra - v$RESOLVED_VERSION"
+tag-template: "opentelemetry-xandra-v$RESOLVED_VERSION"
+tag-prefix: opentelemetry-xandra-v
+include-paths:
+  - instrumentation/opentelemetry_xandra/

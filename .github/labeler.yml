@@ -102,3 +102,6 @@ opentelemetry_telemetry:
 
 opentelemetry_tesla:
   - instrumentation/opentelemetry_tesla/**/*
+
+opentelemetry_xandra:
+  - instrumentation/opentelemetry_xandra/**/*
