@@ -37,7 +37,7 @@ defmodule OpentelemetryEcto do
   before starting the application's top-level supervisor.
 
   `event_prefix` must be the prefix configured in the `Ecto.Repo` Telemetry configuration.
-  By default, it's the snake-cased name of the repository module. For `MyApp.Repo`, it would
+  By default, it's the camel_case name of the repository module. For `MyApp.Repo`, it would
   be `[:my_app, :repo]`.
 
   For example:
@@ -61,7 +61,7 @@ defmodule OpentelemetryEcto do
       `"blog.repo.query"`. This will always be followed with a colon and the
       source (the table name for SQL adapters). For example: `"blog.repo.query:users"`.
     * `:additional_attributes` - additional attributes to include in the span. If there
-      are conflits with default provided attributes, the ones provided with
+      are conflicts with default provided attributes, the ones provided with
       this config will have precedence.
     * `:db_statement` - `:disabled` (default), `:enabled`, or a function.
       Whether or not to include DB statements in the **span attributes** (as the

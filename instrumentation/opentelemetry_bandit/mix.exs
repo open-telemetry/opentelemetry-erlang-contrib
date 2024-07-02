@@ -47,7 +47,6 @@ defmodule OpentelemetryBandit.MixProject do
       files: ~w(lib .formatter.exs mix.exs LICENSE* README* CHANGELOG*),
       maintainers: ["Artem Solomatin"],
       licenses: ["Apache-2.0"],
-
       links: %{
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_bandit",
@@ -78,7 +77,7 @@ defmodule OpentelemetryBandit.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:req, "~> 0.4", only: [:dev, :test]}
+      {:req, "~> 0.5", only: [:dev, :test]}
     ]
   end
 
