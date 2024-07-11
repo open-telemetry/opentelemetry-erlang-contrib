@@ -2,7 +2,7 @@
 
 ### Instrumenting a library
 
-When instrumenting a library, it is important to follow the [Trace Semantic Conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
+When instrumenting a library, it is important to follow the [Trace Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md)
 
 ### CI
 
