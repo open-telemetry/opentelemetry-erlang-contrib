@@ -8,6 +8,7 @@ on:
         type: choice
         options:
           - "aws_xray"
+          - "broadway"
           - "cowboy"
           - "dataloader"
           - "ecto"

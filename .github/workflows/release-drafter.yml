@@ -16,6 +16,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  opentelemetry-broadway-release:
+    name: '[opentelemetry-broadway-release] Draft release'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-broadway.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   opentelemetry-cowboy-release:
     name: '[opentelemetry-cowboy-release] Draft release'
     runs-on: ubuntu-22.04
