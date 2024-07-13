@@ -151,5 +151,14 @@
     "buildTool": "mix",
     "language": "elixir-erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "xandra": {
+    "workingDirectory": "instrumentation/opentelemetry_xandra",
+    "name": "OpenTelemetry Xandra",
+    "packageName": "opentelemetry_xandra",
+    "tagPrefix": "opentelemetry-xandra-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["whatyouhide"]
   }
 }
