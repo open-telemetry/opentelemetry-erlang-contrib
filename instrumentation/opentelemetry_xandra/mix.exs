@@ -49,7 +49,7 @@ defmodule OpentelemetryXandra.MixProject do
       {:ex_doc, "~> 0.32", only: :dev},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:xandra, "~> 0.18", only: [:dev, :test]},
+      {:xandra, "~> 0.19", only: [:dev, :test]},
 
       # Library dependencies
       {:opentelemetry_api, "~> 1.0"},
