@@ -195,3 +195,13 @@ jobs:
           config-name: release-drafter-templates/opentelemetry-tesla.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-xandra-release:
+    name: '[opentelemetry-xandra-release] Draft release'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-xandra.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
