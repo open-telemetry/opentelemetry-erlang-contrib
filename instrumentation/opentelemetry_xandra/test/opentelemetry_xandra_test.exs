@@ -24,7 +24,7 @@ defmodule OpentelemetryXandraTest do
 
   describe "span creation when executing queries" do
     test "when the query is successful" do
-      OpenTelemetryXandra.attach()
+      OpentelemetryXandra.setup()
 
       conn = start_supervised!({Xandra, connect_timeout: 5_000})
 
@@ -44,12 +44,32 @@ defmodule OpentelemetryXandraTest do
     end
 
     test "when the query is a prepared query" do
-      OpenTelemetryXandra.attach()
+      OpentelemetryXandra.setup()
 
       conn = start_supervised!({Xandra, connect_timeout: 5_000})
 
       prepared = Xandra.prepare!(conn, "SELECT * FROM system.local")
       Xandra.execute!(conn, prepared, [])
+
+      assert_receive {:span, span(name: "SELECT") = span}
+
+      assert span(span, :kind) == :client
+      assert span(span, :status) == OpenTelemetry.status(:ok)
+
+      attributes = :otel_attributes.map(span(span, :attributes))
+      assert attributes[:"db.system"] == "cassandra"
+      assert attributes[:"db.operation"] == "SELECT"
+      assert attributes[:"server.address"] == "127.0.0.1"
+      assert attributes[:"network.peer.address"] == "127.0.0.1"
+      assert attributes[:"network.peer.port"] == 9042
+    end
+
+    test "with the :operation_parser option" do
+      OpentelemetryXandra.setup(operation_parser: fn _query -> {"SELECT", nil, nil} end)
+
+      conn = start_supervised!({Xandra, connect_timeout: 5000})
+
+      Xandra.execute!(conn, "SELECT * FROM system.local", [])
 
       assert_receive {:span, span(name: "SELECT") = span}
 
