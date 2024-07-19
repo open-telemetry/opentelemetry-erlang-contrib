@@ -1,7 +1,7 @@
 defmodule OpentelemetryXandra.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
   @description "Trace Xandra queries with OpenTelemetry."
   @repo_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib"
   @folder_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_xandra"
@@ -19,7 +19,7 @@ defmodule OpentelemetryXandra.MixProject do
       source_url: @folder_url,
       docs: [
         source_url_pattern: "#{@folder_url}/%{path}#L%{line}",
-        main: "OpenTelemetryXandra",
+        main: "OpentelemetryXandra",
         extras: ["README.md"]
       ],
 

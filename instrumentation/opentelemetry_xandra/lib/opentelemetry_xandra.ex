@@ -1,4 +1,4 @@
-defmodule OpenTelemetryXandra do
+defmodule OpentelemetryXandra do
   @moduledoc """
   A module to trace Xandra queries with OpenTelemetry.
 
@@ -32,7 +32,7 @@ defmodule OpenTelemetryXandra do
 
   See `attach/1` for more information.
   """
-  @type query_parser_fun ::
+  @type operation_parser_fun ::
           (String.t() -> {operation :: String.t(), database :: String.t(), table :: String.t()})
 
   @doc """
@@ -47,14 +47,14 @@ defmodule OpenTelemetryXandra do
           # ...
         ]
 
-        OpenTelemetryXandra.attach()
+        OpentelemetryXandra.setup()
 
         Supervisor.start_link(children, strategy: :one_for_one)
       end
 
   ## Options
 
-    * `:query_parser` - a function that takes a query (as a string) and should
+    * `:operation_parser` - a function that takes a query (as a string) and should
       return a DB operation string that will be used in the span name. For example,
       for a query like `INSERT INTO users (id, name) VALUES (1, 'Alice')`, the
       operation parser could return `INSERT`. The default operation parser
@@ -73,8 +73,8 @@ defmodule OpenTelemetryXandra do
   > option.
 
   """
-  @spec attach(keyword()) :: :ok | {:error, :already_exists}
-  def attach(options \\ []) when is_list(options) do
+  @spec setup(keyword()) :: :ok | {:error, :already_exists}
+  def setup(options \\ []) when is_list(options) do
     config = %{
       operation_parser: Keyword.get(options, :operation_parser, &parse_operation/1)
     }
@@ -98,13 +98,11 @@ defmodule OpenTelemetryXandra do
   end
 
   defp handle_event(:start, metadata, config) do
-    dbg(metadata)
-
     attributes = attributes_from_query(metadata.query, config)
 
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{Map.fetch!(attributes, :db_operation)}",
+      Map.fetch!(attributes, :"db.operation"),
       metadata,
       %{
         kind: :client,
@@ -148,11 +146,16 @@ defmodule OpenTelemetryXandra do
 
   defp attributes_from_query(query, config)
        when is_struct(query, Xandra.Simple) or is_struct(query, Xandra.Prepared) do
-    {operation, database, table} = config.query_parser.(query.statement)
+    case config.operation_parser.(query.statement) do
+      {operation, database, table} ->
+        ["db.operation": operation, "db.name": database, "db.sql.table": table]
+        |> Enum.reject(&match?({_, nil}, &1))
+        |> Map.new()
 
-    ["db.operation": operation, "db.name": database, "db.sql.table": table]
-    |> Enum.reject(&match?({_, nil}, &1))
-    |> Map.new()
+      other ->
+        raise ArgumentError,
+              ":operation_parser must return a tuple with 3 elements, got: #{inspect(other)}"
+    end
   end
 
   defp attributes_from_query(_meta, _config) do
@@ -161,8 +164,9 @@ defmodule OpenTelemetryXandra do
 
   defp parse_operation(statement) do
     case String.trim(statement) do
-      "SELECT" <> _rest -> "SELECT"
-      _other -> "UNKNOWN"
+      "SELECT" <> _rest -> {"SELECT", nil, nil}
+      "UPDATE" <> _rest -> {"UPDATE", nil, nil}
+      _other -> {"UNKNOWN", nil, nil}
     end
   end
 end
