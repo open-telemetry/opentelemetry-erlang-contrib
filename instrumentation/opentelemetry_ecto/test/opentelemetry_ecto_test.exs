@@ -79,7 +79,7 @@ defmodule OpentelemetryEctoTest do
              :otel_attributes.map(attributes)
   end
 
-  test "include santized query with sanitizer function" do
+  test "include sanitized query with sanitizer function" do
     attach_handler(db_statement: fn str -> String.replace(str, "SELECT", "") end)
     Repo.all(User)
 
@@ -150,7 +150,7 @@ defmodule OpentelemetryEctoTest do
     attach_handler()
 
     try do
-      Repo.all(from(u in "users", select: u.non_existant_field))
+      Repo.all(from(u in "users", select: u.non_existent_field))
     rescue
       _ -> :ok
     end
@@ -161,7 +161,7 @@ defmodule OpentelemetryEctoTest do
                       status: {:status, :error, message}
                     )}
 
-    assert message =~ "non_existant_field does not exist"
+    assert message =~ "non_existent_field does not exist"
   end
 
   test "preloads in sequence are tied to the parent span" do

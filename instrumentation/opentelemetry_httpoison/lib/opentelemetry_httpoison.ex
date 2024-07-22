@@ -100,7 +100,7 @@ defmodule OpentelemetryHTTPoison do
   If this behavior is not desirable, it can be set directly as a string or a function
   with an arity of 1 (the `t:HTTPoison.Request/0` `request`) by using the aforementioned `:ot_resource_route` option.
 
-  It can also be circumvented entirely by suppling `:ignore`  instead.
+  It can also be circumvented entirely by supplying `:ignore`  instead.
 
     ## Examples
 

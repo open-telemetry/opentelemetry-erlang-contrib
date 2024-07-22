@@ -8,6 +8,15 @@
     "language": "erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]
   },
+  "broadway": {
+    "workingDirectory": "instrumentation/opentelemetry_broadway",
+    "name": "Broadway Instrumentation",
+    "packageName": "opentelemetry_broadway",
+    "tagPrefix": "opentelemetry-broadway-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele","tomtaylor","tsloughter","whatyouhide"]
+  },
   "cowboy": {
     "workingDirectory": "instrumentation/opentelemetry_cowboy",
     "name": "Cowboy Instrumentation",
@@ -151,5 +160,14 @@
     "buildTool": "mix",
     "language": "elixir-erlang",
     "authorizedUsers": ["bryannaegele","tsloughter"]
+  },
+  "xandra": {
+    "workingDirectory": "instrumentation/opentelemetry_xandra",
+    "name": "OpenTelemetry Xandra",
+    "packageName": "opentelemetry_xandra",
+    "tagPrefix": "opentelemetry-xandra-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["whatyouhide"]
   }
 }

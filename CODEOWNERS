@@ -6,20 +6,22 @@
 #
 # Learn about membership in OpenTelemetry community:
 #  https://github.com/open-telemetry/community/blob/main/community-membership.md
-# 
 #
-# Learn about CODEOWNERS file format: 
+#
+# Learn about CODEOWNERS file format:
 #  https://help.github.com/en/articles/about-code-owners
 #
 
 @open-telemetry/erlang-approvers
 
+/instrumentation/opentelemetry_broadway         @bryannaegele @tsloughter @whatyouhide @tomtaylor
 /instrumentation/opentelemetry_cowboy           @bryannaegele @tsloughter
 /instrumentation/opentelemetry_ecto             @bryannaegele @tsloughter
 /instrumentation/opentelemetry_nebulex          @andrewhr
 /instrumentation/opentelemetry_oban             @indrekj
 /instrumentation/opentelemetry_phoenix          @bryannaegele @tsloughter
 /instrumentation/opentelemetry_redix            @andrewhr
+/instrumentation/opentelemetry_xandra           @whatyouhide
 /utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
 /utilities/opentelemetry_instrumentation_http   @tsloughter
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva
