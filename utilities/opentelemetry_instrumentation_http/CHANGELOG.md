@@ -4,4 +4,4 @@
 
 ### Changed
 
-* Expose `extract_headers_attributes/3` and `normalize_header_name/1` fucntions to extracted selected headers in an attribute map following semantic conventions
+* Expose `extract_headers_attributes/3` and `normalize_header_name/1` functions to extracted selected headers in an attribute map following semantic conventions

@@ -8,6 +8,7 @@ on:
         type: choice
         options:
           - "aws_xray"
+          - "broadway"
           - "cowboy"
           - "dataloader"
           - "ecto"
@@ -24,6 +25,7 @@ on:
           - "redix"
           - "req"
           - "tesla"
+          - "xandra"
         required: true
       action:
         description: "Publish release"
@@ -45,7 +47,7 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Read file
         id: set-config
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
@@ -101,7 +103,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - run: npm install semver
       - name: "Update Files"
         id: update-files
@@ -136,26 +138,26 @@ jobs:
               case 'elixir':
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
                 core.debug(`Source file path: ${srcFilePath}`)
-                
+
                 srcVersionRegex = /@version\s+"[^"]+"/;
                 core.debug(`Source version regex: ${srcVersionRegex}`)
-                
+
                 vsnLineTemplate = `@version "${version}"`;
                 core.debug(`Version line template: ${vsnLineTemplate}`)
-                
+
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               case 'elixir-erlang':
               case 'erlang':
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
                 core.debug(`Source file path: ${srcFilePath}`)
-                
+
                 srcVersionRegex = /{vsn,\s+"[^"]+"},/;
                 core.debug(`Source version regex: ${srcVersionRegex}`)
-                
+
                 vsnLineTemplate = `{vsn, "${version}"},`;
                 core.debug(`Version line template: ${vsnLineTemplate}`)
-                
+
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               default:
@@ -190,7 +192,7 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@2f0cc07b4b9bea248ae098aba9e1a8a1de5ec24c # v1
+      - uses: erlef/setup-beam@b9c58b0450cd832ccdb3c17cc156a47065d2114f # v1.18.1
         with:
           version-type: strict
           otp-version: "25.3.2.5"
@@ -218,7 +220,7 @@ jobs:
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@a4f52f8033a6168103c2538976c07b467e8163bc # v6
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}

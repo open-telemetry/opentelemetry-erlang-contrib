@@ -60,6 +60,11 @@ defmodule OpentelemetryBandit do
   def handle_request_start(_event, measurements, meta, _config) do
     conn = Map.get(meta, :conn)
 
+    duration = measurements.duration
+    end_time = :opentelemetry.timestamp()
+    start_time = end_time - duration
+    resp_body_bytes = Map.get(measurements, :resp_body_bytes, 0)
+
     url = extract_url(meta, conn)
     request_path = extract_request_path(meta, conn)
 
@@ -67,8 +72,10 @@ defmodule OpentelemetryBandit do
       if Map.has_key?(meta, :error) do
         %{
           Trace.http_url() => url,
-          Trace.http_method() => Map.get(conn, :method),
-          Trace.net_transport() => :"IP.TCP"
+          Trace.http_method() => conn.method,
+          Trace.net_transport() => :"IP.TCP",
+          Trace.http_response_content_length() => resp_body_bytes,
+          Trace.http_status_code() => conn.status
         }
       else
         %{
@@ -79,6 +86,10 @@ defmodule OpentelemetryBandit do
           Trace.net_peer_port() => conn.port,
           Trace.http_target() => conn.request_path,
           Trace.http_method() => conn.method,
+
+          Trace.http_status_code() => conn.status,
+          Trace.http_response_content_length() => resp_body_bytes,
+
           Trace.net_transport() => :"IP.TCP",
           Trace.http_user_agent() => user_agent(conn)
         }

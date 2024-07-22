@@ -1,14 +1,15 @@
 defmodule OpentelemetryEcto do
   @moduledoc """
-  Telemetry handler for creating OpenTelemetry Spans from Ecto query events. Any
-  relation preloads, which are executed in parallel in separate tasks, will be
+  Telemetry handler for creating OpenTelemetry Spans from Ecto query events.
+
+  Any relation preloads, which are executed in parallel in separate tasks, will be
   linked to the span of the process that initiated the call. For example:
 
       Tracer.with_span "parent span" do
         Repo.all(Query.from(User, preload: [:posts, :comments]))
       end
 
-  this will create a span called "parent span" with three child spans for each
+  This will create a span called `"parent span:"` with three child spans for each
   query: users, posts, and comments.
 
   > #### Note {: .neutral}
@@ -19,35 +20,62 @@ defmodule OpentelemetryEcto do
 
   require OpenTelemetry.Tracer
 
+  @typedoc """
+  Option that you can pass to `setup/2`.
+  """
+  @typedoc since: "1.3.0"
+  @type setup_option() ::
+          {:time_unit, System.time_unit()}
+          | {:span_prefix, String.t()}
+          | {:additional_attributes, %{String.t() => term()}}
+          | {:db_statement, :enabled | :disabled | (String.t() -> String.t())}
+
   @doc """
-  Attaches the OpentelemetryEcto handler to your repo events. This should be called
-  from your application behaviour on startup.
+  Attaches the `OpentelemetryEcto` handler to your repo events.
 
-  Example:
+  This should be called from your application's `c:Application.start/2` callback on startup,
+  before starting the application's top-level supervisor.
 
-      OpentelemetryEcto.setup([:blog, :repo])
+  `event_prefix` must be the prefix configured in the `Ecto.Repo` Telemetry configuration.
+  By default, it's the camel_case name of the repository module. For `MyApp.Repo`, it would
+  be `[:my_app, :repo]`.
+
+  For example:
+
+      @impl Application
+      def start(_type, _args) do
+        OpentelemetryEcto.setup([:blog, :repo])
+
+        children = [...]
+        Supervisor.start_link(children, strategy: :one_for_one)
+      end
+
+  ## Options
 
   You may also supply the following options in the second argument:
 
     * `:time_unit` - a time unit used to convert the values of query phase
-      timings, defaults to `:microsecond`. See `System.convert_time_unit/3`
-    * `:span_prefix` - the first part of the span name, as a `String.t`,
-      defaults to the concatenation of the event name with periods, e.g.
+      timings, defaults to `:microsecond`. See `System.convert_time_unit/3`.
+    * `:span_prefix` - the first part of the span name.
+      Defaults to the concatenation of the event name with periods, such as
       `"blog.repo.query"`. This will always be followed with a colon and the
-      source (the table name for SQL adapters).
+      source (the table name for SQL adapters). For example: `"blog.repo.query:users"`.
     * `:additional_attributes` - additional attributes to include in the span. If there
-      are conflits with default provided attributes, the ones provided with
+      are conflicts with default provided attributes, the ones provided with
       this config will have precedence.
-    * `:db_statement` - :disabled (default) | :enabled | fun
-      Whether or not to include db statements.
+    * `:db_statement` - `:disabled` (default), `:enabled`, or a function.
+      Whether or not to include DB statements in the **span attributes** (as the
+      `db.statement` attribute).
       Optionally provide a function that takes a query string and returns a
       sanitized version of it. This is useful for removing sensitive information from the
       query string. Unless this option is `:enabled` or a function,
       query statements will not be recorded on spans.
+
   """
-  def setup(event_prefix, config \\ []) do
+  @spec setup(:telemetry.event_name(), [setup_option()]) :: :ok | {:error, :already_exists}
+  def setup(event_prefix, options \\ []) when is_list(options) do
     event = event_prefix ++ [:query]
-    :telemetry.attach({__MODULE__, event}, event, &__MODULE__.handle_event/4, config)
+    :telemetry.attach({__MODULE__, event}, event, &__MODULE__.handle_event/4, options)
   end
 
   @doc false
