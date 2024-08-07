@@ -36,6 +36,23 @@ defmodule OpentelemetryEctoTest do
     end)
   end
 
+  test "using repo for event prefix" do
+    assert :ok = OpentelemetryEcto.setup(Repo)
+
+    Repo.all(User)
+
+    assert_receive {:span, span(attributes: {:attributes, _, _, _, attributes})}
+    assert %{"db.name": "opentelemetry_ecto_test"} = attributes
+  end
+
+  test "using a repo for event prefix with broken setup" do
+    assert_raise ArgumentError,
+                 ":telemetry_prefix not set in OpentelemetryEcto.TestBrokenRepo repo config",
+                 fn ->
+                   OpentelemetryEcto.setup(OpentelemetryEcto.TestBrokenRepo)
+                 end
+  end
+
   test "captures basic query events" do
     attach_handler()
 
@@ -90,7 +107,9 @@ defmodule OpentelemetryEctoTest do
   end
 
   test "include additional_attributes" do
-    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+    attach_handler(
+      additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"}
+    )
 
     Repo.all(User)
 
