@@ -29,6 +29,14 @@
 -type header_sort_fun() :: fun((Header1 :: header_name(), Header2 :: header_name()) -> boolean()).
 -type server_info() :: #{address => binary() | undefined, port => integer() | undefined}.
 
+-export_type([
+              client_info/0,
+              header_name/0,
+              header_value/0,
+              headers_map/0,
+              header_sort_fun/0,
+              server_info/0]).
+
 ?MODULEDOC("""
 `opentelemetry_instrumentation_http` provides utility functions for
 common otel http-related instrumentation operations such as extraction
