@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0
+
+* Adds several header extraction and manipulation functions for common tasks
+  in instrumentation libraries:
+  * `extract_client_info/1`
+  * `extract_client_info/2`
+  * `extract_scheme/1`
+  * `extract_scheme/2`
+  * `extract_server_info/1`
+  * `extract_server_info/2`
+
 ## v0.1.0
 
 ### Changed

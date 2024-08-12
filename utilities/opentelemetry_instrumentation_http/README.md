@@ -9,13 +9,13 @@
 
 ```erlang
 {deps, [
-  {opentelemetry_instrumentation_http, "~> 0.1"}
+  {opentelemetry_instrumentation_http, "~> 0.2"}
 ]}
 ```
 ```elixir
 def deps do
   [
-    {:opentelemetry_instrumentation_http, "~> 0.1"}
+    {:opentelemetry_instrumentation_http, "~> 0.2"}
   ]
 end
 ```
