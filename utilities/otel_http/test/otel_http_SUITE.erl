@@ -79,64 +79,64 @@ parse_forwarded_headers(_Config) ->
 
 extracting_ip_and_port_addresses(_Config) ->
     ?assertEqual(
-        {"192.0.2.60", undefined},
+        {<<"192.0.2.60">>, undefined},
         otel_http:extract_ip_port(<<"192.0.2.60">>)
     ),
     ?assertEqual(
-        {"192.0.2.60", 443},
+        {<<"192.0.2.60">>, 443},
         otel_http:extract_ip_port(<<"192.0.2.60:443">>)
     ),
     ?assertEqual(
-        {"192.0.2.60", undefined},
+        {<<"192.0.2.60">>, undefined},
         otel_http:extract_ip_port(<<"192.0.2.60:junk">>)
     ),
     ?assertEqual(
-        {"2001:db8:cafe::17", undefined},
+        {<<"2001:db8:cafe::17">>, undefined},
         otel_http:extract_ip_port(<<"\"[2001:db8:cafe::17]\"">>)
     ),
     ?assertEqual(
-        {"2001:db8:cafe::17", 8000},
+        {<<"2001:db8:cafe::17">>, 8000},
         otel_http:extract_ip_port(<<"\"[2001:db8:cafe::17]:8000\"">>)
     ),
     ?assertEqual(
-        {"::", undefined},
+        {<<"::">>, undefined},
         otel_http:extract_ip_port(<<"\"[::]:99999\"">>)
     ),
     ?assertEqual(
-        {"2001:db8:cafe::17", undefined},
+        {<<"2001:db8:cafe::17">>, undefined},
         otel_http:extract_ip_port(<<"\"[2001:db8:cafe::17]:junk\"">>)
     ).
 
 extracts_client_info_from_headers(_Config) ->
     ?assertEqual(
-        #{ip => "192.0.2.60", port => undefined},
+        #{ip => <<"192.0.2.60">>, port => undefined},
         otel_http:extract_client_info(#{
             <<"forwarded">> =>
                 <<"host=developer.mozilla.org:4321; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>
         })
     ),
     ?assertEqual(
-        #{ip => "2001:db8:cafe::17", port => undefined},
+        #{ip => <<"2001:db8:cafe::17">>, port => undefined},
         otel_http:extract_client_info([
             {<<"forwarded">>,
                 <<"host=developer.mozilla.org:4321; for=\"[2001:db8:cafe::17]\", for=192.0.2.60; proto=http;by=203.0.113.43">>}
         ])
     ),
     ?assertEqual(
-        #{ip => "2001:db8:cafe::17", port => 9678},
+        #{ip => <<"2001:db8:cafe::17">>, port => 9678},
         otel_http:extract_client_info([
             {<<"forwarded">>,
                 <<"host=developer.mozilla.org:4321;for=\"[2001:db8:cafe::17]:9678\",for=192.0.2.60;proto=http;by=203.0.113.43">>}
         ])
     ),
     ?assertEqual(
-        #{ip => "23.0.2.1", port => 2121},
+        #{ip => <<"23.0.2.1">>, port => 2121},
         otel_http:extract_client_info([
             {<<"x-forwarded-for">>, <<"23.0.2.1:2121,25.2.2.2">>}
         ])
     ),
     ?assertEqual(
-        #{ip => "192.0.2.60", port => undefined},
+        #{ip => <<"192.0.2.60">>, port => undefined},
         otel_http:extract_client_info(#{
             <<"x-forwarded-for">> => <<"23.0.2.1:2121">>,
             <<"forwarded">> =>
@@ -144,7 +144,7 @@ extracts_client_info_from_headers(_Config) ->
         })
     ),
     ?assertEqual(
-        #{ip => "192.0.2.60", port => undefined},
+        #{ip => <<"192.0.2.60">>, port => undefined},
         otel_http:extract_client_info(#{
             <<"forwarded">> =>
                 <<"host=developer.mozilla.org:4321; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>,
@@ -152,7 +152,7 @@ extracts_client_info_from_headers(_Config) ->
         })
     ),
     ?assertEqual(
-        #{ip => "23.0.2.1", port => 2121},
+        #{ip => <<"23.0.2.1">>, port => 2121},
         otel_http:extract_client_info([
             {<<"x-forwarded-for">>, <<"23.0.2.1:2121,10.100.10.10">>},
             {<<"forwarded">>,
@@ -160,7 +160,7 @@ extracts_client_info_from_headers(_Config) ->
         ])
     ),
     ?assertEqual(
-        #{ip => "192.0.2.60", port => undefined},
+        #{ip => <<"192.0.2.60">>, port => undefined},
         otel_http:extract_client_info([
             {<<"forwarded">>,
                 <<"host=developer.mozilla.org:4321; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>},
@@ -168,7 +168,7 @@ extracts_client_info_from_headers(_Config) ->
         ])
     ),
     ?assertEqual(
-        #{ip => "27.27.27.27", port => 2222},
+        #{ip => <<"27.27.27.27">>, port => 2222},
         otel_http:extract_client_info([
             {<<"forwarded">>,
                 <<"host=developer.mozilla.org:4321; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>},
