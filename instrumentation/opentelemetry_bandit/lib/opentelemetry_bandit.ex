@@ -46,6 +46,10 @@ defmodule OpentelemetryBandit do
                       default: ["forwarded", "x-forwarded-for"],
                       doc: "Headers to use for extracting original client request address info"
                     ],
+                    client_headers_sort_fn: [
+                      type: {:fun, 2},
+                      doc: "Custom client header sort fn. See `otel_http` for more info"
+                    ],
                     public_endpoint: [
                       type: :boolean,
                       default: false,
@@ -71,10 +75,18 @@ defmodule OpentelemetryBandit do
                       default: ["forwarded", "x-forwarded-proto"],
                       doc: "Headers to use for extracting original client request scheme"
                     ],
+                    scheme_headers_sort_fn: [
+                      type: {:fun, 2},
+                      doc: "Custom scheme header sort fn. See `otel_http` for more info"
+                    ],
                     server_address_headers: [
                       type: {:list, :string},
                       default: ["forwarded", "x-forwarded-host", "host"],
                       doc: "Headers to use for extracting original server address info"
+                    ],
+                    server_headers_sort_fn: [
+                      type: {:fun, 2},
+                      doc: "Custom server header sort fn. See `otel_http` for more info"
                     ]
                   )
 
@@ -250,7 +262,7 @@ defmodule OpentelemetryBandit do
   defp set_req_header_attrs(attrs, conn, %{request_headers: headers}) do
     Map.merge(
       attrs,
-      :opentelemetry_instrumentation_http.extract_headers_attributes(
+      :otel_http.extract_headers_attributes(
         :request,
         conn.req_headers,
         headers
@@ -263,7 +275,7 @@ defmodule OpentelemetryBandit do
   defp set_resp_header_attrs(attrs, conn, %{response_headers: headers}) do
     Map.merge(
       attrs,
-      :opentelemetry_instrumentation_http.extract_headers_attributes(
+      :otel_http.extract_headers_attributes(
         :response,
         conn.resp_headers,
         headers
@@ -359,10 +371,18 @@ defmodule OpentelemetryBandit do
       conn.req_headers
       |> extract_headers_by_sort(config.scheme_headers)
 
-    case :opentelemetry_instrumentation_http.extract_scheme(scheme_headers) do
+    case otel_http_extract_scheme(scheme_headers, config[:scheme_headers_sort_fn]) do
       :undefined -> conn.scheme
       scheme -> scheme
     end
+  end
+
+  defp otel_http_extract_scheme(headers, nil) do
+    :otel_http.extract_scheme(headers)
+  end
+
+  defp otel_http_extract_scheme(headers, sort_fn) do
+    :otel_http.extract_scheme(headers, sort_fn)
   end
 
   # client
@@ -371,7 +391,7 @@ defmodule OpentelemetryBandit do
       conn.req_headers
       |> extract_headers_by_sort(config.client_address_headers)
 
-    case :opentelemetry_instrumentation_http.extract_client_info(client_headers) do
+    case otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]) do
       %{ip: :undefined} ->
         %{adapter: {Bandit.Adapter, adapter}} = conn
         start_meta = adapter.transport.socket.span.start_metadata
@@ -383,6 +403,14 @@ defmodule OpentelemetryBandit do
     end
   end
 
+  defp otel_http_extract_client_info(headers, nil) do
+    :otel_http.extract_client_info(headers)
+  end
+
+  defp otel_http_extract_client_info(headers, sort_fn) do
+    :otel_http.extract_client_info(headers, sort_fn)
+  end
+
   # Note: bandit parses host/port but not in the required order and isn't
   # limited to only headers per the spec
   # https://github.com/open-telemetry/semantic-conventions/blob/v1.26.0/docs/http/http-spans.md#setting-serveraddress-and-serverport-attributes
@@ -390,7 +418,15 @@ defmodule OpentelemetryBandit do
   defp extract_server_address(conn, config) do
     conn.req_headers
     |> extract_headers_by_sort(config.server_address_headers)
-    |> :opentelemetry_instrumentation_http.extract_server_info()
+    |> otel_http_extract_server_info(config[:server_headers_sort_fn])
+  end
+
+  defp otel_http_extract_server_info(headers, nil) do
+    :otel_http.extract_server_info(headers)
+  end
+
+  defp otel_http_extract_server_info(headers, sort_fn) do
+    :otel_http.extract_server_info(headers, sort_fn)
   end
 
   defp ip_to_string(ip) do

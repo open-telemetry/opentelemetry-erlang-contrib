@@ -9,7 +9,7 @@ defmodule OpentelemetryBanditTest do
   alias OpenTelemetry.SemConv.ErrorAttributes
   alias OpenTelemetry.SemConv.ExceptionAttributes
   alias OpenTelemetry.SemConv.NetworkAttributes
-  # alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.SemConv.URLAttributes
   alias OpenTelemetry.SemConv.UserAgentAttributes
   alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
@@ -237,6 +237,120 @@ defmodule OpentelemetryBanditTest do
 
       client_port = Map.get(attrs, ClientAttributes.client_port())
       assert is_integer(client_port)
+    end
+
+    def custom_client_header_sort(h1, h2) do
+      h1_priority = custom_client_header_priority(h1)
+      h2_priority = custom_client_header_priority(h2)
+
+      case {h1_priority, h2_priority} do
+        {h1, h2} when h1 <= h2 ->
+          true
+
+        {h1, h2} when h1 > h2 ->
+          false
+      end
+    end
+
+    defp custom_client_header_priority({header_name, _value}) do
+      case header_name do
+        "custom-client" -> 1
+        "x-forwarded-for" -> 2
+      end
+    end
+
+    def custom_server_header_sort(h1, h2) do
+      h1_priority = custom_server_header_priority(h1)
+      h2_priority = custom_server_header_priority(h2)
+
+      case {h1_priority, h2_priority} do
+        {h1, h2} when h1 <= h2 ->
+          true
+
+        {h1, h2} when h1 > h2 ->
+          false
+      end
+    end
+
+    defp custom_server_header_priority({header_name, _value}) do
+      case header_name do
+        "custom-host" -> 1
+        "x-forwarded-host" -> 2
+        "forwarded" -> 3
+        _ -> 4
+      end
+    end
+
+    def custom_scheme_header_sort(h1, h2) do
+      h1_priority = custom_scheme_header_priority(h1)
+      h2_priority = custom_scheme_header_priority(h2)
+
+      case {h1_priority, h2_priority} do
+        {h1, h2} when h1 <= h2 ->
+          true
+
+        {h1, h2} when h1 > h2 ->
+          false
+      end
+    end
+
+    defp custom_scheme_header_priority({header_name, _value}) do
+      case header_name do
+        "custom-scheme" -> 1
+        "x-forwarded-proto" -> 2
+      end
+    end
+
+    test "with custom header settings" do
+      opts = [
+        client_address_headers: ["x-forwarded-for", "custom-client"],
+        client_headers_sort_fn: &__MODULE__.custom_client_header_sort/2,
+        scheme_headers: ["custom-scheme", "x-forwarded-proto"],
+        scheme_headers_sort_fn: &__MODULE__.custom_scheme_header_sort/2,
+        server_address_headers: ["custom-host", "forwarded", "host"],
+        server_headers_sort_fn: &__MODULE__.custom_server_header_sort/2
+      ]
+
+      OpentelemetryBandit.setup(opts)
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/hello",
+        headers: %{
+          "forwarded" =>
+            ~S(host=developer.mozilla.org:4321; for=192.0.2.60, for="[2001:db8:cafe::17]";proto=http;by=203.0.113.43),
+          "x-forwarded-proto" => "http",
+          "custom-scheme" => "https",
+          "custom-client" => "23.23.23.23",
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMzE"
+        }
+      )
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        attributes: span_attrs
+                      )}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      expected_attrs = [
+        {ClientAttributes.client_address(), "23.23.23.23"},
+        {HTTPAttributes.http_request_method(), :GET},
+        {HTTPAttributes.http_response_status_code(), 200},
+        {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+        {ServerAttributes.server_address(), "developer.mozilla.org"},
+        {ServerAttributes.server_port(), 4321},
+        {URLAttributes.url_scheme(), :https}
+      ]
+
+      for {attr, val} <- expected_attrs do
+        assert Map.get(attrs, attr) == val
+      end
+
+      user_agent = Map.get(attrs, UserAgentAttributes.user_agent_original())
+      assert String.starts_with?(user_agent, "req/")
     end
 
     test "with missing user-agent" do
