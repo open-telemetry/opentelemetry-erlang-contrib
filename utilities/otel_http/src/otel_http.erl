@@ -338,14 +338,14 @@ extract_ip_port(IpStr) when is_list(IpStr) ->
         [[], [], Ip] ->
             case inet:parse_ipv6strict_address(Ip) of
                 {ok, IpV6} ->
-                    {inet:ntoa(IpV6), undefined};
+                    {list_to_binary(inet:ntoa(IpV6)), undefined};
                 _ ->
                     {undefined, undefined}
             end;
         [[], [], Ip, Port] ->
             case inet:parse_ipv6strict_address(Ip) of
                 {ok, IpV6} ->
-                    {inet:ntoa(IpV6), extract_port(string:trim(Port, leading, ":"))};
+                    {list_to_binary(inet:ntoa(IpV6)), extract_port(string:trim(Port, leading, ":"))};
                 _ ->
                     {undefined, undefined}
             end;
@@ -354,14 +354,14 @@ extract_ip_port(IpStr) when is_list(IpStr) ->
                 [Ip, Port] ->
                     case inet:parse_ipv4strict_address(Ip) of
                         {ok, IpV4} ->
-                            {inet:ntoa(IpV4), extract_port(Port)};
+                            {list_to_binary(inet:ntoa(IpV4)), extract_port(Port)};
                         _ ->
                             {undefined, undefined}
                     end;
                 [Ip] ->
                     case inet:parse_ipv4strict_address(Ip) of
                         {ok, IpV4} ->
-                            {inet:ntoa(IpV4), undefined};
+                            {list_to_binary(inet:ntoa(IpV4)), undefined};
                         _ ->
                             {undefined, undefined}
                     end;
