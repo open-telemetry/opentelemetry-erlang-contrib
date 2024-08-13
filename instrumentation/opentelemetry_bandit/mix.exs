@@ -78,10 +78,10 @@ defmodule OpentelemetryBandit.MixProject do
        branch: "sem-con-1.25",
        sparse: "apps/opentelemetry_semantic_conventions",
        override: true},
-      {:opentelemetry_instrumentation_http,
+      {:otel_http,
        github: "bryannaegele/opentelemetry-erlang-contrib",
-       branch: "otel-instrumentation-http-enhancements",
-       sparse: "utilities/opentelemetry_instrumentation_http"},
+       branch: "otel-http",
+       sparse: "utilities/otel_http"},
       {:plug, ">= 1.15.0"},
       {:telemetry, "~> 1.2"},
 
