@@ -1,4 +1,4 @@
--module(opentelemetry_instrumentation_http).
+-module(otel_http).
 
 -if(?OTP_RELEASE >= 27).
 -define(MODULEDOC(Str), -moduledoc(Str)).
@@ -301,7 +301,7 @@ client_header_priority({HeaderName, _Value}) ->
     Priority.
 
 ?DOC("""
-Parse a `forwarded` header to a map of directives.  
+Parse a `forwarded` header to a map of directives.
 """).
 -spec parse_forwarded_header(header()) ->
   #{binary() => [header_value()]}.

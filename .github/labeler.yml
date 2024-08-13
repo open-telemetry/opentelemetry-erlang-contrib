@@ -76,9 +76,6 @@ opentelemetry_grpcbox:
 opentelemetry_httpoison:
   - instrumentation/opentelemetry_httpoison/**/*
 
-opentelemetry_instrumentation_http:
-  - utilities/opentelemetry_instrumentation_http/**/*
-
 opentelemetry_nebulex:
   - instrumentation/opentelemetry_nebulex/**/*
 
@@ -108,3 +105,6 @@ opentelemetry_tesla:
 
 opentelemetry_xandra:
   - instrumentation/opentelemetry_xandra/**/*
+
+otel_http:
+  - utilities/otel_http/**/*
