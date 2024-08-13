@@ -451,7 +451,7 @@ defmodule OpentelemetryBanditTest do
   def with_body(conn) do
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, :json.encode(%{"a" => "b"}))
+    |> send_resp(200, Jason.encode!(%{"a" => "b"}))
   end
 
   def halted(conn) do
