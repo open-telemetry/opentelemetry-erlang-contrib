@@ -27,6 +27,18 @@ on:
           - "tesla"
           - "xandra"
         required: true
+      otp-version:
+        description: "OTP version"
+        type: string
+        default: "25.3.2.5"
+      elixir-version:
+        description: "Elixir version"
+        type: string
+        default: "1.14.5"
+      rebar3-version:
+        description: "Rebar3 version"
+        type: string
+        default: "3.22.1"
       action:
         description: "Publish release"
         required: true
@@ -195,9 +207,9 @@ jobs:
       - uses: erlef/setup-beam@b9c58b0450cd832ccdb3c17cc156a47065d2114f # v1.18.1
         with:
           version-type: strict
-          otp-version: "25.3.2.5"
-          elixir-version: "1.14.5"
-          rebar3-version: "3.22.1"
+          otp-version: ${{ inputs.otp-version }}
+          elixir-version: ${{ inputs.elixir-version }}
+          rebar3-version: ${{ inputs.rebar3-version }}
 
       - name: "Mix Hex Publish Dry-run"
         if: ${{ needs.config.outputs.build_tool == 'mix' }}
