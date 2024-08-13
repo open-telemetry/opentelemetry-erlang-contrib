@@ -12,6 +12,7 @@
     extract_headers_attributes/3,
     extract_client_info/1,
     extract_client_info/2,
+    extract_ip_port/1,
     extract_scheme/1,
     extract_scheme/2,
     extract_server_info/1,

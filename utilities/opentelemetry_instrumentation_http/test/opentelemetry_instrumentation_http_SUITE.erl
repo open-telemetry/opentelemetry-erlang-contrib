@@ -132,7 +132,7 @@ extracts_client_info_from_headers(_Config) ->
     ?assertEqual(
         #{ip => "23.0.2.1", port => 2121},
         opentelemetry_instrumentation_http:extract_client_info([
-            {<<"x-forwarded-for">>, <<"23.0.2.1:2121">>}
+            {<<"x-forwarded-for">>, <<"23.0.2.1:2121,25.2.2.2">>}
         ])
     ),
     ?assertEqual(
