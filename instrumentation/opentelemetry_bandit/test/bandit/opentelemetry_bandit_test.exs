@@ -330,28 +330,6 @@ defmodule OpentelemetryBanditTest do
     end
   end
 
-  #   test "default span generation for halted connection" do
-  #     Req.get("http://localhost:4000/fail", retry: false)
-
-  #     assert_receive {:span,
-  #                     span(
-  #                       name: "HTTP GET /fail",
-  #                       kind: :server,
-  #                       status: {:status, :ok, _},
-  #                       attributes: attributes
-  #                     )}
-
-  #     assert %{
-  #              "net.peer.name": "localhost",
-  #              "http.method": "GET",
-  #              "http.target": "/fail",
-  #              "http.scheme": :http,
-  #              "http.status_code": 500
-  #            } = :otel_attributes.map(attributes)
-  #   end
-
-  # end
-
   def hello(conn) do
     conn |> send_resp(200, "OK")
   end
