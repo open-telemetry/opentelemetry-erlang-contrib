@@ -1,9 +1,18 @@
 defmodule OpentelemetryBanditTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   require OpenTelemetry.Tracer
   require OpenTelemetry.Span
   require Record
+
+  alias OpenTelemetry.SemConv.ClientAttributes
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.ExceptionAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  # alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.URLAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
 
   use ServerHelper
 
@@ -11,233 +20,353 @@ defmodule OpentelemetryBanditTest do
     Record.defrecord(name, spec)
   end
 
-  describe "http integration" do
-    test "default span generation for 200" do
-      Req.get("http://localhost:4000/hello")
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET /hello",
-                        kind: :server,
-                        status: {:status, :ok, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.peer.name": "localhost",
-               "http.method": "GET",
-               "http.target": "/hello",
-               "http.scheme": :http,
-               "http.status_code": 200
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "default span generation for 200 without user-agent" do
-      {:ok, {{_, 200, _}, _, _}} =
-        :httpc.request(:get, {~c"http://localhost:4000/hello", []}, [], [])
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET /hello",
-                        kind: :server,
-                        status: {:status, :ok, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.peer.name": "localhost",
-               "http.method": "GET",
-               "http.target": "/hello",
-               "http.scheme": :http,
-               "http.status_code": 200,
-               "http.client_ip": "127.0.0.1"
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "default span generation for 200 with x-forwarded-for" do
-      Req.get("http://localhost:4000/hello", headers: %{x_forwarded_for: "127.0.0.1"})
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET /hello",
-                        kind: :server,
-                        status: {:status, :ok, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.peer.name": "localhost",
-               "http.method": "GET",
-               "http.target": "/hello",
-               "http.scheme": :http,
-               "http.status_code": 200,
-               "http.client_ip": "127.0.0.1"
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "default span generation for halted connection" do
-      Req.get("http://localhost:4000/fail", retry: false)
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET /fail",
-                        kind: :server,
-                        status: {:status, :ok, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.peer.name": "localhost",
-               "http.method": "GET",
-               "http.target": "/fail",
-               "http.scheme": :http,
-               "http.status_code": 500
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "default span generation for 500 response" do
-      :telemetry.execute(
-        [:bandit, :request, :stop],
-        %{duration: 444, resp_body_bytes: 10},
-        %{
-          conn: %{
-            status: 500,
-            method: "GET",
-            request_target: {nil, nil, nil, "/not_existing_route"}
-          },
-          error: "Internal Server Error"
-        }
-      )
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET /not_existing_route",
-                        kind: :error,
-                        status: {:status, :error, "Internal Server Error"},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "http.url": _,
-               "http.method": "GET",
-               "http.status_code": 500,
-               "http.response_content_length": 10,
-               "net.transport": :"IP.TCP"
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "span when request_target is empty" do
-      :telemetry.execute(
-        [:bandit, :request, :stop],
-        %{duration: 444, resp_body_bytes: 10},
-        %{
-          conn: %{status: 500, method: "GET", request_target: nil},
-          error: "Internal Server Error"
-        }
-      )
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP GET",
-                        kind: :error,
-                        status: {:status, :error, "Internal Server Error"},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "http.url": _,
-               "http.method": "GET",
-               "http.status_code": 500,
-               "http.response_content_length": 10,
-               "net.transport": :"IP.TCP"
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "exception catch span" do
-      Req.get("http://localhost:4000/exception", retry: false)
-
-      assert_receive {:span,
-                      span(
-                        name: "HTTP exception RuntimeError",
-                        kind: :error,
-                        status: {:status, :error, _}
-                      )}
-    end
-  end
-
-  describe "websocket integration" do
-    test "span when request finished successfully" do
-      :telemetry.execute(
-        [:bandit, :websocket, :stop],
-        %{
-          duration: 444,
-          send_binary_frame_bytes: 10,
-          recv_binary_frame_bytes: 15
-        },
-        %{}
-      )
-
-      assert_receive {:span,
-                      span(
-                        name: "Websocket",
-                        kind: :server,
-                        status: {:status, :ok, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.transport": :websocket,
-               "websocket.recv.binary.frame.bytes": 10,
-               "websocket.send.binary.frame.bytes": 15
-             } = :otel_attributes.map(attributes)
-    end
-
-    test "span when error is set" do
-      :telemetry.execute(
-        [:bandit, :websocket, :stop],
-        %{
-          duration: 444,
-          send_binary_frame_bytes: 10,
-          recv_binary_frame_bytes: 15
-        },
-        %{error: "Internal Server Error"}
-      )
-
-      assert_receive {:span,
-                      span(
-                        name: "Websocket",
-                        kind: :error,
-                        status: {:status, :error, _},
-                        attributes: attributes
-                      )}
-
-      assert %{
-               "net.transport": :websocket,
-               "websocket.recv.binary.frame.bytes": 10,
-               "websocket.send.binary.frame.bytes": 15
-             } = :otel_attributes.map(attributes)
-    end
+  for {name, spec} <- Record.extract_all(from_lib: "opentelemetry_api/include/opentelemetry.hrl") do
+    Record.defrecord(name, spec)
   end
 
   setup do
     :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
-    {:ok, _} = start_supervised({Bandit, plug: __MODULE__, port: 4000, startup_log: false})
-
-    OpentelemetryBandit.setup()
-
+    on_exit(fn -> :telemetry.detach({OpentelemetryBandit, :otel_bandit}) end)
     :ok
   end
+
+  def start_server(port \\ Enum.random(4000..10_000)) do
+    {:ok, _} = start_supervised({Bandit, plug: __MODULE__, port: port})
+    port
+  end
+
+  test "validates opt-ins" do
+    err =
+      catch_error(
+        OpentelemetryBandit.setup(
+          opt_in_attrs: [
+            {ClientAttributes.client_port(), true},
+            {:unsupported, true},
+            {HTTPAttributes.http_request_body_size(), false}
+          ]
+        )
+      )
+
+    assert is_struct(err, NimbleOptions.ValidationError)
+    assert String.starts_with?(err.message, "unknown options [:unsupported]")
+  end
+
+  describe "GET" do
+    test "basic request with default options" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/hello",
+        params: [a: 1, b: "abc"],
+        headers: %{
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMzE"
+        }
+      )
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        attributes: span_attrs,
+                        parent_span_id: 13_235_353_014_750_950_193
+                      )}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      expected_attrs = [
+        {ClientAttributes.client_address(), "127.0.0.1"},
+        {HTTPAttributes.http_request_method(), :GET},
+        {HTTPAttributes.http_response_status_code(), 200},
+        {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+        {URLAttributes.url_path(), "/hello"},
+        {URLAttributes.url_query(), "a=1&b=abc"},
+        {URLAttributes.url_scheme(), :http}
+      ]
+
+      for {attr, val} <- expected_attrs do
+        assert Map.get(attrs, attr) == val
+      end
+
+      user_agent = Map.get(attrs, UserAgentAttributes.user_agent_original())
+      assert String.starts_with?(user_agent, "req/")
+    end
+
+    test "public endpoint true" do
+      OpentelemetryBandit.setup(public_endpoint: true)
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/hello",
+        headers: %{
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMzE"
+        }
+      )
+
+      refute_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        parent_span_id: 13_235_353_014_750_950_193
+                      )}
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        links: links,
+                        parent_span_id: :undefined
+                      )}
+
+      assert length(:otel_links.list(links)) == 1
+    end
+
+    def public_endpoint_fn(_conn, _opts) do
+      System.get_env("TENANT") != "internal"
+    end
+
+    test "public endpoint fn" do
+      OpentelemetryBandit.setup(public_endpoint_fn: {__MODULE__, :public_endpoint_fn, []})
+      port = start_server()
+
+      System.put_env("TENANT", "customer")
+
+      Req.get("http://localhost:#{port}/hello",
+        headers: %{
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMzE"
+        }
+      )
+
+      refute_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        parent_span_id: 13_235_353_014_750_950_193
+                      )}
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        links: links,
+                        parent_span_id: :undefined
+                      )}
+
+      assert length(:otel_links.list(links)) == 1
+
+      System.put_env("TENANT", "internal")
+
+      Req.get("http://localhost:#{port}/hello",
+        headers: %{
+          "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          "tracestate" => "congo=t61rcWkgMzE"
+        }
+      )
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        parent_span_id: 13_235_353_014_750_950_193
+                      )}
+
+      refute_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        parent_span_id: :undefined
+                      )}
+
+      System.delete_env("PUBLIC")
+    end
+
+    test "with all opt-ins" do
+      OpentelemetryBandit.setup(
+        opt_in_attrs: [
+          {ClientAttributes.client_port(), true},
+          {HTTPAttributes.http_request_body_size(), true},
+          {HTTPAttributes.http_response_body_size(), true},
+          {NetworkAttributes.network_local_address(), true},
+          {NetworkAttributes.network_local_port(), true},
+          {NetworkAttributes.network_transport(), true}
+        ],
+        request_headers: ["test-header"],
+        response_headers: ["content-type"]
+      )
+
+      port = start_server()
+
+      Req.get!("http://localhost:#{port}/with_body",
+        headers: %{"test-header" => "request header"}
+      )
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        attributes: span_attrs
+                      )}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      expected_attrs = [
+        {ClientAttributes.client_address(), "127.0.0.1"},
+        {HTTPAttributes.http_request_body_size(), 0},
+        {HTTPAttributes.http_request_method(), :GET},
+        {HTTPAttributes.http_response_body_size(), 29},
+        {HTTPAttributes.http_response_status_code(), 200},
+        {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"),
+         ["request header"]},
+        {String.to_atom("#{HTTPAttributes.http_response_header()}.content-type"),
+         ["application/json; charset=utf-8"]},
+        {NetworkAttributes.network_local_address(), "localhost"},
+        {NetworkAttributes.network_local_port(), port},
+        {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+        {URLAttributes.url_path(), "/with_body"},
+        {URLAttributes.url_scheme(), :http}
+      ]
+
+      for {attr, expected} <- expected_attrs do
+        actual = Map.get(attrs, attr)
+        assert expected == actual, "#{attr} expected #{expected} got #{actual}"
+      end
+
+      user_agent = Map.get(attrs, UserAgentAttributes.user_agent_original())
+      assert String.starts_with?(user_agent, "req/")
+
+      client_port = Map.get(attrs, ClientAttributes.client_port())
+      assert is_integer(client_port)
+    end
+
+    test "with missing user-agent" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      {:ok, {{_, 200, _}, _, _}} =
+        :httpc.request(:get, {~c"http://localhost:#{port}/hello", []}, [], [])
+
+      assert_receive {:span, span(attributes: span_attrs)}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      assert Map.get(attrs, UserAgentAttributes.user_agent_original()) == ""
+    end
+
+    test "with exception" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/arithmetic_error", retry: false)
+
+      expected_status = OpenTelemetry.status(:error, "")
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        attributes: span_attrs,
+                        events: events,
+                        status: ^expected_status
+                      )}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      expected_attrs = [
+        {ClientAttributes.client_address(), "127.0.0.1"},
+        {ErrorAttributes.error_type(), ArithmeticError},
+        {HTTPAttributes.http_request_method(), :GET},
+        {HTTPAttributes.http_response_status_code(), nil},
+        {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+        {URLAttributes.url_path(), "/arithmetic_error"},
+        {URLAttributes.url_scheme(), :http}
+      ]
+
+      for {attr, val} <- expected_attrs do
+        assert Map.get(attrs, attr) == val
+      end
+
+      [
+        event(
+          name: "exception",
+          attributes: event_attributes
+        )
+      ] = :otel_events.list(events)
+
+      assert [
+               ExceptionAttributes.exception_message(),
+               ExceptionAttributes.exception_stacktrace(),
+               ExceptionAttributes.exception_type()
+             ] ==
+               Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+    end
+
+    test "with halted request" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/halted", retry: false)
+
+      expected_status = OpenTelemetry.status(:error, "")
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        kind: :server,
+                        attributes: span_attrs,
+                        status: ^expected_status
+                      )}
+
+      attrs = :otel_attributes.map(span_attrs)
+
+      expected_attrs = [
+        {ErrorAttributes.error_type(), "500"},
+        {HTTPAttributes.http_response_status_code(), 500},
+        {URLAttributes.url_scheme(), :http}
+      ]
+
+      for {attr, val} <- expected_attrs do
+        assert Map.get(attrs, attr) == val
+      end
+    end
+  end
+
+  #   test "default span generation for halted connection" do
+  #     Req.get("http://localhost:4000/fail", retry: false)
+
+  #     assert_receive {:span,
+  #                     span(
+  #                       name: "HTTP GET /fail",
+  #                       kind: :server,
+  #                       status: {:status, :ok, _},
+  #                       attributes: attributes
+  #                     )}
+
+  #     assert %{
+  #              "net.peer.name": "localhost",
+  #              "http.method": "GET",
+  #              "http.target": "/fail",
+  #              "http.scheme": :http,
+  #              "http.status_code": 500
+  #            } = :otel_attributes.map(attributes)
+  #   end
+
+  # end
 
   def hello(conn) do
     conn |> send_resp(200, "OK")
   end
 
-  def fail(conn) do
+  def with_body(conn) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, :json.encode(%{"a" => "b"}))
+  end
+
+  def halted(conn) do
     conn |> send_resp(500, "Internal Server Error") |> halt()
   end
 
-  def exception(_conn) do
-    raise "boom"
+  def arithmetic_error(_conn) do
+    1 / 0
   end
 end
