@@ -350,7 +350,8 @@ extract_ip_port(IpStr) when is_list(IpStr) ->
                     {undefined, undefined}
             end;
         [IpV4Str] ->
-            case string:split(IpV4Str, ":") of
+            [LeftMostIpV4Str | _] = string:split(IpV4Str, <<",">>),
+            case string:split(LeftMostIpV4Str, ":") of
                 [Ip, Port] ->
                     case inet:parse_ipv4strict_address(Ip) of
                         {ok, IpV4} ->

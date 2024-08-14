@@ -154,7 +154,7 @@ extracts_client_info_from_headers(_Config) ->
     ?assertEqual(
         #{ip => <<"23.0.2.1">>, port => 2121},
         otel_http:extract_client_info([
-            {<<"x-forwarded-for">>, <<"23.0.2.1:2121,10.100.10.10">>},
+            {<<"x-forwarded-for">>, <<"23.0.2.1:2121, 10.100.10.10">>},
             {<<"forwarded">>,
                 <<"host=developer.mozilla.org:4321; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>}
         ])
@@ -252,4 +252,3 @@ extracts_server_info_from_headers(_Config) ->
                     <<"host=d1.mozilla.org; for=192.0.2.60, for=\"[2001:db8:cafe::17]\";proto=http;by=203.0.113.43">>}
             ])
         ).
-    
