@@ -468,9 +468,9 @@ extract_network_protocol(Version) ->
     case Version of
         'HTTP/1.0' -> {http, '1.0'};
         'HTTP/1.1' -> {http, '1.1'};
-        'HTTP/2.0' -> {http, '2.0'};
-        'HTTP/2' -> {http, '2.0'};
-        'SPDY' -> {'SPDY', '2.0'};
-        'QUIC' -> {'QUIC', '3.0'};
+        'HTTP/2.0' -> {http, '2'};
+        'HTTP/2' -> {http, '2'};
+        'SPDY' -> {'SPDY', '2'};
+        'QUIC' -> {'QUIC', '3'};
         _ -> {error, <<"Invalid protocol">>}
     end.
