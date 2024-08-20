@@ -312,7 +312,7 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, Conf
                 kind => ?SPAN_KIND_SERVER
             });
         true ->
-            PropagatedCtx = otel_propagator_text_map:extract_to(otel_ctx:new(), ReqHeaders),
+            PropagatedCtx = otel_propagator_text_map:extract_to(otel_ctx:new(), maps:to_list(ReqHeaders)),
             SpanCtx = otel_tracer:current_span_ctx(PropagatedCtx),
             otel_telemetry:start_telemetry_span(?TRACER_ID, SpanName, Meta, #{
                 attributes => AttrsFinal,
