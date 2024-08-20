@@ -10,6 +10,7 @@
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
 
 -include_lib("opentelemetry_semantic_conventions/include/attributes/client_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/error_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/network_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/server_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/url_attributes.hrl").
@@ -352,7 +353,8 @@ failed_request(_Config) ->
                              ?URL_PATH => <<"/failure">>,
                              ?URL_SCHEME => http,
                              ?USER_AGENT_ORIGINAL => <<>>,
-                             ?HTTP_RESPONSE_STATUS_CODE => 500},
+                             ?HTTP_RESPONSE_STATUS_CODE => 500,
+                             ?ERROR_TYPE => <<"500">>},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(failed_request)
@@ -467,7 +469,7 @@ bad_request(_Config) ->
             ?assertMatch(ExpectedEventAttrs, otel_attributes:map(EventAttributes)),
             ?assertEqual('HTTP', Name),
             ?assertEqual(?SPAN_KIND_SERVER, Kind),
-            ExpectedAttrs = #{?HTTP_RESPONSE_STATUS_CODE => 501},
+            ExpectedAttrs = #{?ERROR_TYPE => <<"501">>, ?HTTP_RESPONSE_STATUS_CODE => 501},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(bad_request)

@@ -16,6 +16,7 @@
 
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/client_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/error_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/network_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/server_attributes.hrl").
 -include_lib("opentelemetry_semantic_conventions/include/attributes/url_attributes.hrl").
@@ -354,7 +355,8 @@ handle_event([cowboy, request, stop], Measurements, Meta, Config) ->
             end;
         StatusCode when StatusCode >= 500 ->
             Attrs = set_resp_header_attrs(#{
-                    ?HTTP_RESPONSE_STATUS_CODE => StatusCode
+                    ?HTTP_RESPONSE_STATUS_CODE => StatusCode,
+                    ?ERROR_TYPE => integer_to_binary(StatusCode)
                 }, RespHeaders, Config),
             FinalAttrs =
                 maps:merge(Attrs, maps:filter(fun(K,_V) -> lists:member(K, OptedInAttrs) end, OptInAttrs)),
@@ -396,7 +398,8 @@ handle_event([cowboy, request, exception], Measurements, Meta, Config) ->
                  },
     StatusCode = transform_status_to_code(Status),
     Attrs = set_resp_header_attrs(#{
-            ?HTTP_RESPONSE_STATUS_CODE => StatusCode
+            ?HTTP_RESPONSE_STATUS_CODE => StatusCode,
+            ?ERROR_TYPE => integer_to_binary(StatusCode)
         }, RespHeaders, Config),
     FinalAttrs =
         maps:merge(Attrs, maps:filter(fun(K,_V) -> lists:member(K, OptedInAttrs) end, OptInAttrs)),
@@ -427,7 +430,8 @@ handle_event([cowboy, request, early_error], Measurements, Meta, Config) ->
     StatusCode = transform_status_to_code(Status),
 
     Attrs = set_resp_header_attrs(#{
-            ?HTTP_RESPONSE_STATUS_CODE => StatusCode
+            ?HTTP_RESPONSE_STATUS_CODE => StatusCode,
+            ?ERROR_TYPE => integer_to_binary(StatusCode)
         }, RespHeaders, Config),
     FinalAttrs =
         maps:merge(Attrs, maps:filter(fun(K,_V) -> lists:member(K, OptedInAttrs) end, OptInAttrs)),
