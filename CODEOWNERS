@@ -14,9 +14,11 @@
 
 * @open-telemetry/erlang-contrib-approvers
 
+/instrumentation/opentelemetry_absinthe         @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_ecto             @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_http             @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-contrib-approvers
