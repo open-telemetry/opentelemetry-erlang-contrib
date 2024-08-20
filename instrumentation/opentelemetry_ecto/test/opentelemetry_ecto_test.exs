@@ -2,6 +2,7 @@ defmodule OpentelemetryEctoTest do
   use ExUnit.Case
   import Ecto.Query
   require OpenTelemetry.Tracer
+  require OpenTelemetry.SemanticConventions.Trace, as: Trace
 
   alias OpentelemetryEcto.TestRepo, as: Repo
   alias OpentelemetryEcto.TestModels.{Comment, User, Post}
@@ -59,6 +60,21 @@ defmodule OpentelemetryEctoTest do
              source: "users",
              total_time_microseconds: _
            } = :otel_attributes.map(attributes)
+  end
+
+  test "reads the db.operation.name" do
+    attach_handler()
+
+    Repo.all(User, telemetry_options: [{:"db.operation.name", "read_all_users"}])
+
+    assert_receive {:span,
+                    span(
+                      name: "opentelemetry_ecto.test_repo.query:users",
+                      attributes: attributes,
+                      kind: :client
+                    )}
+
+    assert %{"db.operation.name": "read_all_users"} = :otel_attributes.map(attributes)
   end
 
   test "exclude unsantized query" do

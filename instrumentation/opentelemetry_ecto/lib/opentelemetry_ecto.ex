@@ -82,12 +82,13 @@ defmodule OpentelemetryEcto do
   def handle_event(
         event,
         measurements,
-        %{query: query, source: source, result: query_result, repo: repo, type: type},
+        %{query: query, source: source, result: query_result, repo: repo, type: type} = meta,
         config
       ) do
     # Doing all this even if the span isn't sampled so the sampler
     # could technically use the attributes to decide if it should sample or not
 
+    options = Map.get(meta, :options, [])
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
@@ -134,11 +135,15 @@ defmodule OpentelemetryEcto do
 
     db_statement_config = Keyword.get(config, :db_statement, :disabled)
 
+    # TODO: Use OpenTelemetry.SemanticConventions.Trace after 1.26 support
+    db_operation = Keyword.get(options, :"db.operation.name")
+
     attributes =
       base_attributes
       |> add_measurements(measurements, time_unit)
       |> maybe_add_db_statement(db_statement_config, query)
       |> maybe_add_db_system(repo.__adapter__())
+      |> maybe_add_db_operation(db_operation)
       |> add_additional_attributes(additional_attributes)
 
     parent_context =
@@ -199,6 +204,15 @@ defmodule OpentelemetryEcto do
       _, acc ->
         acc
     end)
+  end
+
+  defp maybe_add_db_operation(attributes, nil) do
+    attributes
+  end
+
+  defp maybe_add_db_operation(attributes, db_operation) do
+    # TODO: Use OpenTelemetry.SemanticConventions.Trace after 1.26 support
+    Map.put(attributes, :"db.operation.name", db_operation)
   end
 
   defp maybe_add_db_statement(attributes, :enabled, query) do
