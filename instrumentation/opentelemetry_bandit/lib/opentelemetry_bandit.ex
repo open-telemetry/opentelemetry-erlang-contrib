@@ -479,8 +479,12 @@ defmodule OpentelemetryBandit do
 
     Tracer.record_exception(meta.exception, meta.stacktrace)
 
+    # bandit does not set this on the meta but extracts this after the exception
+    # telemetry is emitted
+    status_code = meta.exception |> Plug.Exception.status() |> Plug.Conn.Status.code() |> IO.inspect()
+
     %{
-      HTTPAttributes.http_response_status_code() => meta.conn.status,
+      HTTPAttributes.http_response_status_code() => status_code,
       ErrorAttributes.error_type() => meta.exception.__struct__
     }
     |> set_resp_header_attrs(meta.conn, config)

@@ -389,7 +389,7 @@ defmodule OpentelemetryBanditTest do
         {ClientAttributes.client_address(), "127.0.0.1"},
         {ErrorAttributes.error_type(), ArithmeticError},
         {HTTPAttributes.http_request_method(), :GET},
-        {HTTPAttributes.http_response_status_code(), nil},
+        {HTTPAttributes.http_response_status_code(), 500},
         {NetworkAttributes.network_peer_address(), "127.0.0.1"},
         {URLAttributes.url_path(), "/arithmetic_error"},
         {URLAttributes.url_scheme(), :http}
