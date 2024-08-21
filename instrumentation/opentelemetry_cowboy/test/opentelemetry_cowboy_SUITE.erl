@@ -354,7 +354,7 @@ failed_request(_Config) ->
                              ?URL_SCHEME => http,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 500,
-                             ?ERROR_TYPE => <<"500">>},
+                             ?ERROR_TYPE => failure},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(failed_request)
