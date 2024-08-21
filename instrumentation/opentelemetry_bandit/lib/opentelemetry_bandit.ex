@@ -481,7 +481,7 @@ defmodule OpentelemetryBandit do
 
     # bandit does not set this on the meta but extracts this after the exception
     # telemetry is emitted
-    status_code = meta.exception |> Plug.Exception.status() |> Plug.Conn.Status.code() |> IO.inspect()
+    status_code = meta.exception |> Plug.Exception.status() |> Plug.Conn.Status.code()
 
     %{
       HTTPAttributes.http_response_status_code() => status_code,
