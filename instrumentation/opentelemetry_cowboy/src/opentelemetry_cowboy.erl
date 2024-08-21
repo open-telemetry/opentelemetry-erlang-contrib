@@ -391,22 +391,33 @@ handle_event([cowboy, request, exception], Measurements, Meta, Config) ->
       resp_headers := RespHeaders,
       resp_status := Status
      } = Meta,
+
     % these are opt-in
     OptInAttrs = #{
                   ?HTTP_REQUEST_BODY_SIZE => ReqBodyLength,
                   ?HTTP_RESPONSE_BODY_SIZE => RespBodyLength
                  },
     StatusCode = transform_status_to_code(Status),
+    ErrorType = 
+        case Reason of
+            R when is_atom(R) ->
+                otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
+                R;
+            {#{message := _ElixirExceptionMessage, '__struct__' := ElixirException, '__exception__' := true}, ElixirStacktrace} ->
+                otel_span:record_exception(Ctx, Kind, ElixirException, ElixirStacktrace, []),
+                ElixirException;
+            _ ->
+                Reason
+        end,
     Attrs = set_resp_header_attrs(#{
             ?HTTP_RESPONSE_STATUS_CODE => StatusCode,
-            ?ERROR_TYPE => integer_to_binary(StatusCode)
+            ?ERROR_TYPE => ErrorType
         }, RespHeaders, Config),
     FinalAttrs =
         maps:merge(Attrs, maps:filter(fun(K,_V) -> lists:member(K, OptedInAttrs) end, OptInAttrs)),
 
     otel_span:set_attributes(Ctx, FinalAttrs),
 
-    otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>)),
     
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
