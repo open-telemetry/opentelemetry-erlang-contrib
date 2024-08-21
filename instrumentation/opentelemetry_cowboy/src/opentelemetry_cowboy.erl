@@ -403,8 +403,8 @@ handle_event([cowboy, request, exception], Measurements, Meta, Config) ->
             R when is_atom(R) ->
                 otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
                 R;
-            {#{message := _ElixirExceptionMessage, '__struct__' := ElixirException, '__exception__' := true}, ElixirStacktrace} ->
-                otel_span:record_exception(Ctx, Kind, ElixirException, ElixirStacktrace, []),
+            {{#{message := ElixirExceptionMessage, '__struct__' := ElixirException, '__exception__' := true}, ElixirStacktrace}, _} ->
+                otel_span:record_exception(Ctx, Kind, ElixirException, ElixirExceptionMessage, ElixirStacktrace, []),
                 ElixirException;
             _ ->
                 Reason
