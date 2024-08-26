@@ -15,7 +15,10 @@ fetch_parent_ctx(MaxDepth) ->
 
 -spec fetch_parent_ctx(non_neg_integer(), atom()) -> otel_ctx:t() | undefined.
 fetch_parent_ctx(MaxDepth, Key) ->
-    Pids = pids(Key, pdict(self())),
+    Pids = case get(Key) of
+        List when is_list(List) -> List;
+        _ -> []
+    end,
     inspect_parent(undefined, lists:sublist(Pids, MaxDepth)).
 
 inspect_parent(Ctx, _Pids) when Ctx =/= undefined ->
@@ -60,12 +63,4 @@ otel_ctx(Dictionary) ->
             undefined;
         {'$__current_otel_ctx', Ctx} ->
             Ctx
-    end.
-
-pids(Key, Dictionary) ->
-    case lists:keyfind(Key, 1, Dictionary) of
-        false ->
-            [];
-        {Key,Pids} ->
-            Pids
     end.
