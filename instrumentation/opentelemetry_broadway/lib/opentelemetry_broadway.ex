@@ -53,6 +53,22 @@ defmodule OpentelemetryBroadway do
         []
       )
 
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.batch_start",
+        [:broadway, :batch_processor, :start],
+        &__MODULE__.handle_batch_start/4,
+        []
+      )
+
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.batch_stop",
+        [:broadway, :batch_processor, :stop],
+        &__MODULE__.handle_batch_stop/4,
+        []
+      )
+
     :ok
   end
 
@@ -133,6 +149,58 @@ defmodule OpentelemetryBroadway do
       ctx,
       OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
     )
+
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
+  end
+
+  @doc false
+  def handle_batch_start(
+    _event,
+    _measurements,
+    %{
+      topology_name: topology_name,
+      messages: messages,
+      batch_info: %Broadway.BatchInfo{batcher: batcher},
+    } = metadata,
+    _config
+  ) do
+    span_name = "#{inspect(topology_name)}/#{Atom.to_string(batcher)} batching process"
+
+    attributes = %{
+      :"broadway.batch.count" => length(messages)
+    }
+
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
+      kind: :internal,
+      attributes: attributes
+    })
+  end
+
+  @doc false
+  def handle_batch_stop(
+    _event,
+    _measurements,
+    %{
+      successful_messages: successful_messages,
+      failed_messages: failed_messages
+    } = metadata,
+    _config
+  ) do
+    status = if length(failed_messages) == 0 do
+      OpenTelemetry.status(:ok)
+    else
+      OpenTelemetry.status(:error, "Batch completed with failed messages")
+    end
+
+    attributes = %{
+      :"broadway.batch.success.count" => length(successful_messages),
+      :"broadway.batch.failed.count" => length(failed_messages)
+    }
+
+    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
+
+    OpenTelemetry.Span.set_status(ctx, status)
+    OpenTelemetry.Span.set_attributes(ctx, attributes)
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
