@@ -186,7 +186,7 @@ defmodule OpentelemetryBroadway do
     } = metadata,
     _config
   ) do
-    status = if length(failed_messages) == 0 do
+    status = if Enum.empty?(failed_messages) do
       OpenTelemetry.status(:ok)
     else
       OpenTelemetry.status(:error, "Batch completed with failed messages")
