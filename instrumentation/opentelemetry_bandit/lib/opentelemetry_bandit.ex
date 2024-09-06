@@ -335,8 +335,8 @@ defmodule OpentelemetryBandit do
     end
   end
 
-  defp extract_network_protocol({_adapter_name, meta}) do
-    case Map.get(meta, :version) do
+  defp extract_network_protocol({_adapter_name, %{transport: %{version: vsn}}}) do
+    case vsn do
       :"HTTP/1.0" -> {:http, :"1.0"}
       :"HTTP/1.1" -> {:http, :"1.1"}
       :"HTTP/2.0" -> {:http, :"2.0"}
@@ -346,6 +346,7 @@ defmodule OpentelemetryBandit do
       nil -> {:error, "Invalid protocol"}
     end
   end
+  defp extract_network_protocol(_), do: {:error, "Invalid protocol"}
 
   defp parse_method(method) do
     case method do
