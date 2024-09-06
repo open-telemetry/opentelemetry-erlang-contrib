@@ -346,6 +346,7 @@ defmodule OpentelemetryBandit do
       nil -> {:error, "Invalid protocol"}
     end
   end
+
   defp extract_network_protocol(_), do: {:error, "Invalid protocol"}
 
   defp parse_method(method) do
