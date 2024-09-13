@@ -12,7 +12,7 @@ See [Docs](https://hex.pm/packages/opentelemetry_req) for usage instructions.
 ```elixir
 def deps do
   [
-    {:opentelemetry_req, "~> 0.2.0"}
+    {:opentelemetry_req, "~> 1.0.0-beta.1"}
   ]
 end
 ```
