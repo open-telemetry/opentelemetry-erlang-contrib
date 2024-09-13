@@ -182,7 +182,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
     OpentelemetryPhoenix.setup(adapter: :cowboy2, endpoint_prefix: [:phoenix, :cowboy, :endpoint])
   end
 
-  adapter_suites = for adapter <- [:bandit, :cowboy], protocol <- [:http1, :http2], do: {adapter, protocol}
+  adapter_suites =
+    for adapter <- [:bandit, :cowboy], protocol <- [:http1, :http2], do: {adapter, protocol}
 
   for {adapter, protocol} <- adapter_suites do
     describe "#{adapter} - #{protocol}" do
