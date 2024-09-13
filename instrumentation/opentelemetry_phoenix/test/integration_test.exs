@@ -182,8 +182,10 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
     OpentelemetryPhoenix.setup(adapter: :cowboy2, endpoint_prefix: [:phoenix, :cowboy, :endpoint])
   end
 
-  for adapter <- @adapters do
-    describe "#{adapter}" do
+  adapter_suites = for adapter <- [:bandit, :cowboy], protocol <- [:http1, :http2], do: {adapter, protocol}
+
+  for {adapter, protocol} <- adapter_suites do
+    describe "#{adapter} - #{protocol}" do
       test "basic request with default options", %{unquote(adapter) => adapter_info} do
         capture_log(fn ->
           {:ok, _} = start_supervised(adapter_info.spec)
@@ -195,7 +197,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
               "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
               "tracestate" => "congo=t61rcWkgMzE"
             },
-            retry: false
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           assert_receive {:span,
@@ -208,12 +211,14 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
 
           attrs = :otel_attributes.map(span_attrs)
 
+          expected_proto = if unquote(protocol) == :http1, do: :"1.1", else: :"2"
+
           expected_attrs = [
             {ClientAttributes.client_address(), "127.0.0.1"},
             {HTTPAttributes.http_request_method(), :GET},
             {HTTPAttributes.http_response_status_code(), 200},
             {NetworkAttributes.network_peer_address(), "127.0.0.1"},
-            {NetworkAttributes.network_protocol_version(), :"1.1"},
+            {NetworkAttributes.network_protocol_version(), expected_proto},
             {URLAttributes.url_path(), "/users/1234"},
             {URLAttributes.url_query(), "a=1&b=abc"},
             {URLAttributes.url_scheme(), :http},
@@ -242,7 +247,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
               "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
               "tracestate" => "congo=t61rcWkgMzE"
             },
-            retry: false
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           refute_receive {:span,
@@ -279,7 +285,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
               "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
               "tracestate" => "congo=t61rcWkgMzE"
             },
-            retry: false
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           refute_receive {:span,
@@ -305,7 +312,9 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
             headers: %{
               "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
               "tracestate" => "congo=t61rcWkgMzE"
-            }
+            },
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           assert_receive {:span,
@@ -345,7 +354,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
 
           Req.get!("http://localhost:#{adapter_info.port}/with_body",
             headers: %{"test-header" => "request header"},
-            retry: false
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           assert_receive {:span,
@@ -414,7 +424,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
               "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
               "tracestate" => "congo=t61rcWkgMzE"
             },
-            retry: false
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
           )
 
           assert_receive {:span,
@@ -452,7 +463,12 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
           setup_adapter(unquote(adapter))
 
           {:ok, {{_, 200, _}, _, _}} =
-            :httpc.request(:get, {~c"http://localhost:#{adapter_info.port}/hello", []}, [], [])
+            :httpc.request(
+              :get,
+              {~c"http://localhost:#{adapter_info.port}/hello", []},
+              [],
+              []
+            )
 
           assert_receive {:span, span(attributes: span_attrs)}
 
@@ -468,7 +484,10 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
 
           setup_adapter(unquote(adapter))
 
-          Req.get("http://localhost:#{adapter_info.port}/router/oops", retry: false)
+          Req.get("http://localhost:#{adapter_info.port}/router/oops",
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
+          )
 
           expected_status = OpenTelemetry.status(:error, "")
 
@@ -522,7 +541,10 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
 
           setup_adapter(unquote(adapter))
 
-          Req.get("http://localhost:#{adapter_info.port}/halted", retry: false)
+          Req.get("http://localhost:#{adapter_info.port}/halted",
+            retry: false,
+            connect_options: [protocols: [unquote(protocol)]]
+          )
 
           expected_status = OpenTelemetry.status(:error, "")
 
