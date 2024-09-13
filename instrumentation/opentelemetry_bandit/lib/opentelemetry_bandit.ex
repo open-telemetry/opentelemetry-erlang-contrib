@@ -335,16 +335,22 @@ defmodule OpentelemetryBandit do
     end
   end
 
-  defp extract_network_protocol({_adapter_name, %{transport: %{version: vsn}}}) do
-    case vsn do
+  defp extract_network_protocol(
+         {_adapter_name, %{transport: %{__struct__: Bandit.HTTP1.Socket} = transport}}
+       ) do
+    case transport.version do
       :"HTTP/1.0" -> {:http, :"1.0"}
       :"HTTP/1.1" -> {:http, :"1.1"}
-      :"HTTP/2.0" -> {:http, :"2.0"}
-      :"HTTP/2" -> {:http, :"2.0"}
-      :SPDY -> {:spdy, :"2.0"}
-      :QUIC -> {:quic, :"3.0"}
+      :"HTTP/2.0" -> {:http, :"2"}
+      :"HTTP/2" -> {:http, :"2"}
+      :SPDY -> {:spdy, :"2"}
+      :QUIC -> {:quic, :"3"}
       nil -> {:error, "Invalid protocol"}
     end
+  end
+
+  defp extract_network_protocol({_adapter_name, %{transport: %{__struct__: Bandit.HTTP2.Stream}}}) do
+    {:http, :"2"}
   end
 
   defp extract_network_protocol(_), do: {:error, "Invalid protocol"}
@@ -396,13 +402,24 @@ defmodule OpentelemetryBandit do
     case otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]) do
       %{ip: :undefined} ->
         %{adapter: {Bandit.Adapter, adapter}} = conn
-        start_meta = adapter.transport.socket.span.start_metadata
 
-        %{ip: ip_to_string(start_meta.remote_address), port: start_meta.remote_port}
+        extract_client_info_from_transport(adapter.transport)
 
       client_address ->
         client_address
     end
+  end
+
+  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP1.Socket} = transport) do
+    start_meta = transport.socket.span.start_metadata
+
+    %{ip: ip_to_string(start_meta.remote_address), port: start_meta.remote_port}
+  end
+
+  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP2.Stream} = transport) do
+    {ip, port} = transport.transport_info.peername
+
+    %{ip: ip_to_string(ip), port: port}
   end
 
   defp otel_http_extract_client_info(headers, nil) do
