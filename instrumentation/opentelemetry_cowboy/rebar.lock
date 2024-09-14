@@ -5,7 +5,7 @@
  {<<"opentelemetry_api">>,{pkg,<<"opentelemetry_api">>,<<"1.3.0">>},0},
  {<<"opentelemetry_semantic_conventions">>,
   {git_subdir,"https://github.com/open-telemetry/opentelemetry-erlang.git",
-              {ref,"f377d87be815c2ffd73281a6fdf3015aa02982b1"},
+              {ref,"357178d410e3ab8afb22374305ce74119166dbda"},
               "apps/opentelemetry_semantic_conventions"},
   0},
  {<<"opentelemetry_telemetry">>,
