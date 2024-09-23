@@ -55,16 +55,16 @@ defmodule OpentelemetryDataloader.MixProject do
   defp deps do
     [
       {:telemetry, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.2"},
-      {:opentelemetry_telemetry, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_telemetry, "~> 1.1"},
       {:dataloader, "~> 2.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.7", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
-      {:postgrex, ">= 0.15.0", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:opentelemetry_process_propagator, "~> 0.3.0"}
+      {:postgrex, ">= 0.19.0", only: [:dev, :test]},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:opentelemetry_process_propagator, "~> 0.3"}
     ]
   end
 end
