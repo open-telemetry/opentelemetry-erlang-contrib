@@ -30,15 +30,15 @@ on:
       otp-version:
         description: "OTP version"
         type: string
-        default: "25.3.2.5"
+        default: "27.1"
       elixir-version:
         description: "Elixir version"
         type: string
-        default: "1.14.5"
+        default: "1.17.3"
       rebar3-version:
         description: "Rebar3 version"
         type: string
-        default: "3.22.1"
+        default: "3.24.0"
       action:
         description: "Publish release"
         required: true
