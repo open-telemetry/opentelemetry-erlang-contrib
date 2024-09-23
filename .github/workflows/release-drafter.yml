@@ -96,16 +96,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  opentelemetry-instrumentation-http-release:
-    name: '[opentelemetry-instrument-http-release] Draft release'
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter-templates/opentelemetry-instrumentation-http.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   opentelemetry-nebulex-release:
     name: '[opentelemetry-nebulex-release] Draft release'
     runs-on: ubuntu-22.04
@@ -203,5 +193,15 @@ jobs:
       - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-xandra.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  otel-http-release:
+    name: '[otel-http-release] Draft release'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/otel-http.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
