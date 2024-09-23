@@ -1,0 +1,6 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Otel HTTP - v$RESOLVED_VERSION'
+tag-template: 'otel-http-v$RESOLVED_VERSION'
+tag-prefix: otel-http-v
+include-paths:
+  - utilities/otel_http/
