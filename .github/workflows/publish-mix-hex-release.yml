@@ -15,7 +15,7 @@ on:
           - "elli"
           - "finch"
           - "grpcbox"
-          - "http_instrumentation"
+          - "http"
           - "httpoison"
           - "nebulex"
           - "oban"
