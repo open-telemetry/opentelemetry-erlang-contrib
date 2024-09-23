@@ -10,8 +10,7 @@ defmodule OpentelemetryBroadway.MixProject do
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       docs: [
-        source_url_pattern:
-          "https://github.com/breakroom/opentelemetry_broadway/blob/main/%{path}#L%{line}",
+        source_url_pattern: "https://github.com/breakroom/opentelemetry_broadway/blob/main/%{path}#L%{line}",
         main: "OpentelemetryBroadway",
         extras: ["README.md"]
       ],
