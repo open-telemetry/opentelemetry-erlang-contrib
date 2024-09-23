@@ -1,4 +1,4 @@
--module(opentelemetry_instrumentation_http).
+-module(otel_http).
 
 -if(?OTP_RELEASE >= 27).
 -define(MODULEDOC(Str), -moduledoc(Str)).
@@ -39,7 +39,7 @@
               server_info/0]).
 
 ?MODULEDOC("""
-`opentelemetry_instrumentation_http` provides utility functions for
+`otel_http` provides utility functions for
 common otel http-related instrumentation operations such as extraction
 of schemes, client and server info, and header operations.
 """).
@@ -301,7 +301,7 @@ client_header_priority({HeaderName, _Value}) ->
     Priority.
 
 ?DOC("""
-Parse a `forwarded` header to a map of directives.  
+Parse a `forwarded` header to a map of directives.
 """).
 -spec parse_forwarded_header(header()) ->
   #{binary() => [header_value()]}.
@@ -338,30 +338,31 @@ extract_ip_port(IpStr) when is_list(IpStr) ->
         [[], [], Ip] ->
             case inet:parse_ipv6strict_address(Ip) of
                 {ok, IpV6} ->
-                    {inet:ntoa(IpV6), undefined};
+                    {list_to_binary(inet:ntoa(IpV6)), undefined};
                 _ ->
                     {undefined, undefined}
             end;
         [[], [], Ip, Port] ->
             case inet:parse_ipv6strict_address(Ip) of
                 {ok, IpV6} ->
-                    {inet:ntoa(IpV6), extract_port(string:trim(Port, leading, ":"))};
+                    {list_to_binary(inet:ntoa(IpV6)), extract_port(string:trim(Port, leading, ":"))};
                 _ ->
                     {undefined, undefined}
             end;
         [IpV4Str] ->
-            case string:split(IpV4Str, ":") of
+            [LeftMostIpV4Str | _] = string:split(IpV4Str, <<",">>),
+            case string:split(LeftMostIpV4Str, ":") of
                 [Ip, Port] ->
                     case inet:parse_ipv4strict_address(Ip) of
                         {ok, IpV4} ->
-                            {inet:ntoa(IpV4), extract_port(Port)};
+                            {list_to_binary(inet:ntoa(IpV4)), extract_port(Port)};
                         _ ->
                             {undefined, undefined}
                     end;
                 [Ip] ->
                     case inet:parse_ipv4strict_address(Ip) of
                         {ok, IpV4} ->
-                            {inet:ntoa(IpV4), undefined};
+                            {list_to_binary(inet:ntoa(IpV4)), undefined};
                         _ ->
                             {undefined, undefined}
                     end;
