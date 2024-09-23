@@ -39,7 +39,7 @@
               server_info/0]).
 
 ?MODULEDOC("""
-`opentelemetry_instrumentation_http` provides utility functions for
+`otel_http` provides utility functions for
 common otel http-related instrumentation operations such as extraction
 of schemes, client and server info, and header operations.
 """).
