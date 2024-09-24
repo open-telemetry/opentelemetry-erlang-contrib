@@ -63,7 +63,7 @@ defmodule OpentelemetryReq.MixProject do
       {:opentelemetry_api, "~> 1.3"},
       {:opentelemetry_semantic_conventions,
        github: "open-telemetry/opentelemetry-erlang",
-       branch: "sem-con-1.25",
+       branch: "main",
        sparse: "apps/opentelemetry_semantic_conventions",
        override: true},
       {:otel_http, "~> 0.2"},
