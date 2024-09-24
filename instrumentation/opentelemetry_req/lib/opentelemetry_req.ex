@@ -28,10 +28,9 @@ defmodule OpentelemetryReq do
                       type: :keyword_list,
                       keys: opt_ins_schema,
                       default: [],
-                      doc:
-                        """
-                        Opt-in and experimental attributes. Use semantic conventions library to ensure compatability, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`
-                        """
+                      doc: """
+                      Opt-in and experimental attributes. Use semantic conventions library to ensure compatability, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`
+                      """
                     ],
                     propagate_trace_headers: [
                       type: :boolean,
