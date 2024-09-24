@@ -213,7 +213,6 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -263,7 +262,6 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -301,7 +299,6 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -329,7 +326,6 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -370,7 +366,6 @@ if otp_vsn >= 27 do
 
             Req.get!("http://localhost:#{adapter_info.port}/with_body",
               headers: %{"test-header" => "request header"},
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -387,7 +382,8 @@ if otp_vsn >= 27 do
               {HTTPAttributes.http_request_body_size(), 0},
               {HTTPAttributes.http_request_method(), :GET},
               {HTTPAttributes.http_response_status_code(), 200},
-              {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"), ["request header"]},
+              {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"),
+               ["request header"]},
               {String.to_atom("#{HTTPAttributes.http_response_header()}.content-type"),
                ["application/json; charset=utf-8"]},
               {NetworkAttributes.network_local_address(), "localhost"},
@@ -439,7 +435,6 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
