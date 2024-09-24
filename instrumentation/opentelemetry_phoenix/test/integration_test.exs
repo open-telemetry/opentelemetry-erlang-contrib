@@ -135,7 +135,6 @@ if otp_vsn >= 27 do
     alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
     setup do
-      Application.ensure_all_started([:telemetry])
       :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
       # Find available ports to use for this test
@@ -171,7 +170,8 @@ if otp_vsn >= 27 do
       }
 
       on_exit(fn ->
-        Application.stop(:telemetry)
+        :telemetry.list_handlers([])
+        |> Enum.each(fn h -> :telemetry.detach(h.id) end)
       end)
 
       adapters
