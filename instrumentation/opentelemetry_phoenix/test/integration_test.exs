@@ -186,8 +186,6 @@ if otp_vsn >= 27 do
         adapter: :bandit,
         endpoint_prefix: [:phoenix, :bandit, :endpoint]
       )
-
-      Process.sleep(100)
     end
 
     defp setup_adapter(:cowboy, opts) do
@@ -197,8 +195,6 @@ if otp_vsn >= 27 do
         adapter: :cowboy2,
         endpoint_prefix: [:phoenix, :cowboy, :endpoint]
       )
-
-      Process.sleep(100)
     end
 
     adapter_suites =
@@ -217,6 +213,7 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -266,6 +263,7 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -303,6 +301,7 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -330,6 +329,7 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -370,6 +370,7 @@ if otp_vsn >= 27 do
 
             Req.get!("http://localhost:#{adapter_info.port}/with_body",
               headers: %{"test-header" => "request header"},
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -438,6 +439,7 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
+              retry: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
