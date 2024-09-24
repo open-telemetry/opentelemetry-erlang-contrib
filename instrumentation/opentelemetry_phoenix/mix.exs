@@ -50,7 +50,8 @@ defmodule OpentelemetryPhoenix.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -68,14 +69,10 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions,
        github: "open-telemetry/opentelemetry-erlang",
-       branch: "sem-con-1.25",
+       branch: "main",
        sparse: "apps/opentelemetry_semantic_conventions",
        override: true},
-      {:otel_http,
-       github: "bryannaegele/opentelemetry-erlang-contrib",
-       branch: "otel-http",
-       sparse: "utilities/otel_http",
-       override: true},
+      {:otel_http, "~> 0.2", override: true},
       # {:opentelemetry_semantic_conventions, "~> 0.2"},
       {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},
