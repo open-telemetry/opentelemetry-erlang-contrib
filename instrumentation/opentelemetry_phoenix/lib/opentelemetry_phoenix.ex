@@ -136,8 +136,9 @@ defmodule OpentelemetryPhoenix do
 
   @doc false
   def handle_endpoint_start(_event, _measurements, _meta, %{adapter: :bandit}), do: :ok
+
   def handle_endpoint_start(_event, _measurements, _meta, %{adapter: :cowboy2}) do
-        cowboy2_start()
+    cowboy2_start()
   end
 
   defp cowboy2_start do
@@ -163,7 +164,6 @@ defmodule OpentelemetryPhoenix do
         %{socket: %{view: live_view}} = meta,
         _handler_configuration
       ) do
-
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
       "#{inspect(live_view)}.mount",
