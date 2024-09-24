@@ -186,6 +186,8 @@ if otp_vsn >= 27 do
         adapter: :bandit,
         endpoint_prefix: [:phoenix, :bandit, :endpoint]
       )
+
+      Process.sleep(100)
     end
 
     defp setup_adapter(:cowboy, opts) do
@@ -195,6 +197,8 @@ if otp_vsn >= 27 do
         adapter: :cowboy2,
         endpoint_prefix: [:phoenix, :cowboy, :endpoint]
       )
+
+      Process.sleep(100)
     end
 
     adapter_suites =
