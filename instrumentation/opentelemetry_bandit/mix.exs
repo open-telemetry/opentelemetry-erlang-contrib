@@ -73,15 +73,8 @@ defmodule OpentelemetryBandit.MixProject do
     [
       {:nimble_options, "~> 1.1"},
       {:opentelemetry_api, "~> 1.3"},
-      {:opentelemetry_semantic_conventions,
-       github: "open-telemetry/opentelemetry-erlang",
-       branch: "sem-con-1.25",
-       sparse: "apps/opentelemetry_semantic_conventions",
-       override: true},
-      {:otel_http,
-       github: "bryannaegele/opentelemetry-erlang-contrib",
-       branch: "otel-http",
-       sparse: "utilities/otel_http"},
+      {:opentelemetry_semantic_conventions, "~> 1.27", override: true},
+      {:otel_http, "~> 0.2"},
       {:plug, ">= 1.15.0"},
       {:telemetry, "~> 1.2"},
 
