@@ -5,6 +5,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
   import ExUnit.CaptureLog
   import Phoenix.Integration.EndpointHelper
 
+  @moduletag :integration
+
   @adapters [:cowboy, :bandit]
 
   defmodule TestController do
@@ -372,7 +374,8 @@ defmodule OpentelemetryPhoenix.Integration.TracingTest do
             {HTTPAttributes.http_request_body_size(), 0},
             {HTTPAttributes.http_request_method(), :GET},
             {HTTPAttributes.http_response_status_code(), 200},
-            {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"), ["request header"]},
+            {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"),
+             ["request header"]},
             {String.to_atom("#{HTTPAttributes.http_response_header()}.content-type"),
              ["application/json; charset=utf-8"]},
             {NetworkAttributes.network_local_address(), "localhost"},
