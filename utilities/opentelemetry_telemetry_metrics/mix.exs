@@ -25,12 +25,12 @@ defmodule OtelTelemetryMetrics.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:telemetry, "~> 1.0"},
-      {:telemetry_metrics, "~> 0.6"},
-      {:opentelemetry_api, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry_api", override: true},
-      {:opentelemetry_api_experimental, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry_api_experimental", override: true},
-      {:opentelemetry, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry", override: true},
-      {:opentelemetry_experimental, path: "/home/tristan/Devel/opentelemetry-erlang/apps/opentelemetry_experimental"},
+      {:telemetry, "~> 1.3"},
+      {:telemetry_metrics, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_api_experimental, "~> 0.5"},
+      {:opentelemetry, "~> 1.4.0"},
+      {:opentelemetry_experimental, "~> 0.5"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
