@@ -54,14 +54,14 @@ defmodule OpentelemetryOban.PluginHandler do
   def handle_plugin_exception(
         _event,
         _measurements,
-        %{stacktrace: stacktrace, error: error} = metadata,
+        %{kind: :error, reason: exception, stacktrace: stacktrace} = metadata,
         _config
       ) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
     # Record exception and mark the span as errored
-    Span.record_exception(ctx, error, stacktrace)
-    Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    Span.record_exception(ctx, exception, stacktrace)
+    Span.set_status(ctx, OpenTelemetry.status(:error, Exception.message(exception)))
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
