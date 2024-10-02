@@ -36,15 +36,16 @@ defmodule OpentelemetryEcto do
   This should be called from your application's `c:Application.start/2` callback on startup,
   before starting the application's top-level supervisor.
 
-  `event_prefix` must be the prefix configured in the `Ecto.Repo` Telemetry configuration.
-  By default, it's the camel_case name of the repository module. For `MyApp.Repo`, it would
-  be `[:my_app, :repo]`.
+  `repo_or_event_prefix` must be either the name of the Ecto repo, or the prefix
+  configured in the repo's Telemetry configuration. By default, it's the
+  camelCased name of the repository module. For `MyApp.Repo`, for example, the
+  default prefix would be `[:my_app, :repo]`.
 
   For example:
 
       @impl Application
       def start(_type, _args) do
-        OpentelemetryEcto.setup([:blog, :repo])
+        OpentelemetryEcto.setup(Blog.Repo)
 
         children = [...]
         Supervisor.start_link(children, strategy: :one_for_one)
@@ -72,9 +73,10 @@ defmodule OpentelemetryEcto do
       query statements will not be recorded on spans.
 
   """
-  @spec setup(:telemetry.event_name(), [setup_option()]) :: :ok | {:error, :already_exists}
-  def setup(event_prefix, options \\ []) when is_list(options) do
-    event = event_prefix ++ [:query]
+  @spec setup(module() | :telemetry.event_name(), [setup_option()]) ::
+          :ok | {:error, :already_exists}
+  def setup(repo_or_event_prefix, options \\ []) when is_list(options) do
+    event = telemetry_prefix(repo_or_event_prefix) ++ [:query]
     :telemetry.attach({__MODULE__, event}, event, &__MODULE__.handle_event/4, options)
   end
 
@@ -239,5 +241,16 @@ defmodule OpentelemetryEcto do
 
   defp add_additional_attributes(attributes, additional_attributes) do
     Map.merge(attributes, additional_attributes)
+  end
+
+  defp telemetry_prefix(event_prefix) when is_list(event_prefix) do
+    event_prefix
+  end
+
+  defp telemetry_prefix(repo) when is_atom(repo) do
+    case Keyword.get(repo.config(), :telemetry_prefix) do
+      telemetry_prefix when is_list(telemetry_prefix) -> telemetry_prefix
+      _ -> raise ArgumentError, ":telemetry_prefix not set in #{inspect(repo)} repo config"
+    end
   end
 end
