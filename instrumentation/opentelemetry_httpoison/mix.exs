@@ -30,7 +30,7 @@ defmodule OpentelemetryHTTPoison.MixProject do
     [
       {:httpoison, "~> 1.6 or ~> 2.0"},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"}
+      {:opentelemetry_semantic_conventions, "~> 1.0"}
     ] ++ dev_deps()
   end
 
