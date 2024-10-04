@@ -401,7 +401,7 @@ defmodule OpentelemetryBanditTest do
 
       [
         event(
-          name: "exception",
+          name: :exception,
           attributes: event_attributes
         )
       ] = :otel_events.list(events)
