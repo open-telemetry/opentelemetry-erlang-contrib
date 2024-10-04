@@ -533,12 +533,10 @@ if otp_vsn >= 27 do
 
             [
               event(
-                name: event_name,
+                name: :exception,
                 attributes: event_attributes
               )
             ] = :otel_events.list(events)
-
-            assert "exception" == to_string(event_name)
 
             assert [
                      ExceptionAttributes.exception_message(),

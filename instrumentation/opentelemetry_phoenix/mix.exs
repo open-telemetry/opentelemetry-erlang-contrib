@@ -66,7 +66,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry_api, "~> 1.3"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_process_propagator, "~> 0.3"},
-      {:opentelemetry_semantic_conventions, "~> 1.27", override: true},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:otel_http, "~> 0.2"},
       {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},

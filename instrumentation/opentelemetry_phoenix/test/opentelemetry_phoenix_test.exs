@@ -6,6 +6,7 @@ defmodule OpentelemetryPhoenixTest do
   require OpenTelemetry.Span
   require Record
 
+  alias OpenTelemetry.SemConv.ExceptionAttributes
   alias PhoenixLiveViewMeta, as: LiveViewMeta
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -145,12 +146,16 @@ defmodule OpentelemetryPhoenixTest do
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
 
-    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+    assert [
+             ExceptionAttributes.exception_message(),
+             ExceptionAttributes.exception_stacktrace(),
+             ExceptionAttributes.exception_type()
+           ] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
@@ -180,12 +185,15 @@ defmodule OpentelemetryPhoenixTest do
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
 
-    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
-             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+    assert [
+             ExceptionAttributes.exception_message(),
+             ExceptionAttributes.exception_stacktrace(),
+             ExceptionAttributes.exception_type()
+           ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 end
