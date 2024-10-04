@@ -327,7 +327,7 @@ defmodule OpentelemetryReq do
     case scheme do
       nil -> 80
       "http" -> 80
-      "https" -> 8080
+      "https" -> 443
       _ -> 80
     end
   end
