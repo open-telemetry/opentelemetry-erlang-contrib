@@ -109,7 +109,7 @@ defmodule OpentelemetryReq do
   ```
 
   Request and response header attributes are opt-in and can be set with the
-  `request_header_attrs` and `response_header_attrss` options. Values should be lower-case.
+  `request_header_attrs` and `response_header_attrs` options. Values should be lower-case.
 
   ### Trace Header Propagation
 
