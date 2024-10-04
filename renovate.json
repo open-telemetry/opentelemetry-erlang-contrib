@@ -7,7 +7,7 @@
     {
       "matchDatasources": ["hex"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "addLabels": ["skip-changelog"]
+      "addLabels": ["skip-changelog", "chore"]
     }
   ]
 }

@@ -15,7 +15,7 @@ on:
           - "elli"
           - "finch"
           - "grpcbox"
-          - "http_instrumentation"
+          - "http"
           - "httpoison"
           - "nebulex"
           - "oban"
@@ -27,6 +27,18 @@ on:
           - "tesla"
           - "xandra"
         required: true
+      otp-version:
+        description: "OTP version"
+        type: string
+        default: "27.1"
+      elixir-version:
+        description: "Elixir version"
+        type: string
+        default: "1.17.3"
+      rebar3-version:
+        description: "Rebar3 version"
+        type: string
+        default: "3.24.0"
       action:
         description: "Publish release"
         required: true
@@ -47,7 +59,7 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - name: Read file
         id: set-config
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
@@ -103,7 +115,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
       - run: npm install semver
       - name: "Update Files"
         id: update-files
@@ -192,12 +204,12 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@b9c58b0450cd832ccdb3c17cc156a47065d2114f # v1.18.1
+      - uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451 # v1.18.2
         with:
           version-type: strict
-          otp-version: "25.3.2.5"
-          elixir-version: "1.14.5"
-          rebar3-version: "3.22.1"
+          otp-version: ${{ inputs.otp-version }}
+          elixir-version: ${{ inputs.elixir-version }}
+          rebar3-version: ${{ inputs.rebar3-version }}
 
       - name: "Mix Hex Publish Dry-run"
         if: ${{ needs.config.outputs.build_tool == 'mix' }}
@@ -214,13 +226,13 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 upgrade
+          rebar3 update
           rebar3 hex publish --dry-run --yes
 
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}
@@ -261,6 +273,6 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 upgrade
+          rebar3 update
           rebar3 hex publish --yes
           echo "published=true" >> $GITHUB_ENV
