@@ -56,7 +56,7 @@ defmodule OpentelemetryFinch.MixProject do
     [
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_semantic_conventions, "~> 1.0"},
       {:opentelemetry, "~> 1.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.34.0", only: [:dev], runtime: false},

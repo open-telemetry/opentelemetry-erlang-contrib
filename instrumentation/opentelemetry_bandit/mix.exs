@@ -65,7 +65,7 @@ defmodule OpentelemetryBandit.MixProject do
   defp deps do
     [
       {:opentelemetry_api, "~> 1.2"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_semantic_conventions, "~> 1.0"},
       {:opentelemetry_telemetry, "~> 1.0"},
       {:plug, ">= 1.15.0"},
       {:telemetry, "~> 1.2"},

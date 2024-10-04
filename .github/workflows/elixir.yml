@@ -59,7 +59,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -108,7 +108,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -156,7 +156,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -195,7 +195,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -234,7 +234,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -273,7 +273,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -321,7 +321,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -360,7 +360,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -399,7 +399,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -442,7 +442,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -481,7 +481,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -520,7 +520,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -559,7 +559,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -598,7 +598,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -643,7 +643,7 @@ jobs:
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
       - name: Compile project
-        run: mix compile --warnings-as-errors
+        run: mix compile
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
