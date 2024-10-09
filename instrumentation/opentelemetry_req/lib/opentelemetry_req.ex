@@ -350,7 +350,7 @@ defmodule OpentelemetryReq do
       [] ->
         ""
 
-      [user_agent] ->
+      [user_agent | _] ->
         user_agent
     end
   end
@@ -360,13 +360,13 @@ defmodule OpentelemetryReq do
       [] ->
         0
 
-      [length_str] when is_binary(length_str) ->
+      [length_str | _] when is_binary(length_str) ->
         # Req sets this as a string but should be an integer
         # https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length
         # https://opentelemetry.io/docs/specs/semconv/attributes-registry/http
         String.to_integer(length_str)
 
-      [length] ->
+      [length | _] ->
         # In case this is ever fixed
         length
     end
@@ -377,13 +377,13 @@ defmodule OpentelemetryReq do
       [] ->
         0
 
-      [length_str] when is_binary(length_str) ->
+      [length_str | _] when is_binary(length_str) ->
         # Req sets this as a string but should be an integer
         # https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length
         # https://opentelemetry.io/docs/specs/semconv/attributes-registry/http
         String.to_integer(length_str)
 
-      [length] ->
+      [length | _] ->
         # In case this is ever fixed
         length
     end
