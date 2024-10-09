@@ -60,13 +60,13 @@ defmodule OpentelemetryReq.MixProject do
     [
       {:jason, "~> 1.3"},
       {:nimble_options, "~> 1.1"},
-      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:otel_http, "~> 0.2"},
       {:req, ">= 0.3.5"},
       {:ex_doc, "~> 0.34", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.7", only: [:test]},
-      {:opentelemetry, "~> 1.0", only: :test},
+      {:opentelemetry_exporter, "~> 1.8", only: [:test]},
+      {:opentelemetry, "~> 1.5", only: :test},
       {:bypass, "~> 2.1", only: :test},
       {:plug, ">= 1.15.0", only: [:test]}
     ]
