@@ -37,11 +37,6 @@ defmodule OpentelemetryReq do
                       default: false,
                       doc: "Trace headers will be propagated"
                     ],
-                    # propagate_trace_headers_fn: [
-                    #   type: :mfa,
-                    #   default: {__MODULE__, :default_propagation_fn, []},
-                    #   doc: "Default function returns `false`. See docs for more info"
-                    # ],
                     request_header_attrs: [
                       type: {:list, :string},
                       default: [],
