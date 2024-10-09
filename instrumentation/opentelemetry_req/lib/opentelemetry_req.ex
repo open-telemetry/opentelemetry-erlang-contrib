@@ -155,10 +155,9 @@ defmodule OpentelemetryReq do
 
   @spec attach(Req.Request.t(), options()) :: Req.Request.t()
   def attach(%Req.Request{} = request, options \\ []) do
-    opts = NimbleOptions.validate!(options, @options_schema) |> Enum.into(%{})
-
     config =
-      opts
+      options
+      |> NimbleOptions.validate!(@options_schema)
       |> Enum.into(%{})
       |> Map.update!(:opt_in_attrs, fn attrs ->
         attrs
@@ -166,7 +165,7 @@ defmodule OpentelemetryReq do
         |> Keyword.keys()
       end)
       |> then(fn config ->
-        if Enum.member?(opts.opt_in_attrs, {URLAttributes.url_template(), true}) do
+        if Enum.member?(config.opt_in_attrs, URLAttributes.url_template()) do
           Map.put(config, :url_template_enabled, true)
         else
           Map.put(config, :url_template_enabled, false)
