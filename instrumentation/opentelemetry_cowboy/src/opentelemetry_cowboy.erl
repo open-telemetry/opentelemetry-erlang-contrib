@@ -59,7 +59,7 @@ to `true` if an endpoint only accepts public traffic to prevent missing root spa
 the endpoint is handled as non-public, resulting in traces being continued rather than linked. 
 
 In a mixed traffic environment, an MFA can be supplied to determine whether to
-treat a request as public. This function is executed on every request so refrain
+treat a request as public. This function is executed on every request, so refrain
 from expensive operations such as lookups to external systems. The function must
 be a predicate function of arity-2, accepting the `Req` from the request as
 the first argument and the second being any user-supplied options. Any dynamic
