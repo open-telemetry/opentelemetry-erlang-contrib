@@ -152,7 +152,7 @@ parse_method(Method) ->
         <<"PATCH">> -> ?HTTP_REQUEST_METHOD_VALUES_PATCH;
         <<"POST">> -> ?HTTP_REQUEST_METHOD_VALUES_POST;
         <<"PUT">> -> ?HTTP_REQUEST_METHOD_VALUES_PUT;
-        <<"TRACE">> -> ?HTTP_REQUEST_METHOD_VALUES_PUT;
+        <<"TRACE">> -> ?HTTP_REQUEST_METHOD_VALUES_TRACE;
         _ -> ?HTTP_REQUEST_METHOD_VALUES_OTHER
     end.
 
