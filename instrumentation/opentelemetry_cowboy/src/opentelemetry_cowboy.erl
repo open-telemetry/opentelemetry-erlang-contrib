@@ -62,7 +62,7 @@ In a mixed traffic environment, an MFA can be supplied to determine whether to
 treat a request as public. This function is executed on every request, so refrain
 from expensive operations such as lookups to external systems. The function must
 be a predicate function of arity-2, accepting the `Req` from the request as
-the first argument and the second being any user-supplied options. Any dynamic
+the first argument and user-supplied options as the second. Any dynamic
 information used in comparisons should be supplied at setup time for efficiency.
 
 Example:
