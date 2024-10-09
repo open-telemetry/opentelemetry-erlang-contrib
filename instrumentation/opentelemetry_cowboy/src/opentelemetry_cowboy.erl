@@ -100,7 +100,7 @@ Supported options:
 * `client_headers_sort_fn` - Custom client header sort fn. See `otel_http` for more info. Default: `undefined`
 * `handler_id` - Only set when running multiple instances on different endpoints. Default: `otel_cowboy`
 * `opt_in_attrs` - Use semantic conventions library to ensure compatability, e.g. `[{?HTTP_REQUEST_BODY_SIZE, true}]`. Default: `[]`
-* `public_endpoint` - Endpoint is public. Propagated traces will be added as a link.. Default: `false`
+* `public_endpoint` - Endpoint is public. Propagated traces will be added as a link. Default: `false`
 * `public_endpoint_fn` - Default function returns `false`. See docs for more info.
 * `request_headers` - List of request headers to add as attributes. (lowercase). Default: `[]`
 * `response_headers` - List of response headers to add as attributes. (lowercase). Default: `[]`
