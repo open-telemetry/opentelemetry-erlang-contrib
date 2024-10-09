@@ -69,21 +69,19 @@ defmodule OpentelemetryReq do
 
   ## Req Path Params
 
-  It is strongly encouraged to use `req_path_params` module which should be registered before this step.
+  It is strongly encouraged to use the [`put_path_params` step](https://hexdocs.pm/req/Req.Steps.html#put_path_params/1) option.
   This allows the span name to include the `{target}` portion of the span name described in the
   [HTTP Span Name guidelines](https://opentelemetry.io/docs/specs/semconv/http/http-spans/#name).
 
   > #### Requirements {: .info}
   >
-  > * `req_path_params` module must be registered before `OpentelemetryReq` step
+  > * `path_params` option should be set along with a templated path. Only `:colon` style is supported
   > * `URLAttributes.url_template()` opt-in attribute must be set to `true`
 
   ## Semantic Conventions
 
   All available required and recommended [Client HTTP Span](https://opentelemetry.io/docs/specs/semconv/http/http-spans/#http-client) semantic conventions are implemented.
   Supported opt-in and experimental attributes can be configured using the `opt_in_attrs` option.
-
-
 
   ## Options
 
