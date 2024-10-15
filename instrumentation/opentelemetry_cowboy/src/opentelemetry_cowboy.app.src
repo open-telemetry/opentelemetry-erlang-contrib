@@ -1,6 +1,6 @@
 {application, opentelemetry_cowboy,
  [{description, "OpenTelemetry Cowboy Instrumentation"},
-  {vsn, "0.3.0"},
+  {vsn, "1.0.0-rc.1"},
   {registered, []},
   {applications,
    [kernel,
