@@ -1,5 +1,16 @@
 # Changelog
 
+# v1.0.0
+
+NOTE: This release includes numerous breaking changes with implementation
+of Semantic Conventions introduced in v1.20. The full list of changes
+are enumerated in the [HTTP Stability Migration Guide](https://opentelemetry.io/docs/specs/semconv/non-normative/http-migration/).
+
+### Changed
+
+* Semantic Conventions v1.26.0 compliance
+* Added public endpoint settings for determining whether to continue a trace or create a link
+
 ## v0.3.0
 
 ### Changed
