@@ -314,12 +314,6 @@ defmodule OpentelemetryBandit do
 
       {:http, version} ->
         Map.put(attrs, NetworkAttributes.network_protocol_version(), version)
-
-      {protocol, version} ->
-        Map.merge(attrs, %{
-          NetworkAttributes.network_protocol_name() => protocol,
-          NetworkAttributes.network_protocol_version() => version
-        })
     end
   end
 
