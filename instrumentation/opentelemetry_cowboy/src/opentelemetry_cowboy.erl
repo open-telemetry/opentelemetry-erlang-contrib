@@ -124,11 +124,7 @@ setup(Opts) when is_list(Opts) ->
     setup(maps:from_list(Opts));
 setup(Opts) ->
     InitialConfig = maps:merge(default_opts(), Opts),
-    OptInAttrs = lists:filtermap(fun({Name, OptedIn}) ->
-        case OptedIn of
-            true -> {true, Name};
-            false -> false end
-        end, maps:get(opt_in_attrs, InitialConfig)),
+    OptInAttrs = maps:get(opt_in_attrs, InitialConfig),
     ReversedClientAddressHeaders = lists:reverse(maps:get(client_address_headers, InitialConfig)),
     ReversedSchemeHeaders = lists:reverse(maps:get(scheme_headers, InitialConfig)),
     FinalOpts = maps:merge(InitialConfig, #{
