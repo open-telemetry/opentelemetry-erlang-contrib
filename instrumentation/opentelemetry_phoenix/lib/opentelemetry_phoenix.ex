@@ -53,7 +53,6 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  # alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
   alias OpenTelemetry.Tracer
