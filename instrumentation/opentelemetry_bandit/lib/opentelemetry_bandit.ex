@@ -128,8 +128,14 @@ defmodule OpentelemetryBandit do
   OpentelemetryBandit.setup(opt_in_attrs: opt_ins)
   ```
 
+  #### Request and Response Headers as Opt-in Attributes
+
   Request and response header attributes are opt-in and can be set with the
   `request_headers` and `response_headers` options. Values should be lower-case.
+
+  ```
+  OpentelemetryBandit.setup(request_headers: ["x-customer-id"])
+  ```
 
   ### Public Endpoint
 
