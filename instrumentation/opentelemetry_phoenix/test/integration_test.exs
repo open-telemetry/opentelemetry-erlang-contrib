@@ -357,12 +357,12 @@ if otp_vsn >= 27 do
 
             setup_adapter(unquote(adapter),
               opt_in_attrs: [
-                {ClientAttributes.client_port(), true},
-                {HTTPAttributes.http_request_body_size(), true},
-                {HTTPAttributes.http_response_body_size(), true},
-                {NetworkAttributes.network_local_address(), true},
-                {NetworkAttributes.network_local_port(), true},
-                {NetworkAttributes.network_transport(), true}
+                ClientAttributes.client_port(),
+                HTTPAttributes.http_request_body_size(),
+                HTTPAttributes.http_response_body_size(),
+                NetworkAttributes.network_local_address(),
+                NetworkAttributes.network_local_port(),
+                NetworkAttributes.network_transport()
               ],
               request_headers: ["test-header"],
               response_headers: ["content-type"]
@@ -387,7 +387,8 @@ if otp_vsn >= 27 do
               {HTTPAttributes.http_request_body_size(), 0},
               {HTTPAttributes.http_request_method(), :GET},
               {HTTPAttributes.http_response_status_code(), 200},
-              {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"), ["request header"]},
+              {String.to_atom("#{HTTPAttributes.http_request_header()}.test-header"),
+               ["request header"]},
               {String.to_atom("#{HTTPAttributes.http_response_header()}.content-type"),
                ["application/json; charset=utf-8"]},
               {NetworkAttributes.network_local_address(), "localhost"},

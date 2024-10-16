@@ -50,7 +50,8 @@ defmodule OpentelemetryPhoenix.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" =>
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -63,7 +64,7 @@ defmodule OpentelemetryPhoenix.MixProject do
   defp deps do
     [
       {:nimble_options, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
@@ -71,18 +72,10 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.7", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
-      {:opentelemetry_bandit,
-       github: "bryannaegele/opentelemetry-erlang-contrib",
-       branch: "bandit-instrumentation",
-       sparse: "instrumentation/opentelemetry_bandit",
-       only: [:dev, :test]},
-      {:opentelemetry_cowboy,
-       github: "bryannaegele/opentelemetry-erlang-contrib",
-       branch: "cowboy-1.25-semconv",
-       sparse: "instrumentation/opentelemetry_cowboy",
-       only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
+      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:opentelemetry_bandit, "~> 0.2.0-rc.1", only: [:dev, :test]},
+      {:opentelemetry_cowboy, "~> 1.0.0-rc.1", only: [:dev, :test]},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:phoenix, "~> 1.7", only: [:dev, :test]},
       {:phoenix_html, "~> 4.1", only: [:dev, :test]},
