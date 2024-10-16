@@ -184,22 +184,22 @@ defmodule OpentelemetryBandit do
   end
 
   @doc false
-  def handle_request([:bandit, :request, :start] = event, measurements, meta, config) do
-    handle_request_start(event, measurements, meta, config)
+  def handle_request([:bandit, :request, :start], _measurements, meta, config) do
+    handle_request_start(meta, config)
   end
 
   @doc false
-  def handle_request([:bandit, :request, :stop] = event, measurements, meta, config) do
-    handle_request_stop(event, measurements, meta, config)
+  def handle_request([:bandit, :request, :stop], measurements, meta, config) do
+    handle_request_stop(measurements, meta, config)
   end
 
   @doc false
-  def handle_request([:bandit, :request, :exception] = event, measurements, meta, config) do
-    handle_request_exception(event, measurements, meta, config)
+  def handle_request([:bandit, :request, :exception], _measurements, meta, config) do
+    handle_request_exception(meta, config)
   end
 
   @doc false
-  def handle_request_start(_event, _measurements, %{conn: conn}, config) do
+  def handle_request_start(%{conn: conn}, config) do
     peer_data = Plug.Conn.get_peer_data(conn)
     request_method = parse_method(conn.method)
     client_address = extract_client_address(conn, config)
@@ -461,7 +461,7 @@ defmodule OpentelemetryBandit do
   end
 
   @doc false
-  def handle_request_stop(_event, _measurements, %{error: error_message}, _config) do
+  def handle_request_stop(_measurements, %{error: error_message}, _config) do
     Tracer.set_status(OpenTelemetry.status(:error, ""))
     Tracer.set_attribute(ErrorAttributes.error_type(), error_message)
     Tracer.end_span()
@@ -469,7 +469,7 @@ defmodule OpentelemetryBandit do
   end
 
   @doc false
-  def handle_request_stop(_event, measurements, %{conn: conn} = _meta, config) do
+  def handle_request_stop(measurements, %{conn: conn}, config) do
     opt_in =
       %{
         HTTPAttributes.http_request_body_size() => Map.get(measurements, :req_body_bytes, 0),
@@ -501,7 +501,7 @@ defmodule OpentelemetryBandit do
   end
 
   @doc false
-  def handle_request_exception(_event, _measurements, meta, config) do
+  def handle_request_exception(meta, config) do
     Tracer.set_status(OpenTelemetry.status(:error, ""))
 
     Tracer.record_exception(meta.exception, meta.stacktrace)
