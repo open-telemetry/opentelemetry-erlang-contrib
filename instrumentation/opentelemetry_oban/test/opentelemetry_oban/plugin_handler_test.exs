@@ -71,6 +71,14 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{plugin: Elixir.Oban.Plugins.Stager}
     )
 
+    exception = %UndefinedFunctionError{
+      arity: 0,
+      function: :error,
+      message: nil,
+      module: Some,
+      reason: nil
+    }
+
     :telemetry.execute(
       [:oban, :plugin, :exception],
       %{duration: 444},
@@ -80,17 +88,11 @@ defmodule OpentelemetryOban.PluginHandlerTest do
         stacktrace: [
           {Some, :error, [], []}
         ],
-        error: %UndefinedFunctionError{
-          arity: 0,
-          function: :error,
-          message: nil,
-          module: Some,
-          reason: nil
-        }
+        reason: exception
       }
     )
 
-    expected_status = OpenTelemetry.status(:error, "")
+    expected_status = OpenTelemetry.status(:error, Exception.message(exception))
 
     assert_receive {:span,
                     span(

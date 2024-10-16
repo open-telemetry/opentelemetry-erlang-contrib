@@ -26,4 +26,4 @@ erl_crash.dump
 /tmp/
 .DS_Store
 
-priv
+/priv/plts/*

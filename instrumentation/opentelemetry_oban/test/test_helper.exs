@@ -1,4 +1,4 @@
-ExUnit.start()
+ExUnit.start(capture_log: true)
 
 TestRepo.start_link(
   database: "opentelemetry_oban_test",
