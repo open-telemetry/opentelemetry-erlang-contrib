@@ -349,10 +349,6 @@ defmodule OpentelemetryBandit do
     case transport.version do
       :"HTTP/1.0" -> {:http, :"1.0"}
       :"HTTP/1.1" -> {:http, :"1.1"}
-      :"HTTP/2.0" -> {:http, :"2"}
-      :"HTTP/2" -> {:http, :"2"}
-      :SPDY -> {:spdy, :"2"}
-      :QUIC -> {:quic, :"3"}
       nil -> {:error, "Invalid protocol"}
     end
   end
