@@ -50,8 +50,7 @@ defmodule OpentelemetryPhoenix.MixProject do
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_phoenix",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" =>
-          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" => "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
