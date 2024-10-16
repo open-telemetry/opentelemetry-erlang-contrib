@@ -153,12 +153,12 @@ public_endpoint_true_fn(_Req, _Opts) ->
 with_all_optins(_Config) ->
     Opts = #{
       opt_in_attrs => [
-        {?CLIENT_PORT, true},
-        {?HTTP_REQUEST_BODY_SIZE, true},
-        {?HTTP_RESPONSE_BODY_SIZE, true},
-        {?NETWORK_LOCAL_ADDRESS, true},
-        {?NETWORK_LOCAL_PORT, true},
-        {?NETWORK_TRANSPORT, true}
+        ?CLIENT_PORT,
+        ?HTTP_REQUEST_BODY_SIZE,
+        ?HTTP_RESPONSE_BODY_SIZE,
+        ?NETWORK_LOCAL_ADDRESS,
+        ?NETWORK_LOCAL_PORT,
+        ?NETWORK_TRANSPORT
       ],
       request_headers => [<<"test-header">>],
       response_headers => [<<"content-type">>]
