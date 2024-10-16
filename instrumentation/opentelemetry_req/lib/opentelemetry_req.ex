@@ -364,10 +364,6 @@ defmodule OpentelemetryReq do
         # https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length
         # https://opentelemetry.io/docs/specs/semconv/attributes-registry/http
         String.to_integer(length_str)
-
-      [length | _] ->
-        # In case this is ever fixed
-        length
     end
   end
 
@@ -381,10 +377,6 @@ defmodule OpentelemetryReq do
         # https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length
         # https://opentelemetry.io/docs/specs/semconv/attributes-registry/http
         String.to_integer(length_str)
-
-      [length | _] ->
-        # In case this is ever fixed
-        length
     end
   end
 

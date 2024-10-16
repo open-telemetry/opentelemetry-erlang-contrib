@@ -68,7 +68,8 @@ defmodule OpentelemetryReq.MixProject do
       {:opentelemetry_exporter, "~> 1.8", only: [:test]},
       {:opentelemetry, "~> 1.5", only: :test},
       {:bypass, "~> 2.1", only: :test},
-      {:plug, ">= 1.15.0", only: [:test]}
+      {:plug, ">= 1.15.0", only: [:test]},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
 end
