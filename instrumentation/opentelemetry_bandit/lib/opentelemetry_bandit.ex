@@ -19,15 +19,6 @@ defmodule OpentelemetryBandit do
   alias OpenTelemetry.Tracer
   require OpenTelemetry.Tracer
 
-  opt_ins_schema = [
-    {ClientAttributes.client_port(), [type: :boolean]},
-    {HTTPAttributes.http_request_body_size(), [type: :boolean]},
-    {HTTPAttributes.http_response_body_size(), [type: :boolean]},
-    {NetworkAttributes.network_local_address(), [type: :boolean]},
-    {NetworkAttributes.network_local_port(), [type: :boolean]},
-    {NetworkAttributes.network_transport(), [type: :boolean]}
-  ]
-
   opt_ins = [
     ClientAttributes.client_port(),
     HTTPAttributes.http_request_body_size(),
