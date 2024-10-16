@@ -48,15 +48,21 @@ OptInAttrs = [{?HTTP_REQUEST_BODY_SIZE, true}]`
 opentelemetry_cowboy:setup(#{opt_in_attrs => OptInAttrs)
 ```
 
+#### Request and Response Headers as Opt-in Attributes
+
 Request and response header attributes are opt-in and can be set with the
 `request_headers` and `response_headers` options. Values should be lower-case.
+
+```
+opentelemetry_cowboy:setup(#{request_headers => ["x-customer-id"]})
+```
 
 ### Public Endpoint
 
 Setting an endpoint as public will result in any propagated trace to be added as a link,
 rather than a continuation of an existing trace. The `public_endpoint` option should be set
 to `true` if an endpoint only accepts public traffic to prevent missing root spans. By default,
-the endpoint is handled as non-public, resulting in traces being continued rather than linked. 
+the endpoint is handled as non-public, resulting in traces being continued rather than linked.
 
 In a mixed traffic environment, an MFA can be supplied to determine whether to
 treat a request as public. This function is executed on every request, so refrain
