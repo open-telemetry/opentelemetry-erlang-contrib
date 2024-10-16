@@ -142,10 +142,10 @@ defmodule OpentelemetryBandit do
 
   ### Public Endpoint
 
-  By default, the endpoint is handled as non-public. Setting an endpoint as
-  public will result in any propagated trace to be added as a link, not a
-  continuation of an existing trace. The `public_endpoint` option should be set
-  to `true` if an endpoint only accepts public traffic to prevent missing root spans.
+  Setting an endpoint as public will result in any propagated trace to be added as a link,
+  rather than a continuation of an existing trace. The `public_endpoint` option should be set
+  to `true` if an endpoint only accepts public traffic to prevent missing root spans. By default,
+  the endpoint is handled as non-public, resulting in traces being continued rather than linked. 
 
   In a mixed traffic environment, an MFA can be supplied to determine whether to
   treat a request as public. This function is executed on every request so refrain
