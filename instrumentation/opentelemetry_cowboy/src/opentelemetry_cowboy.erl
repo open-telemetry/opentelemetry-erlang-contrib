@@ -48,15 +48,21 @@ OptInAttrs = [{?HTTP_REQUEST_BODY_SIZE, true}]`
 opentelemetry_cowboy:setup(#{opt_in_attrs => OptInAttrs)
 ```
 
+#### Request and Response Headers as Opt-in Attributes
+
 Request and response header attributes are opt-in and can be set with the
 `request_headers` and `response_headers` options. Values should be lower-case.
+
+```
+opentelemetry_cowboy:setup(#{request_headers => ["x-customer-id"]})
+```
 
 ### Public Endpoint
 
 Setting an endpoint as public will result in any propagated trace to be added as a link,
 rather than a continuation of an existing trace. The `public_endpoint` option should be set
 to `true` if an endpoint only accepts public traffic to prevent missing root spans. By default,
-the endpoint is handled as non-public, resulting in traces being continued rather than linked. 
+the endpoint is handled as non-public, resulting in traces being continued rather than linked.
 
 In a mixed traffic environment, an MFA can be supplied to determine whether to
 treat a request as public. This function is executed on every request, so refrain
@@ -118,7 +124,7 @@ setup(Opts) when is_list(Opts) ->
     setup(maps:from_list(Opts));
 setup(Opts) ->
     InitialConfig = maps:merge(default_opts(), Opts),
-    OptInAttrs = lists:filtermap(fun({Name, OptedIn}) -> 
+    OptInAttrs = lists:filtermap(fun({Name, OptedIn}) ->
         case OptedIn of
             true -> {true, Name};
             false -> false end
@@ -162,7 +168,7 @@ extract_headers(Headers, Keys) ->
 set_req_header_attrs(Attrs, _ReqHeaders, #{request_headers := []}) -> Attrs;
 set_req_header_attrs(Attrs, ReqHeaders, #{request_headers := HeadersAttrs}) ->
     maps:merge(Attrs, otel_http:extract_headers_attributes(request, ReqHeaders, HeadersAttrs)).
-  
+
 set_resp_header_attrs(Attrs, _RespHeaders, #{response_headers := []}) -> Attrs;
 set_resp_header_attrs(Attrs, RespHeaders, #{response_headers := HeadersAttrs}) ->
     maps:merge(Attrs, otel_http:extract_headers_attributes(response, RespHeaders, HeadersAttrs)).
@@ -251,7 +257,7 @@ ip_to_binary(IP) ->
 is_public_endpoint(_Req, #{public_endpoint := true}) -> true;
 is_public_endpoint(Req, #{public_endpoint_fn := {M, F, A}}) ->
     apply(M, F, [Req, A]).
-  
+
 default_public_endpoint_fn(_, _) -> false.
 
 opt_in_attrs() ->
@@ -297,8 +303,8 @@ handle_event([cowboy, request, start], _Measurements, #{req := Req} = Meta, Conf
     Attrs4 = set_server_address_attrs(Attrs3, ReqHeaders, Config),
     Attrs5 = set_req_header_attrs(Attrs4, ReqHeaders, Config),
     AttrsFinal = maps:merge(Attrs5, maps:filter(fun(K,_V) -> lists:member(K, OptedInAttrs) end, OptInAttrs)),
-    
-    SpanName = 
+
+    SpanName =
         case Method of
             ?HTTP_REQUEST_METHOD_VALUES_OTHER ->
                 'HTTP';
@@ -398,7 +404,7 @@ handle_event([cowboy, request, exception], Measurements, Meta, Config) ->
                   ?HTTP_RESPONSE_BODY_SIZE => RespBodyLength
                  },
     StatusCode = transform_status_to_code(Status),
-    ErrorType = 
+    ErrorType =
         case Reason of
             R when is_atom(R) ->
                 otel_span:record_exception(Ctx, Kind, Reason, Stacktrace, []),
@@ -419,7 +425,7 @@ handle_event([cowboy, request, exception], Measurements, Meta, Config) ->
     otel_span:set_attributes(Ctx, FinalAttrs),
 
     otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, <<"">>)),
-    
+
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear();
 
@@ -435,7 +441,7 @@ handle_event([cowboy, request, early_error], Measurements, Meta, Config) ->
       resp_headers := RespHeaders,
       resp_status := Status
      } = Meta,
-     
+
     OptInAttrs = #{?HTTP_RESPONSE_BODY_SIZE => RespBodyLength},
 
     StatusCode = transform_status_to_code(Status),
@@ -478,7 +484,7 @@ set_network_protocol_attrs(Attrs, ReqVersion) ->
                 ?NETWORK_PROTOCOL_VERSION => Version
             })
     end.
-  
+
 extract_network_protocol(Version) ->
     case Version of
         'HTTP/1.0' -> {http, '1.0'};
