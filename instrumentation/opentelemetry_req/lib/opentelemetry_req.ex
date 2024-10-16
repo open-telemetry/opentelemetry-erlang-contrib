@@ -14,22 +14,24 @@ defmodule OpentelemetryReq do
   require Tracer
   require Logger
 
-  opt_ins_schema = [
-    {HTTPAttributes.http_request_body_size(), [type: :boolean]},
-    {HTTPAttributes.http_response_body_size(), [type: :boolean]},
-    {NetworkAttributes.network_transport(), [type: :boolean]},
-    {URLAttributes.url_scheme(), [type: :boolean]},
-    {URLAttributes.url_template(), [type: :boolean]},
-    {UserAgentAttributes.user_agent_original(), [type: :boolean]}
+  opt_ins = [
+    HTTPAttributes.http_request_body_size(),
+    HTTPAttributes.http_response_body_size(),
+    NetworkAttributes.network_transport(),
+    URLAttributes.url_scheme(),
+    URLAttributes.url_template(),
+    UserAgentAttributes.user_agent_original()
   ]
 
   @options_schema NimbleOptions.new!(
                     opt_in_attrs: [
-                      type: :keyword_list,
-                      keys: opt_ins_schema,
+                      type: {:list, {:in, opt_ins}},
                       default: [],
+                      type_spec: quote(do: opt_in_attrs()),
                       doc: """
                       Opt-in and experimental attributes. Use semantic conventions library to ensure compatability, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`
+
+                      #{Enum.map_join(opt_ins, "\n\n", &"  * `#{inspect(&1)}`")}
                       """
                     ],
                     propagate_trace_headers: [
@@ -54,7 +56,17 @@ defmodule OpentelemetryReq do
                     ]
                   )
 
-  @type opt_in_attrs() :: [unquote(NimbleOptions.option_typespec(opt_ins_schema))]
+  @typedoc "Use semantic conventions library to ensure compatability, e.g. `HTTPAttributes.http_request_body_size()`"
+  @type opt_in_attr() ::
+          unquote(HTTPAttributes.http_request_body_size())
+          | unquote(HTTPAttributes.http_response_body_size())
+          | unquote(NetworkAttributes.network_transport())
+          | unquote(URLAttributes.url_scheme())
+          | unquote(URLAttributes.url_template())
+          | unquote(UserAgentAttributes.user_agent_original())
+
+  @type opt_in_attrs() :: [opt_in_attr()]
+
   @type options() :: [unquote(NimbleOptions.option_typespec(@options_schema))]
 
   @moduledoc """
@@ -91,7 +103,7 @@ defmodule OpentelemetryReq do
   client =
     Req.new()
     |> OpentelemetryReq.attach(
-      opt_in_attrs: [{SemConv.URLAttributes.url_template(), true}]
+      opt_in_attrs: [SemConv.URLAttributes.url_template()]
     )
 
   client
@@ -152,11 +164,6 @@ defmodule OpentelemetryReq do
       options
       |> NimbleOptions.validate!(@options_schema)
       |> Enum.into(%{})
-      |> Map.update!(:opt_in_attrs, fn attrs ->
-        attrs
-        |> Enum.filter(&elem(&1, 1))
-        |> Keyword.keys()
-      end)
       |> then(fn config ->
         if Enum.member?(config.opt_in_attrs, URLAttributes.url_template()) do
           Map.put(config, :url_template_enabled, true)

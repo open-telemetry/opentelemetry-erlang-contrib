@@ -84,12 +84,12 @@ defmodule OpentelemetryReqTest do
     client =
       client(%{
         opt_in_attrs: [
-          {HTTPAttributes.http_request_body_size(), true},
-          {HTTPAttributes.http_response_body_size(), true},
-          {NetworkAttributes.network_transport(), true},
-          {URLAttributes.url_scheme(), true},
-          {URLAttributes.url_template(), true},
-          {UserAgentAttributes.user_agent_original(), true}
+          HTTPAttributes.http_request_body_size(),
+          HTTPAttributes.http_response_body_size(),
+          NetworkAttributes.network_transport(),
+          URLAttributes.url_scheme(),
+          URLAttributes.url_template(),
+          UserAgentAttributes.user_agent_original()
         ]
       })
 
@@ -247,7 +247,7 @@ defmodule OpentelemetryReqTest do
     end
 
     test "with path params" do
-      Req.get!(client(opt_in_attrs: [{URLAttributes.url_template(), true}]),
+      Req.get!(client(opt_in_attrs: [URLAttributes.url_template()]),
         plug: &ok_resp/1,
         url: "http://localtest:8080/users/:id",
         path_params: [id: 3],
