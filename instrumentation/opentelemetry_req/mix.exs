@@ -1,14 +1,14 @@
 defmodule OpentelemetryReq.MixProject do
   use Mix.Project
 
-  @version "1.0.0-beta.1"
+  @version "1.0.0-rc.1"
 
   def project do
     [
       app: :opentelemetry_req,
       description: description(),
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Opentelemetry Req",
