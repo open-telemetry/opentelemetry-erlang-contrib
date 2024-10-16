@@ -41,15 +41,19 @@ defmodule OpentelemetryBanditTest do
       catch_error(
         OpentelemetryBandit.setup(
           opt_in_attrs: [
-            {ClientAttributes.client_port(), true},
-            {:unsupported, true},
-            {HTTPAttributes.http_request_body_size(), false}
+            ClientAttributes.client_port(),
+            :unsupported,
+            HTTPAttributes.http_request_body_size()
           ]
         )
       )
 
     assert is_struct(err, NimbleOptions.ValidationError)
-    assert String.starts_with?(err.message, "unknown options [:unsupported]")
+
+    assert String.starts_with?(
+             err.message,
+             "invalid list in :opt_in_attrs option: invalid value for list element at position"
+           )
   end
 
   describe "GET" do
@@ -185,12 +189,12 @@ defmodule OpentelemetryBanditTest do
     test "with all opt-ins" do
       OpentelemetryBandit.setup(
         opt_in_attrs: [
-          {ClientAttributes.client_port(), true},
-          {HTTPAttributes.http_request_body_size(), true},
-          {HTTPAttributes.http_response_body_size(), true},
-          {NetworkAttributes.network_local_address(), true},
-          {NetworkAttributes.network_local_port(), true},
-          {NetworkAttributes.network_transport(), true}
+          ClientAttributes.client_port(),
+          HTTPAttributes.http_request_body_size(),
+          HTTPAttributes.http_response_body_size(),
+          NetworkAttributes.network_local_address(),
+          NetworkAttributes.network_local_port(),
+          NetworkAttributes.network_transport()
         ],
         request_headers: ["test-header"],
         response_headers: ["content-type"]

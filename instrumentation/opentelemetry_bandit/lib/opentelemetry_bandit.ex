@@ -28,13 +28,25 @@ defmodule OpentelemetryBandit do
     {NetworkAttributes.network_transport(), [type: :boolean]}
   ]
 
+  opt_ins = [
+    ClientAttributes.client_port(),
+    HTTPAttributes.http_request_body_size(),
+    HTTPAttributes.http_response_body_size(),
+    NetworkAttributes.network_local_address(),
+    NetworkAttributes.network_local_port(),
+    NetworkAttributes.network_transport()
+  ]
+
   @options_schema NimbleOptions.new!(
                     opt_in_attrs: [
-                      type: :keyword_list,
-                      keys: opt_ins_schema,
+                      type: {:list, {:in, opt_ins}},
                       default: [],
-                      doc:
-                        "Use semantic conventions library to ensure compatability, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`"
+                      type_spec: quote(do: opt_in_attrs()),
+                      doc: """
+                      Use semantic conventions library to ensure compatability, e.g. `[HTTPAttributes.http_request_body_size()]`
+
+                      #{Enum.map_join(opt_ins, "\n\n", &"  * `#{inspect(&1)}`")}
+                      """
                     ],
                     handler_id: [
                       type: :atom,
@@ -90,6 +102,17 @@ defmodule OpentelemetryBandit do
                     ]
                   )
 
+  @typedoc "Use semantic conventions library to ensure compatability, e.g. `HTTPAttributes.http_request_body_size()`"
+  @type opt_in_attr() ::
+          unquote(ClientAttributes.client_port())
+          | unquote(HTTPAttributes.http_request_body_size())
+          | unquote(HTTPAttributes.http_response_body_size())
+          | unquote(NetworkAttributes.network_local_address())
+          | unquote(NetworkAttributes.network_local_port())
+          | unquote(NetworkAttributes.network_transport())
+
+  @type opt_in_attrs() :: [opt_in_attr()]
+
   @type options() :: [unquote(NimbleOptions.option_typespec(@options_schema))]
 
   @moduledoc """
@@ -110,7 +133,7 @@ defmodule OpentelemetryBandit do
 
   Example:
   ```
-  opt_ins = [{SemConv.HTTPAttributes.http_request_body_size(), true}]`
+  opt_ins = [SemConv.HTTPAttributes.http_request_body_size()]`
   OpentelemetryBandit.setup(opt_in_attrs: opt_ins)
   ```
 
@@ -150,16 +173,10 @@ defmodule OpentelemetryBandit do
   """
   @spec setup(any) :: :ok
   def setup(opts \\ []) do
-    opts = NimbleOptions.validate!(opts, @options_schema)
-
     config =
       opts
+      |> NimbleOptions.validate!(@options_schema)
       |> Enum.into(%{})
-      |> Map.update!(:opt_in_attrs, fn attrs ->
-        attrs
-        |> Enum.filter(&elem(&1, 1))
-        |> Keyword.keys()
-      end)
       |> Map.update!(:scheme_headers, &Enum.reverse/1)
       |> Map.update!(:client_address_headers, &Enum.reverse/1)
 
