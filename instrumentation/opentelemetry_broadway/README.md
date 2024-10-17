@@ -25,7 +25,7 @@ This library is available on Hex:
 ```elixir
 defp deps do
   [
-    {:opentelemetry_broadway, "~> 0.1"}
+    {:opentelemetry_broadway, "~> 0.3"}
   ]
 end
 ```

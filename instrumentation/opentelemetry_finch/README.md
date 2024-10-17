@@ -11,7 +11,7 @@ dependencies in `mix.exs`:
 ```elixir
   def deps do
     [
-      {:opentelemetry_finch, "~> 0.1"}
+      {:opentelemetry_finch, "~> 0.3"}
     ]
   end
 ```
@@ -26,7 +26,7 @@ In your application start:
   end
 ```
 
-*Since this instrumentation is based on telemetry, it is not possible to automatically propagate the context in the http headers. If you need to perform context propagation, you should opt for manual instrumentation. Something like this:*
+_Since this instrumentation is based on telemetry, it is not possible to automatically propagate the context in the http headers. If you need to perform context propagation, you should opt for manual instrumentation. Something like this:_
 
 ```elixir
     require OpenTelemetry.Tracer, as: Tracer
@@ -57,8 +57,6 @@ In your application start:
 |                            |              |       |
 | v0.1.0                     | v1.0.0       |       |
 
-
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/opentelemetry_finch](https://hexdocs.pm/opentelemetry_finch).
-

@@ -1,14 +1,14 @@
 defmodule OpentelemetryEcto.MixProject do
   use Mix.Project
 
-  @version "1.2.0"
+  @version "1.3.0"
 
   def project do
     [
       app: :opentelemetry_ecto,
       description: description(),
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
@@ -56,10 +56,10 @@ defmodule OpentelemetryEcto.MixProject do
 
   defp deps do
     [
-      {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
+      {:telemetry, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
       {:postgrex, ">= 0.15.0", only: [:dev, :test]},

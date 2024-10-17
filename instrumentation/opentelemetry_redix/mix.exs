@@ -1,14 +1,14 @@
 defmodule OpentelemetryRedix.MixProject do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.2.0"
 
   def project do
     [
       app: :opentelemetry_redix,
       description: description(),
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -55,15 +55,15 @@ defmodule OpentelemetryRedix.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.34.0", only: [:dev], runtime: false},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_api, "~> 1.0"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
+      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_process_propagator, "~> 0.3"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
+      {:opentelemetry_semantic_conventions, "~> 0.2 or ~> 1.27"},
+      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
       {:redix, "~> 1.0", only: [:dev, :test]},
-      {:telemetry, "~> 0.4 or ~> 1.0"}
+      {:telemetry, "~> 1.0"}
     ]
   end
 end
