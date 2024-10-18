@@ -51,6 +51,110 @@ defmodule OpentelemetryFinchTest do
            } = :otel_attributes.map(attributes)
   end
 
+  test "records span on streamed requests where the acc is a 3 elements tuple", %{
+    bypass: bypass,
+    test: finch_name
+  } do
+    Bypass.expect_once(bypass, "GET", "/", fn conn ->
+      Plug.Conn.send_resp(conn, 200, "OK")
+    end)
+
+    OpentelemetryFinch.setup()
+
+    _conn = start_supervised!({Finch, name: finch_name})
+
+    acc = {nil, [], ""}
+
+    fun = fn
+      {:status, value}, {_, headers, body} -> {:cont, {value, headers, body}}
+      {:headers, value}, {status, headers, body} -> {:cont, {status, headers ++ value, body}}
+      {:data, value}, {status, headers, body} -> {:cont, {status, headers, body <> value}}
+    end
+
+    assert {:ok, {200, [_ | _], "OK"}} =
+             Finch.build(:get, endpoint_url(bypass.port))
+             |> Finch.stream_while(finch_name, acc, fun)
+
+    assert_receive {:span,
+                    span(
+                      name: "HTTP GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    assert %{
+             "net.peer.name": "localhost",
+             "http.method": "GET",
+             "http.target": "/",
+             "http.scheme": :http,
+             "http.status_code": 200
+           } = :otel_attributes.map(attributes)
+  end
+
+  test "records span on streamed requests where the acc is a 2 elements tuple", %{
+    bypass: bypass,
+    test: finch_name
+  } do
+    Bypass.expect_once(bypass, "GET", "/", fn conn ->
+      Plug.Conn.send_resp(conn, 200, "OK")
+    end)
+
+    OpentelemetryFinch.setup()
+
+    _conn = start_supervised!({Finch, name: finch_name})
+
+    acc = {nil, %{body: "", headers: %{}, trailers: [], status: 200}}
+
+    fun = fn
+      {:status, status}, {req, resp} ->
+        {:cont, {req, %{resp | status: status}}}
+
+      {:headers, fields}, {req, resp} ->
+        fields = finch_fields_to_map(fields)
+        resp = update_in(resp.headers, &Map.merge(&1, fields))
+        {:cont, {req, resp}}
+
+      {:data, data}, acc ->
+        {:cont, acc}
+
+      {:trailers, fields}, {req, resp} ->
+        fields = finch_fields_to_map(fields)
+        resp = update_in(resp.trailers, &Map.merge(&1, fields))
+        {:cont, {req, resp}}
+    end
+
+    assert {:ok,
+            {_request,
+             %{
+               status: 200,
+               body: "",
+               headers: %{
+                 "cache-control" => _,
+                 "content-length" => ["2"],
+                 "date" => [_],
+                 "server" => _
+               },
+               trailers: []
+             }}} =
+             Finch.build(:get, endpoint_url(bypass.port))
+             |> Finch.stream_while(finch_name, acc, fun)
+
+    assert_receive {:span,
+                    span(
+                      name: "HTTP GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    assert %{
+             "net.peer.name": "localhost",
+             "http.method": "GET",
+             "http.target": "/",
+             "http.scheme": :http,
+             "http.status_code": 200
+           } = :otel_attributes.map(attributes)
+  end
+
   test "records span on requests failed", %{bypass: _} do
     OpentelemetryFinch.setup()
 
@@ -76,4 +180,10 @@ defmodule OpentelemetryFinchTest do
   end
 
   defp endpoint_url(port), do: "http://localhost:#{port}/"
+
+  defp finch_fields_to_map(fields) do
+    Enum.reduce(fields, %{}, fn {name, value}, acc ->
+      Map.update(acc, name, [value], &(&1 ++ [value]))
+    end)
+  end
 end
