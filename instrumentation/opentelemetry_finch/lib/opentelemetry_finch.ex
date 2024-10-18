@@ -42,12 +42,6 @@ defmodule OpentelemetryFinch do
     end_time = :opentelemetry.timestamp()
     start_time = end_time - duration
 
-    # status =
-    #   case meta.result do
-    #     {:ok, response} -> response.status
-    #     _ -> 0
-    #   end
-
     status =
       case meta.result do
         {:ok, response} when is_map(response) ->
