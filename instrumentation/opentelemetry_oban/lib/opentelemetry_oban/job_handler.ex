@@ -71,7 +71,7 @@ defmodule OpentelemetryOban.JobHandler do
       :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
     }
 
-    span_name = "#{worker} process"
+    span_name = "#{worker}.process"
 
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       kind: :consumer,
