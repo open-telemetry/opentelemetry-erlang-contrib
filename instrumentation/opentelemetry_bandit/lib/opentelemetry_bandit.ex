@@ -240,7 +240,7 @@ defmodule OpentelemetryBandit do
     name =
       if request_method == HTTPAttributes.http_request_method_values().other,
         do: :HTTP,
-        else: request_method
+        else: String.trim("#{request_method} #{conn.request_path}")
 
     if public_endpoint?(conn, config) do
       propagated_ctx =
