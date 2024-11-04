@@ -15,7 +15,10 @@ fetch_parent_ctx(MaxDepth) ->
 
 -spec fetch_parent_ctx(non_neg_integer(), atom()) -> otel_ctx:t() | undefined.
 fetch_parent_ctx(MaxDepth, Key) ->
-    Pids = pids(Key, pdict(self())),
+    Pids = case get(Key) of
+        List when is_list(List) -> List;
+        _ -> []
+    end,
     inspect_parent(undefined, lists:sublist(Pids, MaxDepth)).
 
 inspect_parent(Ctx, _Pids) when Ctx =/= undefined ->
@@ -30,28 +33,30 @@ inspect_parent(_Ctx, [Pid | Rest]) ->
             inspect_parent(OtelCtx, [])
     end.
 
--spec fetch_ctx(pid()) -> otel_ctx:t() | undefined.
-fetch_ctx(Pid) ->
-    case pdict(Pid) of
-        undefined ->
-            undefined;
-        Dictionary ->
-            otel_ctx(Dictionary)
-    end.
-
--spec pdict(pid() | atom()) -> [{term(), term()}] | undefined.
-pdict(Name) when is_atom(Name) ->
+-spec fetch_ctx(pid() | atom()) -> otel_ctx:t() | undefined.
+fetch_ctx(Name) when is_atom(Name) ->
     case whereis(Name) of
         undefined -> undefined;
         Pid -> pdict(Pid)
     end;
+fetch_ctx(Pid) when is_pid(Pid) ->
+    pdict(Pid).
+
+-if(?OTP_RELEASE >= 27).
+%% Fetching a single key from another process's dictionary was introduced in 26.2,
+%% so we can't depend on it until 27.
 pdict(Pid) ->
-    case process_info(Pid, dictionary) of
-        {dictionary, Dict} ->
-            Dict;
-        undefined ->
-            undefined
+    case process_info(Pid, {dictionary, '$__current_otel_ctx'}) of
+        undefined -> undefined;
+        {{dictionary, '$__current_otel_ctx'}, Ctx} -> Ctx
     end.
+-else.
+pdict(Pid) when is_pid(Pid) ->
+    case process_info(Pid, dictionary) of
+        undefined -> undefined;
+        {dictionary, Dict} -> otel_ctx(Dict)
+    end.
+-endif.
 
 -spec otel_ctx([{term(), term()}]) -> otel_ctx:t() | undefined.
 otel_ctx(Dictionary) ->
@@ -60,12 +65,4 @@ otel_ctx(Dictionary) ->
             undefined;
         {'$__current_otel_ctx', Ctx} ->
             Ctx
-    end.
-
-pids(Key, Dictionary) ->
-    case lists:keyfind(Key, 1, Dictionary) of
-        false ->
-            [];
-        {Key,Pids} ->
-            Pids
     end.

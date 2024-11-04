@@ -2,7 +2,11 @@
 
 ## v0.2.0
 
-## Features
+### Breaking
+
+* Package renamed to `otel_http` from `opentelemetry_instrumentation_http`
+
+### Features
 
 * Adds several header extraction and manipulation functions for common tasks
   in instrumentation libraries:

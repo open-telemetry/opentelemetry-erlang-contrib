@@ -25,5 +25,5 @@
 /instrumentation/opentelemetry_redix            @andrewhr
 /instrumentation/opentelemetry_xandra           @whatyouhide
 /utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
-/utilities/opentelemetry_instrumentation_http   @tsloughter
+/utilities/otel_http                            @bryannaegele @tsloughter
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva
