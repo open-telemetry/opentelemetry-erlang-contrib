@@ -54,7 +54,7 @@ defmodule OpentelemetryOban do
     attributes = attributes_before_insert(changeset)
     worker = Changeset.get_field(changeset, :worker)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "#{worker}.send", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       case Oban.insert(name, changeset) do
@@ -76,7 +76,7 @@ defmodule OpentelemetryOban do
     attributes = attributes_before_insert(changeset)
     worker = Changeset.get_field(changeset, :worker)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "#{worker}.send", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do

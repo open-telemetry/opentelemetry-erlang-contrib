@@ -37,7 +37,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob send",
+                      name: "TestJob.send",
                       attributes: attributes,
                       parent_span_id: :undefined,
                       kind: :producer,
@@ -49,7 +49,7 @@ defmodule OpentelemetryObanTest do
              "messaging.system": :oban,
              "oban.job.job_id": _job_id,
              "oban.job.max_attempts": 1,
-             "oban.job.priority": 0,
+             "oban.job.priority": nil,
              "oban.job.worker": "TestJob"
            } = :otel_attributes.map(attributes)
   end
@@ -65,7 +65,7 @@ defmodule OpentelemetryObanTest do
 
       assert_receive {:span,
                       span(
-                        name: "TestJob send",
+                        name: "TestJob.send",
                         attributes: _attributes,
                         trace_id: ^root_trace_id,
                         parent_span_id: ^root_span_id,
@@ -88,7 +88,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob send",
+                      name: "TestJob.send",
                       attributes: _attributes,
                       trace_id: send_trace_id,
                       span_id: send_span_id,
@@ -98,7 +98,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob process",
+                      name: "TestJob.process",
                       attributes: _attributes,
                       kind: :consumer,
                       status: :undefined,
@@ -120,7 +120,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob process",
+                      name: "TestJob.process",
                       attributes: _attributes,
                       kind: :consumer,
                       status: :undefined,
@@ -137,7 +137,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob process",
+                      name: "TestJob.process",
                       attributes: attributes,
                       kind: :consumer,
                       status: :undefined
@@ -165,7 +165,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJobThatReturnsError process",
+                      name: "TestJobThatReturnsError.process",
                       attributes: attributes,
                       kind: :consumer,
                       events: events,
@@ -187,7 +187,7 @@ defmodule OpentelemetryObanTest do
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
@@ -206,14 +206,14 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJobThatReturnsError send",
+                      name: "TestJobThatReturnsError.send",
                       trace_id: send_trace_id,
                       span_id: send_span_id
                     )}
 
     assert_receive {:span,
                     span(
-                      name: "TestJobThatReturnsError process",
+                      name: "TestJobThatReturnsError.process",
                       status: ^expected_status,
                       trace_id: first_process_trace_id,
                       links: job_1_links
@@ -223,7 +223,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJobThatReturnsError process",
+                      name: "TestJobThatReturnsError.process",
                       status: ^expected_status,
                       trace_id: second_process_trace_id,
                       links: job_2_links
@@ -242,7 +242,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJobThatThrowsException process",
+                      name: "TestJobThatThrowsException.process",
                       attributes: attributes,
                       kind: :consumer,
                       events: events,
@@ -264,7 +264,7 @@ defmodule OpentelemetryObanTest do
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
@@ -279,7 +279,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJobWithInnerSpan process",
+                      name: "TestJobWithInnerSpan.process",
                       kind: :consumer,
                       trace_id: trace_id,
                       span_id: process_span_id
@@ -297,8 +297,8 @@ defmodule OpentelemetryObanTest do
   test "OpentelemetryOban.insert!/2 returns job on successful insert" do
     %Oban.Job{} = OpentelemetryOban.insert!(TestJob.new(%{}))
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :events)
-    assert_receive {:span, span(name: "TestJob send")}
-    assert_receive {:span, span(name: "TestJob process")}
+    assert_receive {:span, span(name: "TestJob.send")}
+    assert_receive {:span, span(name: "TestJob.process")}
   end
 
   test "OpentelemetryOban.insert!/2 raises an error on failed insert" do
@@ -313,14 +313,14 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob send",
+                      name: "TestJob.send",
                       events: events,
                       status: ^expected_status
                     )}
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
@@ -328,7 +328,7 @@ defmodule OpentelemetryObanTest do
     assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
 
-    refute_received {:span, span(name: "TestJob process")}
+    refute_received {:span, span(name: "TestJob.process")}
   end
 
   test "tracing information is propagated when using insert_all/2" do
@@ -351,7 +351,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob process",
+                      name: "TestJob.process",
                       attributes: _attributes,
                       kind: :consumer,
                       status: :undefined,
@@ -363,7 +363,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: "TestJob process",
+                      name: "TestJob.process",
                       attributes: _attributes,
                       kind: :consumer,
                       status: :undefined,
@@ -383,6 +383,6 @@ defmodule OpentelemetryObanTest do
   test "works with Oban.Testing.perform_job helper function" do
     Oban.Testing.perform_job(TestJob, %{}, repo: TestRepo)
 
-    assert_receive {:span, span(name: "TestJob process")}
+    assert_receive {:span, span(name: "TestJob.process")}
   end
 end
