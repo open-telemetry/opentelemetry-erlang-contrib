@@ -262,6 +262,12 @@ defmodule OpentelemetryBandit do
     end
   end
 
+  # error with no conn
+  def handle_request_start(_meta, _config) do
+    Tracer.start_span(:HTTP, %{kind: :server})
+    |> Tracer.set_current_span()
+  end
+
   defp public_endpoint?(_conn, %{public_endpoint: true}), do: true
 
   defp public_endpoint?(conn, %{public_endpoint_fn: {m, f, a}}) do
