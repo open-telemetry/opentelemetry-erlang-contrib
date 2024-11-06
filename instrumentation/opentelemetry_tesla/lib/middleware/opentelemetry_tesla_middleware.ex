@@ -2,11 +2,37 @@ defmodule Tesla.Middleware.OpenTelemetry do
   @moduledoc """
   Creates OpenTelemetry spans and injects tracing headers into HTTP requests
 
-  When used with `Tesla.Middleware.PathParams`, the span name will be created
-  based on the provided path. Without it, the span name follow OpenTelemetry
-  standards and use just the method name, if not being overridden by opts.
+  ## Span Name
 
-  NOTE: This middleware needs to come before `Tesla.Middleware.PathParams`
+  If `span_name` is provided, the span name will be created based on the
+  provided value.
+
+  (Recommended Setup) If `Tesla.Middleware.KeepRequest` is used, the span name
+  will be created based on the request URL stored in `:req_url`.
+
+  What that means in practice is that you should set the `Tesla.Middleware.PathParams`
+  after `Tesla.Middleware.KeepRequest` and before `Tesla.Middleware.OpenTelemetry`
+  to use the path params before it has been processed by `Tesla.Middleware.PathParams`.
+
+      iex> client = Tesla.client([
+      ...>   Tesla.Middleware.KeepRequest,
+      ...>   Tesla.Middleware.PathParams,
+      ...>   # ... other middleware
+      ...>   Tesla.Middleware.OpenTelemetry
+      ...> ])
+
+  If `Tesla.Middleware.PathParams` is used without
+  `Tesla.Middleware.KeepRequest`, and `:path_params` is provided, the span name
+  will be created based on the provided path.
+
+  What that means in practice is that you should set the `Tesla.Middleware.PathParams`
+  after `Tesla.Middleware.OpenTelemetry` to use the path params before it has
+  been processed by `Tesla.Middleware.PathParams`.
+
+      iex> client = Tesla.client([
+      ...>   Tesla.Middleware.OpenTelemetry,
+      ...>   Tesla.Middleware.PathParams
+      ...> ])
 
   ## Options
 
@@ -48,9 +74,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp get_span_name(env, _) do
-    case env.opts[:path_params] do
-      nil -> "HTTP #{http_method(env.method)}"
-      _ -> URI.parse(env.url).path
+    cond do
+      env.opts[:req_url] ->
+        URI.parse(env.opts[:req_url]).path
+
+      env.opts[:path_params] ->
+        URI.parse(env.url).path
+
+      true ->
+        "HTTP #{http_method(env.method)}"
     end
   end
 

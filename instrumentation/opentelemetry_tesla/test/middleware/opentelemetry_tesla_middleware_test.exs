@@ -26,6 +26,25 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
   end
 
   describe "span name" do
+    test "uses generic route name when opentelemetry middleware is configured with path params and keep request middleware",
+         %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/users/3", fn conn ->
+        Plug.Conn.resp(conn, 204, "")
+      end)
+
+      client =
+        Tesla.client([
+          {Tesla.Middleware.BaseUrl, endpoint_url(bypass.port)},
+          Tesla.Middleware.KeepRequest,
+          Tesla.Middleware.PathParams,
+          Tesla.Middleware.OpenTelemetry
+        ])
+
+      Tesla.get(client, "/users/:id", opts: [path_params: [id: "3"]])
+
+      assert_receive {:span, span(name: "/users/:id", attributes: _attributes)}
+    end
+
     test "uses generic route name when opentelemetry middleware is configured before path params middleware",
          %{
            bypass: bypass
