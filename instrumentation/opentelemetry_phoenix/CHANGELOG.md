@@ -16,9 +16,6 @@
   and bandit libraries. One major change regards span naming. This may
   affect your observability tools when keying on span names. The key
   change there is the HTTP method is now a prefix, e.g. "GET /users/:user_id"
-
-# Changes
-
 - OpenTelemetry API v1.4 required
 
 ## 1.2.0
