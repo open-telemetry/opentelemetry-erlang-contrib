@@ -1,7 +1,7 @@
 defmodule OpentelemetryBroadway.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
 
   def project do
     [
@@ -41,12 +41,12 @@ defmodule OpentelemetryBroadway.MixProject do
   defp deps do
     [
       {:broadway, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_telemetry, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:opentelemetry, "~> 1.0", only: [:test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:test]},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_telemetry, "~> 1.1"},
+      {:opentelemetry_semantic_conventions, "~> 0.2 or ~> 1.27"},
+      {:telemetry, "~> 1.0"},
+      {:opentelemetry, "~> 1.5", only: [:test]},
+      {:opentelemetry_exporter, "~> 1.8", only: [:test]},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false}
     ]
   end

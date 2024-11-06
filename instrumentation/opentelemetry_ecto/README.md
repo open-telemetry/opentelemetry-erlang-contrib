@@ -22,7 +22,7 @@ Add the package to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:opentelemetry_ecto, "~> 1.0"}
+    {:opentelemetry_ecto, "~> 1.3"}
   ]
 end
 ```

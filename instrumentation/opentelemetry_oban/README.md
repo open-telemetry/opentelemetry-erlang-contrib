@@ -11,7 +11,7 @@ dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:opentelemetry_oban, "~> 1.0"}
+    {:opentelemetry_oban, "~> 1.2"}
   ]
 end
 ```
