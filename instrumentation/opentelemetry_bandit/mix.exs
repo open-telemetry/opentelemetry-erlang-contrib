@@ -1,7 +1,7 @@
 defmodule OpentelemetryBandit.MixProject do
   use Mix.Project
 
-  @version "0.1.4"
+  @version "0.2.0-rc.2"
 
   def project do
     [
@@ -13,6 +13,11 @@ defmodule OpentelemetryBandit.MixProject do
       description: description(),
       package: package(),
       elixirc_paths: elixirc_path(Mix.env()),
+      dialyzer: [
+        plt_add_apps: [:ex_unit, :mix],
+        plt_core_path: "priv/plts",
+        plt_local_path: "priv/plts"
+      ],
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -23,8 +28,10 @@ defmodule OpentelemetryBandit.MixProject do
         "coveralls.cobertura": :test
       ],
       docs: [
-        main: "readme",
-        extras: ["README.md"]
+        main: "OpentelemetryBandit",
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_bandit/%{path}#L%{line}",
+        extras: []
       ]
     ]
   end
@@ -45,9 +52,8 @@ defmodule OpentelemetryBandit.MixProject do
   defp package do
     [
       files: ~w(lib .formatter.exs mix.exs LICENSE* README* CHANGELOG*),
-      maintainers: ["Artem Solomatin"],
+      maintainers: ["Artem Solomatin", "Bryan Naegele"],
       licenses: ["Apache-2.0"],
-
       links: %{
         "GitHub" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_bandit",
@@ -65,20 +71,21 @@ defmodule OpentelemetryBandit.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:opentelemetry_api, "~> 1.2"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:opentelemetry_telemetry, "~> 1.0"},
+      {:nimble_options, "~> 1.1"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
+      {:otel_http, "~> 0.2"},
       {:plug, ">= 1.15.0"},
       {:telemetry, "~> 1.2"},
 
       # dev dependencies
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
-      {:bandit, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:bandit, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:req, "~> 0.4", only: [:dev, :test]}
+      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.7", only: [:dev, :test]},
+      {:req, "~> 0.5", only: [:dev, :test]}
     ]
   end
 

@@ -1,7 +1,7 @@
 defmodule OpentelemetryOban.MixProject do
   use Mix.Project
 
-  @version "1.1.0"
+  @version "1.1.1"
 
   def project do
     [
@@ -51,7 +51,7 @@ defmodule OpentelemetryOban.MixProject do
       {:opentelemetry, "~> 1.0", only: [:test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:test]},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:postgrex, ">= 0.0.0", only: [:dev, :test]}
     ]
   end

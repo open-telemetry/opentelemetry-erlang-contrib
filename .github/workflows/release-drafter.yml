@@ -1,6 +1,7 @@
 name: Release Drafter
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -8,7 +9,7 @@ on:
 jobs:
   opentelemetry-aws-xray-release:
     name: '[opentelemetry-aws-xray-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -16,9 +17,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  opentelemetry-broadway-release:
+    name: '[opentelemetry-broadway-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-broadway.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   opentelemetry-cowboy-release:
     name: '[opentelemetry-cowboy-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -28,7 +39,7 @@ jobs:
 
   opentelemetry-dataloader-release:
     name: '[opentelemetry-dataloader-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -38,7 +49,7 @@ jobs:
 
   opentelemetry-ecto-release:
     name: '[opentelemetry-ecto-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -48,7 +59,7 @@ jobs:
 
   opentelemetry-elli-release:
     name: '[opentelemetry-elli-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -58,7 +69,7 @@ jobs:
 
   opentelemetry-finch-release:
     name: '[opentelemetry-finch-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -68,7 +79,7 @@ jobs:
 
   opentelemetry-grpcbox-release:
     name: '[opentelemetry-grpcbox-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -78,7 +89,7 @@ jobs:
 
   opentelemetry-httpoison-release:
     name: '[opentelemetry-httpoison-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -86,19 +97,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  opentelemetry-instrumentation-http-release:
-    name: '[opentelemetry-instrument-http-release] Draft release'
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: release-drafter/release-drafter@v6
-        with:
-          config-name: release-drafter-templates/opentelemetry-instrumentation-http.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   opentelemetry-nebulex-release:
     name: '[opentelemetry-nebulex-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -108,7 +109,7 @@ jobs:
 
   opentelemetry-oban-release:
     name: '[opentelemetry-oban-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -118,7 +119,7 @@ jobs:
 
   opentelemetry-phoenix-release:
     name: '[opentelemetry-phoenix-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -128,7 +129,7 @@ jobs:
 
   opentelemetry-bandit-release:
     name: '[opentelemetry-bandit-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -138,7 +139,7 @@ jobs:
 
   opentelemetry-process-propagator-release:
     name: '[opentelemetry-process-propagator-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -148,7 +149,7 @@ jobs:
 
   opentelemetry-redix-release:
     name: '[opentelemetry-redix-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -158,7 +159,7 @@ jobs:
 
   opentelemetry-req-release:
     name: '[opentelemetry-req-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -168,7 +169,7 @@ jobs:
 
   opentelemetry-telemetry-release:
     name: '[opentelemetry-telemetry-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
@@ -178,10 +179,30 @@ jobs:
 
   opentelemetry-tesla-release:
     name: '[opentelemetry-tesla-release] Draft release'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-templates/opentelemetry-tesla.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-xandra-release:
+    name: '[opentelemetry-xandra-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-xandra.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  otel-http-release:
+    name: '[otel-http-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/otel-http.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
