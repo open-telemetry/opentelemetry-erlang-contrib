@@ -17,7 +17,7 @@ by adding `opentelemetry_dataloader` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:opentelemetry_dataloader, "~> 1.0.0"}
+    {:opentelemetry_dataloader, "~> 0.1"}
   ]
 end
 ```
