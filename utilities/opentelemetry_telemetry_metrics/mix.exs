@@ -29,8 +29,8 @@ defmodule OtelTelemetryMetrics.MixProject do
       {:telemetry_metrics, "~> 1.0"},
       {:opentelemetry_api, "~> 1.3"},
       {:opentelemetry_api_experimental, "~> 0.5"},
-      {:opentelemetry, "~> 1.4.0"},
-      {:opentelemetry_experimental, "~> 0.5"},
+      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
+      {:opentelemetry_experimental, "~> 0.5", only: [:dev, :test]},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
