@@ -4,11 +4,14 @@ defmodule RollDice.Application do
   @moduledoc false
 
   use Application
+  require OpenTelemetryAPIExperimental.Counter, as: Counter
 
   @impl true
   def start(_type, _args) do
     :opentelemetry_cowboy.setup()
     OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    Counter.create(:number_of_messages, %{unit: "1", description: "some counter lusooo"})
 
     children = [
       # Start the Telemetry supervisor

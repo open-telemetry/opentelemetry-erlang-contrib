@@ -17,6 +17,19 @@ To generate and view traces:
 
 For more information on the OpenTelemetry instrumentation in this example, check out the guide for getting started with [OpenTelemetry](https://opentelemetry.io/docs/instrumentation/erlang/getting-started/)
 
+## No OpenTelemetry Metrics exported
+
+How to reproduce:
+
+Use Elixir 1.14.3 (compiled with Erlang/OTP 25)
+
+1. Start OTEL Collector `docker-compose up`
+2. `mix deps.get`
+3. `mix phx.server`
+4. `curl -X GET http://localhost:4000/api/rolldice`
+
+Notice that no metrics reach the OTEL Collector
+
 ## How did we get here?
 
 To begin, use the `phx` generator to create a new project. To keep things simple we'll leave out the database and html for now with the `--no-ecto` and `--no-html` flags.

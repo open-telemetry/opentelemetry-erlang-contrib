@@ -43,11 +43,13 @@ defmodule RollDice.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:opentelemetry_exporter, "~> 1.5"},
-      {:opentelemetry, "~> 1.3"},
-      {:opentelemetry_api, "~> 1.2"},
-      {:opentelemetry_phoenix, "~> 1.1"},
-      {:opentelemetry_cowboy, "~> 0.2"},
+      {:opentelemetry_exporter, "~> 1.8"},
+      {:opentelemetry, "~> 1.5"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_api_experimental, "~> 0.5.1"},
+      {:opentelemetry_experimental, "~> 0.5.1"},
+      {:opentelemetry_phoenix, "~> 1.2"},
+      {:opentelemetry_cowboy, "~> 0.3"}
     ]
   end
 
