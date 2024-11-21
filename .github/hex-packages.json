@@ -8,6 +8,15 @@
     "language": "erlang",
     "authorizedUsers": ["bryannaegele", "tsloughter"]
   },
+  "bandit": {
+    "workingDirectory": "instrumentation/opentelemetry_bandit",
+    "name": "Bandit Instrumentation",
+    "packageName": "opentelemetry_bandit",
+    "tagPrefix": "opentelemetry-bandit-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele", "tsloughter"]
+  },
   "broadway": {
     "workingDirectory": "instrumentation/opentelemetry_broadway",
     "name": "Broadway Instrumentation",
