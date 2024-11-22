@@ -49,8 +49,8 @@ defmodule OpentelemetryBroadwayTest do
 
     assert %{
              "messaging.system": :broadway,
-             "messaging.operation": :process,
-             "messaging.message_payload_size_bytes": 7
+             "messaging.operation.type": :process,
+             "messaging.message.body.size": 7
            } = :otel_attributes.map(attributes)
   end
 
