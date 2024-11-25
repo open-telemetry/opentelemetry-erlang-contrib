@@ -16,17 +16,15 @@ OpentelemetryPhoenix.setup(adapter: :bandit)
 See the documentation for `OpentelemetryPhoenix.setup/1` for additional options that
 may be supplied.
 
-
 ## Installation
 
 ```elixir
 def deps do
   [
-    {:opentelemetry_phoenix, "~> 2.0.0-beta.1"}
+    {:opentelemetry_phoenix, "~> 2.0.0-rc.2"}
   ]
 end
 ```
-
 
 [OpentelemetryBandit](https://hex.pm/packages/opentelemetry_bandit) or [OpentelemetryCowboy](https://hex.pm/packages/opentelemetry_cowboy) must be installed to capture the full
 request lifecycle. Phoenix only handles part of the request lifecycle which can lead
@@ -38,6 +36,7 @@ level or before reaching Phoenix.
 `OpentelemetryPhoenix` requires phoenix to use `Plug.Telemetry` in order to correctly trace endpoint calls.
 
 The `endpoint.ex` file should look like:
+
 ```Elixir
 defmodule MyApp.Endpoint do
   use Phoenix.Endpoint, otp_app: :my_app
@@ -46,5 +45,5 @@ defmodule MyApp.Endpoint do
   ...
 end
 ```
-The [Phoenix endpoint.ex template](https://github.com/phoenixframework/phoenix/blob/v1.6.0/installer/templates/phx_web/endpoint.ex#L39) can be used as a reference
 
+The [Phoenix endpoint.ex template](https://github.com/phoenixframework/phoenix/blob/v1.6.0/installer/templates/phx_web/endpoint.ex#L39) can be used as a reference

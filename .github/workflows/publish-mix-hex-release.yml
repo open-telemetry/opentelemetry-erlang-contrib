@@ -9,6 +9,7 @@ on:
         options:
           - "absinthe"
           - "aws_xray"
+          - "bandit"
           - "broadway"
           - "cowboy"
           - "dataloader"
@@ -60,7 +61,7 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Read file
         id: set-config
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
@@ -116,7 +117,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: npm install semver
       - name: "Update Files"
         id: update-files

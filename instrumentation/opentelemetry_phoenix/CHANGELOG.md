@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.0
+
+### Features
+
+- Added Bandit instrumentation support
+- Semantic Conventions v1.27 support
+
+### Breaking Changes
+
+- Specifying an adapter is now required. Simply add the instrumentation
+  library as a dep and follow its setup instructions, then specify your
+  your adapter.
+- Various HTTP Semantic Convention changes are included in the cowboy
+  and bandit libraries. One major change regards span naming. This may
+  affect your observability tools when keying on span names. The key
+  change there is the HTTP method is now a prefix, e.g. "GET /users/:user_id"
+- OpenTelemetry API v1.4 required
+
 ## 2.0.0-rc.1
 
 ### Features
@@ -16,9 +34,6 @@
   and bandit libraries. One major change regards span naming. This may
   affect your observability tools when keying on span names. The key
   change there is the HTTP method is now a prefix, e.g. "GET /users/:user_id"
-
-# Changes
-
 - OpenTelemetry API v1.4 required
 
 ## 1.2.0
