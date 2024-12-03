@@ -64,7 +64,8 @@ defmodule OpentelemetryEcto.MixProject do
       {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
       {:postgrex, ">= 0.15.0", only: [:dev, :test]},
       {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:opentelemetry_process_propagator, "~> 0.3"}
+      {:opentelemetry_process_propagator, "~> 0.3"},
+      {:opentelemetry_semantic_conventions, "~> 0.2"}
     ]
   end
 end
