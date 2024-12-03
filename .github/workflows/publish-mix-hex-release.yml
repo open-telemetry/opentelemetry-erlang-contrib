@@ -8,6 +8,7 @@ on:
         type: choice
         options:
           - "aws_xray"
+          - "bandit"
           - "broadway"
           - "cowboy"
           - "dataloader"
