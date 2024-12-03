@@ -5,7 +5,7 @@
 
 [Req](https://hex.pm/packages/req) plugin for OpenTelemetry instrumentation and propagation.
 
-See [Docs](https://hex.pm/packages/opentelemetry_req) for usage instructions.
+See [Docs](https://hexdocs.pm/opentelemetry_req) for usage instructions.
 
 ## Installation
 
@@ -16,4 +16,3 @@ def deps do
   ]
 end
 ```
-
