@@ -114,7 +114,7 @@ defmodule OpentelemetryFinchTest do
         resp = update_in(resp.headers, &Map.merge(&1, fields))
         {:cont, {req, resp}}
 
-      {:data, data}, acc ->
+      {:data, _data}, acc ->
         {:cont, acc}
 
       {:trailers, fields}, {req, resp} ->

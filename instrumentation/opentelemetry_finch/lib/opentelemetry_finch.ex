@@ -44,17 +44,10 @@ defmodule OpentelemetryFinch do
 
     status =
       case meta.result do
-        {:ok, response} when is_map(response) ->
-          response.status
-
-        {:ok, {_request, response}} when is_map(response) ->
-          response.status
-
-        {:ok, {status, _headers, _body}} when is_integer(status) ->
-          status
-
-        _ ->
-          0
+        {:ok, %{status: status}} when is_integer(status) -> status
+        {:ok, {_request, %{status: status}}} when is_integer(status) -> status
+        {:ok, {status, _headers, _body}} when is_integer(status) -> status
+        _ -> 0
       end
 
     url = build_url(meta.request.scheme, meta.request.host, meta.request.port, meta.request.path)
