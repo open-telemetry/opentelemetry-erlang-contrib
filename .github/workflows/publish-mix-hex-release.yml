@@ -50,7 +50,7 @@ on:
 
 jobs:
   config:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       authorized_users: ${{ steps.set-config.outputs.authorized_users }}
       build_tool: ${{ steps.set-config.outputs.build_tool }}
@@ -94,13 +94,13 @@ jobs:
 
   authorized_publisher:
     needs: config
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - run: ${{ contains(fromJson(needs.config.outputs.authorized_users), github.actor) }}
 
   publish:
     needs: [authorized_publisher, config]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       # write permission is required to create a github release
