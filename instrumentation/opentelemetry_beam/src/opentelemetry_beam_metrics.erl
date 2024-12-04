@@ -25,27 +25,27 @@ setup(Meter) ->
     setup(Meter, #{}).
 
 setup(Meter, Opts) ->
-    system_info_updowncounter(
+    system_info_gauge(
       atom_count, Meter, 'beam.atom.count',
       #{description => <<"The number of atom currently existing "
                          "at the local node.">>,
         unit => '{atom}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       atom_limit, Meter, 'beam.atom.limit',
       #{description => <<"The maximum number of simultaneously existing "
                          "atom at the local node.">>,
         unit => '{atom}'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       dirty_cpu_schedulers, Meter, 'beam.cpu.dirty_cpu_scheduler.count',
       #{description => <<"The number of scheduler dirty CPU scheduler "
                          "threads used by the emulator.">>,
         unit => '{scheduler}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       dirty_cpu_schedulers_online, Meter, 'beam.cpu.dirty_cpu_scheduler.online',
       #{description => <<"The number of dirty CPU scheduler threads online.">>,
         unit => '{scheduler}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       dirty_io_schedulers, Meter, 'beam.dirty_io_scheduler.count',
       #{description => <<"The number of scheduler dirty I/O scheduler "
                          "threads used by the emulator.">>,
@@ -54,11 +54,11 @@ setup(Meter, Opts) ->
     case dirty_run_queue_metrics([]) of
         [_, _] ->
             RunQueueInstr =
-                [otel_meter:create_observable_updowncounter(
+                [otel_meter:create_observable_gauge(
                    Meter, 'beam.cpu.dirty_cpu_scheduler.run_queue_length',
                    #{description => <<"Length of the dirty CPU run-queue.">>,
                      unit => '{count}'}),
-                 otel_meter:create_observable_updowncounter(
+                 otel_meter:create_observable_gauge(
                    Meter, 'beam.cpu.dirty_io_scheduler.run_queue_length',
                    #{description => <<"Length of the dirty IO run-queue.">>,
                      unit => '{count}'})],
@@ -67,50 +67,50 @@ setup(Meter, Opts) ->
             ok
     end,
 
-    system_info_updowncounter(
+    system_info_gauge(
       logical_processors, Meter, 'beam.cpu.logical_processors.count',
       #{description => <<"The detected number of logical processors "
                          "configured in the system.">>,
         unit => '{cpu}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       logical_processors_available, Meter, 'beam.cpu.logical_processors.available',
       #{description => <<"The detected number of logical processors "
                          "available to the Erlang runtime system.">>,
         unit => '{cpu}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       logical_processors_online, Meter, 'beam.cpu.logical_processors.online',
       #{description => <<"The detected number of logical processors "
                          "online on the system.">>,
         unit => '{cpu}'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       schedulers, Meter, 'beam.cpu.scheduler.count',
       #{description => <<"The number of scheduler threads used by the emulator.">>,
         unit => '{scheduler}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       schedulers_online, Meter, 'beam.cpu.scheduler.online',
       #{description => <<"The number of schedulers online.">>,
         unit => '{scheduler}'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       run_queue, Meter, 'beam.cpu.scheduler.run_queues_length',
       #{description => <<"Length of normal run-queues.">>,
         unit => '{process}'}),
 
     setup_microstate_metrics(Meter, Opts),
 
-    system_info_updowncounter(
+    system_info_gauge(
       thread_pool_size, Meter, 'beam.thread_pool_size',
       #{description => <<"The number of async threads in the async thread pool "
                          "used for asynchronous driver calls.">>,
         unit => '{thread}'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       ets_limit, Meter, 'beam.ets.limit',
       #{description => <<"The maximum number of ETS tables allowed.">>,
         unit => '{table}'}),
 
-    otel_meter:create_observable_updowncounter(
+    otel_meter:create_observable_gauge(
       Meter, 'beam.ets.count',
       fun(_) -> [{length(ets:all()), #{}}] end, [],
       #{description => <<"Erlang VM ETS Tables count.">>,
@@ -123,15 +123,15 @@ setup(Meter, Opts) ->
         unit => '{table}'}),
 
     MemAllocInstr =
-        [otel_meter:create_observable_updowncounter(
+        [otel_meter:create_observable_gauge(
            Meter, 'beam.memory.allocators.block.count',
            #{description => <<"Count of allocated blocks for the different allocators in the VM.">>,
              unit => '{block}'}),
-         otel_meter:create_observable_updowncounter(
+         otel_meter:create_observable_gauge(
            Meter, 'beam.memory.allocators.block.size',
            #{description => <<"Size of the memory blocks for the different allocators in the VM.">>,
              unit => 'By'}),
-         otel_meter:create_observable_updowncounter(
+         otel_meter:create_observable_gauge(
            Meter, 'beam.memory.allocators.carrier.count',
            #{description => <<"Number of allocated carriers for the different allocators in the VM.">>,
              unit => '{carrier}'}),
@@ -189,7 +189,7 @@ setup(Meter, Opts) ->
              unit => '{word}'})],
     otel_meter:register_callback(Meter, GcInstr, fun vm_gc_stats/1, []),
 
-    system_info_updowncounter(
+    system_info_gauge(
       port_count, Meter, 'beam.port.count',
       #{description => <<"The number of ports currently existing "
                          "at the local node.">>,
@@ -203,7 +203,7 @@ setup(Meter, Opts) ->
       end, [],
       #{description => <<"Total number of bytes read and written to/from ports.">>,
         unit => 'By'}),
-    system_info_updowncounter(
+    system_info_gauge(
       port_limit, Meter, 'beam.port.limit',
       #{description => <<"The maximum number of simultaneously existing ports "
                          "at the local node.">>,
@@ -214,7 +214,7 @@ setup(Meter, Opts) ->
       #{description => <<"Total number of context switches "
                          "since the system started.">>,
         unit => '{count}'}),
-    system_info_updowncounter(
+    system_info_gauge(
       process_count, Meter, 'beam.process.count',
       #{description => <<"The number of processes currently existing "
                          "at the local node.">>,
@@ -235,7 +235,7 @@ setup(Meter, Opts) ->
                          "Can be greater than wall clock time.">>,
         unit => 's'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       process_limit, Meter, 'beam.process.limit',
       #{description => <<"The maximum number of simultaneously existing "
                          "processes at the local node.">>,
@@ -250,7 +250,7 @@ setup(Meter, Opts) ->
       #{description => <<"Total reductions.">>,
         unit => '{reductions}'}),
 
-    system_info_updowncounter(
+    system_info_gauge(
       wordsize, Meter, 'beam.system.wordsize',
       #{description => <<"The size of Erlang term words in bytes.">>,
         unit => 'By'}),
@@ -320,10 +320,10 @@ system_info_counter(Item, Meter, Name, Opts) ->
             ok
     end.
 
-system_info_updowncounter(Item, Meter, Name, Opts) ->
+system_info_gauge(Item, Meter, Name, Opts) ->
     try erlang:system_info(Item) of
         Value when is_integer(Value) ->
-            otel_meter:create_observable_updowncounter(
+            otel_meter:create_observable_gauge(
               Meter, Name, fun system_info_metric/1, Item, Opts);
         _ -> ok
     catch error:badarg ->
