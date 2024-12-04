@@ -27,6 +27,7 @@ on:
           - "req"
           - "tesla"
           - "xandra"
+          - "commanded"
         required: true
       otp-version:
         description: "OTP version"
