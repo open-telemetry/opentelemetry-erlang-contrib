@@ -25,3 +25,4 @@
 /utilities/opentelemetry_telemetry              @open-telemetry/erlang-maintainers
 /utilities/otel_http                            @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_commanded        @open-telemetry/erlang-maintainers
