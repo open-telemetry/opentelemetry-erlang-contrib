@@ -157,6 +157,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  opentelemetry-resource-detector-aws:
+    name: '[opentelemetry-resource-detector-aws] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-resource-detector-aws.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   opentelemetry-req-release:
     name: '[opentelemetry-req-release] Draft release'
     runs-on: ubuntu-24.04

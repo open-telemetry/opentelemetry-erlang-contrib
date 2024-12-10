@@ -152,6 +152,15 @@
     "language": "elixir",
     "authorizedUsers": ["bryannaegele", "tsloughter"]
   },
+  "resource_detector_aws": {
+    "workingDirectory": "detectors/opentelemetry_resource_detector_aws",
+    "name": "Resource Detector for AWS",
+    "packageName": "opentelemetry_resource_detector_aws",
+    "tagPrefix": "opentelemetry-resource-detector-aws-v",
+    "buildTool": "rebar3",
+    "language": "erlang",
+    "authorizedUsers": ["danschultzer"]
+  },
   "tesla": {
     "workingDirectory": "instrumentation/opentelemetry_tesla",
     "name": "Tesla Instrumentation",

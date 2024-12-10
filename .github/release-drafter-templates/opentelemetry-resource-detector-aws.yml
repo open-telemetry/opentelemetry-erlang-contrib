@@ -1,0 +1,6 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry Resource Detector for AWS - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-resource-detector-aws-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-resource-detector-aws-v
+include-paths:
+  - detectors/opentelemetry_resource_detector_aws/

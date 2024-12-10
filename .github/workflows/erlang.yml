@@ -155,6 +155,38 @@ jobs:
       - name: Test
         run: rebar3 ct
 
+  opentelemetry-reource-detector-aws:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_resource_detector_aws'))
+    env:
+      app: "opentelemetry_resource_detector_aws"
+    defaults:
+      run:
+        working-directory: detectors/${{ env.app }}
+    runs-on: ${{ matrix.os }}
+    name: Opentelemetry Resource Detector for AWS test on OTP ${{ matrix.otp_version }} with Rebar3 ${{ matrix.rebar3_version }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          version-type: strict
+          otp-version: ${{ matrix.otp_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.rebar3_version }}-v3-${{ hashFiles('**/rebar.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: rebar3 get-deps
+      - name: Test
+        run: rebar3 ct
+
   opentelemetry-telemetry:
     needs: [test-matrix]
     if: (contains(github.event.pull_request.labels.*.name, 'erlang') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_telemetry'))

@@ -33,6 +33,9 @@ erlang:
   - utilities/**/*.erl
   - utilities/**/*.hrl
   - utilities/**/rebar.*
+  - detectors/**/*.erl
+  - detectors/**/*.hrl
+  - detectors/**/rebar.*
 
 instrumentation:
   - instrumentation/**/*
@@ -45,6 +48,9 @@ examples:
 
 utilities:
   - utilities/**/*
+
+detectors:
+  - detectors/**/*
 
 scope-ci:
   - .github/workflows/**
@@ -96,6 +102,9 @@ opentelemetry_redix:
 
 opentelemetry_req:
   - instrumentation/opentelemetry_req/**/*
+
+opentelemetry_resource_detector_aws:
+  - detectors/opentelemetry_resource_detector_aws/**/*
 
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*

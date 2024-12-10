@@ -25,6 +25,7 @@ on:
           - "process_propagator"
           - "redix"
           - "req"
+          - "resource_detector_aws"
           - "tesla"
           - "xandra"
         required: true
