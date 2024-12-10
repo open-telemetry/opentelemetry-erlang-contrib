@@ -1,0 +1,17 @@
+{application, opentelemetry_resource_detector_aws, [
+  {description, "OpenTelemetry resource detector for AWS"},
+  {vsn, "0.0.1"},
+  {registered, []},
+  {applications,
+    [kernel,
+     stdlib,
+     inets,
+     opentelemetry,
+     opentelemetry_semantic_conventions
+   ]},
+  {env, []},
+  {modules, []},
+
+  {licenses, ["Apache-2.0"]},
+  {links, [{"GitHub", "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/detectors/opentelemetry_resource_detector_aws"}]}
+]}.
