@@ -16,9 +16,9 @@ defmodule OpentelemetryBroadway do
 
   """
 
-  alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Span
   alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   require Trace
 
@@ -72,16 +72,16 @@ defmodule OpentelemetryBroadway do
     client_id = inspect(name)
 
     attributes = %{
-      SemanticConventions.Trace.messaging_system() => :broadway,
-      SemanticConventions.Trace.messaging_operation() => :process,
-      SemanticConventions.Trace.messaging_consumer_id() => client_id
+      MessagingAttributes.messaging_system() => :broadway,
+      MessagingAttributes.messaging_operation_type() => :process,
+      MessagingAttributes.messaging_client_id() => client_id
     }
 
     attributes =
       if is_binary(message.data) do
         Map.put(
           attributes,
-          SemanticConventions.Trace.messaging_message_payload_size_bytes(),
+          MessagingAttributes.messaging_message_body_size(),
           byte_size(message.data)
         )
       else
