@@ -92,8 +92,9 @@ setup(Meter, Opts) ->
       #{description => <<"The number of schedulers online.">>,
         unit => '{scheduler}'}),
 
-    system_info_gauge(
-      run_queue, Meter, 'beam.cpu.scheduler.run_queues_length',
+    otel_meter:create_observable_gauge(
+      Meter, 'beam.cpu.scheduler.run_queues_length',
+      fun(_) -> [{erlang:statistics(run_queue), #{}}] end, [],
       #{description => <<"Length of normal run-queues.">>,
         unit => '{process}'}),
 
@@ -198,8 +199,8 @@ setup(Meter, Opts) ->
       Meter, 'beam.port.io',
       fun(_) ->
               {{input, Input}, {output, Output}} = erlang:statistics(io),
-              [{'beam.port.io', [{Output, #{'port.io.direction' => write}},
-                                 {Input,  #{'port.io.direction' => read}}]}]
+              [{Output, #{'port.io.direction' => write}},
+               {Input,  #{'port.io.direction' => read}}]
       end, [],
       #{description => <<"Total number of bytes read and written to/from ports.">>,
         unit => 'By'}),
@@ -220,20 +221,24 @@ setup(Meter, Opts) ->
                          "at the local node.">>,
         unit => '{process}'}),
 
-    otel_meter:create_observable_counter(
-      Meter, 'beam.process.cpu.time',
-      fun(_) ->
-              {Runtime, _} = erlang:statistics(runtime),
-              {WallclockTime, _} = erlang:statistics(wall_clock),
+    case Opts of
+        #{opt_in := #{'beam.process.cpu.time' := true}} ->
+            otel_meter:create_observable_counter(
+              Meter, 'beam.process.cpu.time',
+              fun(_) ->
+                      {Runtime, _} = erlang:statistics(runtime),
+                      {WallclockTime, _} = erlang:statistics(wall_clock),
 
-              [{'beam.process.cpu.time',
-                [{Runtime / 1.0e3, #{'process.cpu.state' => user}},
-                 {WallclockTime / 1.0e3, #{'process.cpu.state' => wall}}]}]
-      end, [],
-      #{description => <<"The sum of the runtime for all threads "
-                         "in the Erlang runtime system. "
-                         "Can be greater than wall clock time.">>,
-        unit => 's'}),
+                      [{Runtime / 1.0e3, #{'beam.process.cpu.state' => user}},
+                       {WallclockTime / 1.0e3, #{'process.cpu.state' => wall}}]
+              end, [],
+              #{description => <<"The sum of the runtime for all threads "
+                                 "in the Erlang runtime system. "
+                                 "Can be greater than wall clock time.">>,
+                unit => 's'});
+        _ ->
+            ok
+    end,
 
     system_info_gauge(
       process_limit, Meter, 'beam.process.limit',
@@ -245,7 +250,7 @@ setup(Meter, Opts) ->
       Meter, 'beam.process.reductions',
       fun(_) ->
               {ReductionsTotal, _} = erlang:statistics(reductions),
-              ReductionsTotal
+              [{ReductionsTotal, #{}}]
       end, [],
       #{description => <<"Total reductions.">>,
         unit => '{reductions}'}),
@@ -429,16 +434,16 @@ memory_other(Data) ->
 vm_memory_gauges(_) ->
     Data = erlang:memory(),
 
-    [{'erlang.vm.memory.atoms',
+    [{'beam.memory.atoms',
       [{?gv(atom_used, Data), #{usage => used}},
        {?gv(atom, Data) - ?gv(atom_used, Data), #{usage => free}}]},
-     {'erlang.vm.memory.allocated',
+     {'beam.memory.allocated',
       [{?gv(system, Data), #{kind => system}},
        {?gv(processes, Data), #{kind => processes}}]},
-     {'erlang.vm.memory.processes',
+     {'beam.memory.processes',
       [{?gv(processes_used, Data), #{usage => used}},
        {?gv(processes, Data) - ?gv(processes_used, Data), #{usage => free}}]},
-     {'erlang.vm.memory.system',
+     {'beam.memory.system',
       [{?gv(atom, Data), #{usage => atom}},
        {?gv(binary, Data), #{usage => binary}},
        {?gv(code, Data), #{usage => code}},
