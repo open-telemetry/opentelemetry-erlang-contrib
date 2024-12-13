@@ -93,6 +93,7 @@ defmodule OpentelemetryEcto do
     total_time = measurements.total_time
     end_time = :opentelemetry.timestamp()
     start_time = end_time - total_time
+    measurements = Map.put(measurements, :total_time, total_time)
     database = repo.config()[:database]
 
     url =
@@ -130,8 +131,7 @@ defmodule OpentelemetryEcto do
       :"db.instance" => database,
       :"db.type" => db_type,
       unquote(DBAttributes.db_name()) => database,
-      :"db.url" => url,
-      :"total_time_#{time_unit}s" => System.convert_time_unit(total_time, :native, time_unit)
+      :"db.url" => url
     }
 
     db_statement_config = Keyword.get(config, :db_statement, :disabled)
@@ -191,7 +191,7 @@ defmodule OpentelemetryEcto do
     measurements
     |> Enum.reduce(attributes, fn
       {k, v}, acc
-      when not is_nil(v) and k in [:decode_time, :query_time, :queue_time, :idle_time] ->
+      when not is_nil(v) and k in [:total_time, :decode_time, :query_time, :queue_time, :idle_time] ->
         Map.put(
           acc,
           String.to_atom("#{k}_#{time_unit}s"),
