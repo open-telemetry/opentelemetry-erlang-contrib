@@ -1,3 +1,19 @@
+defmodule NnnnnWeb.Router do
+  use Phoenix.Router, helpers: false
+
+  import Phoenix.LiveView.Router
+
+  scope "/", NnnnnWeb do
+    scope "/resources/", ResourceLive do
+      live "/:resource_id", Show, :show
+    end
+  end
+end
+
+defmodule NnnnnWeb.ResourceLive.Show do
+  use Phoenix.LiveView, log: false
+end
+
 defmodule OpentelemetryPhoenixTest do
   use ExUnit.Case, async: false
   doctest OpentelemetryPhoenix
@@ -12,23 +28,24 @@ defmodule OpentelemetryPhoenixTest do
     %Phoenix.LiveView.Socket{
       endpoint: NnnnWeb.Endpoint,
       router: NnnnnWeb.Router,
-      view: NnnnnWeb.MyTestLive
+      view: NnnnnWeb.ResourceLive.Show
     },
     %{
       connect_params: %{},
       connect_info: %{},
-      root_view: NnnnnWeb.MyTestLive,
+      root_view: NnnnnWeb.ResourceLive.Show,
       live_temp: %{}
     },
-    nil,
+    :show,
     %{},
-    URI.parse("https://localhost:4000/live?foo=bar")
+    URI.parse("https://localhost:4000/resources/123?foo=bar")
   )
 
   @telemetry_meta_base %{
     socket: @socket,
     params: %{"foo" => "bar"},
-    uri: "https://localhost:4000/live?foo=bar",
+    uri: "https://localhost:4000/resources/123?foo=bar",
+    session: %{},
     telemetry_span_context: :dummy_ref
   }
 
@@ -37,9 +54,9 @@ defmodule OpentelemetryPhoenixTest do
   @exception_meta %{
     reason: %RuntimeError{message: "stop"},
     stacktrace: [
-      {NnnnnWeb.MyTestLive, :handle_params, 3,
+      {NnnnnWeb.ResourceLive.Show, :handle_params, 3,
        [
-         file: ~c"lib/nnnnn_web/live/my_test_live.ex",
+         file: ~c"lib/nnnnn_web/live/resources_live/show.ex",
          line: 28,
          error_info: %{module: Exception}
        ]}
@@ -95,17 +112,17 @@ defmodule OpentelemetryPhoenixTest do
 
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :stop],
-      %{system_time: System.system_time()},
+      %{system_time: System.system_time(), duration: 10},
       @telemetry_meta.mount.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "NnnnnWeb.ResourceLive.Show.mount",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "records spans for Phoenix LiveView handle_params" do
@@ -119,17 +136,17 @@ defmodule OpentelemetryPhoenixTest do
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :stop],
-      %{system_time: System.system_time()},
+      %{system_time: System.system_time(), duration: 10},
       @telemetry_meta.handle_params.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "NnnnnWeb.ResourceLive.Show.handle_params",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "records spans for Phoenix LiveView handle_event" do
@@ -143,17 +160,17 @@ defmodule OpentelemetryPhoenixTest do
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :stop],
-      %{system_time: System.system_time()},
+      %{system_time: System.system_time(), duration: 10},
       @telemetry_meta.handle_event.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "NnnnnWeb.ResourceLive.Show.handle_event#hello",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "handles exception during Phoenix LiveView handle_params" do
@@ -185,20 +202,20 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "NnnnnWeb.ResourceLive.Show.mount",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "NnnnnWeb.ResourceLive.Show.handle_params",
                       attributes: attributes,
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     [
       event(
@@ -232,12 +249,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "NnnnnWeb.ResourceLive.Show.handle_event#hello",
                       attributes: attributes,
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert  :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     [
       event(
