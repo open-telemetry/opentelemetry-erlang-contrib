@@ -20,6 +20,8 @@ defmodule OpentelemetryEcto do
 
   require OpenTelemetry.Tracer
 
+  alias OpenTelemetry.SemConv.Incubating.DBAttributes
+
   @typedoc """
   Option that you can pass to `setup/2`.
   """
@@ -65,7 +67,7 @@ defmodule OpentelemetryEcto do
       this config will have precedence.
     * `:db_statement` - `:disabled` (default), `:enabled`, or a function.
       Whether or not to include DB statements in the **span attributes** (as the
-      `db.statement` attribute).
+      `#{DBAttributes.db_statement()}` attribute).
       Optionally provide a function that takes a query string and returns a
       sanitized version of it. This is useful for removing sensitive information from the
       query string. Unless this option is `:enabled` or a function,
@@ -124,12 +126,12 @@ defmodule OpentelemetryEcto do
     # TODO: need connection information to complete the required attributes
     # net.peer.name or net.peer.ip and net.peer.port
     base_attributes = %{
-      "db.type": db_type,
-      source: source,
-      "db.instance": database,
-      "db.name": database,
-      "db.url": url,
-      "total_time_#{time_unit}s": System.convert_time_unit(total_time, :native, time_unit)
+      :source => source,
+      :"db.instance" => database,
+      :"db.type" => db_type,
+      unquote(DBAttributes.db_name()) => database,
+      :"db.url" => url,
+      :"total_time_#{time_unit}s" => System.convert_time_unit(total_time, :native, time_unit)
     }
 
     db_statement_config = Keyword.get(config, :db_statement, :disabled)
@@ -202,7 +204,7 @@ defmodule OpentelemetryEcto do
   end
 
   defp maybe_add_db_statement(attributes, :enabled, query) do
-    Map.put(attributes, :"db.statement", query)
+    Map.put(attributes, unquote(DBAttributes.db_statement()), query)
   end
 
   defp maybe_add_db_statement(attributes, :disabled, _query) do
@@ -210,7 +212,7 @@ defmodule OpentelemetryEcto do
   end
 
   defp maybe_add_db_statement(attributes, sanitizer, query) when is_function(sanitizer, 1) do
-    Map.put(attributes, :"db.statement", sanitizer.(query))
+    Map.put(attributes, unquote(DBAttributes.db_statement()), sanitizer.(query))
   end
 
   defp maybe_add_db_statement(attributes, _, _query) do
@@ -218,19 +220,19 @@ defmodule OpentelemetryEcto do
   end
 
   defp maybe_add_db_system(attributes, Ecto.Adapters.Postgres) do
-    Map.put(attributes, :"db.system", :postgresql)
+    Map.put(attributes, unquote(DBAttributes.db_system()), :postgresql)
   end
 
   defp maybe_add_db_system(attributes, Ecto.Adapters.MyXQL) do
-    Map.put(attributes, :"db.system", :mysql)
+    Map.put(attributes, unquote(DBAttributes.db_system()), :mysql)
   end
 
   defp maybe_add_db_system(attributes, Ecto.Adapters.SQLite3) do
-    Map.put(attributes, :"db.system", :sqlite)
+    Map.put(attributes, unquote(DBAttributes.db_system()), :sqlite)
   end
 
   defp maybe_add_db_system(attributes, Ecto.Adapters.Tds) do
-    Map.put(attributes, :"db.system", :mssql)
+    Map.put(attributes, unquote(DBAttributes.db_system()), :mssql)
   end
 
   defp maybe_add_db_system(attributes, _) do
