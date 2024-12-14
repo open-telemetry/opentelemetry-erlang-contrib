@@ -131,6 +131,7 @@ if otp_vsn >= 27 do
     alias OpenTelemetry.SemConv.NetworkAttributes
     alias OpenTelemetry.SemConv.ServerAttributes
     alias OpenTelemetry.SemConv.UserAgentAttributes
+    alias OpenTelemetry.SemConv.Incubating.CodeAttributes
     alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
     alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
@@ -238,8 +239,8 @@ if otp_vsn >= 27 do
               {URLAttributes.url_query(), "a=1&b=abc"},
               {URLAttributes.url_scheme(), :http},
               {URLAttributes.url_template(), "/users/:user_id"},
-              {:"phoenix.action", :user},
-              {:"phoenix.plug", OpentelemetryPhoenix.Integration.TracingTest.TestController}
+              {CodeAttributes.code_function(), :user},
+              {CodeAttributes.code_namespace(), OpentelemetryPhoenix.Integration.TracingTest.TestController}
             ]
 
             for {attr, val} <- expected_attrs do
