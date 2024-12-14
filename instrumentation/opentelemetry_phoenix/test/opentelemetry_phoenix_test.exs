@@ -118,7 +118,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.mount",
+                      name: "live_view.mount /resources/:resource_id",
                       attributes: attributes
                     )}
 
@@ -142,7 +142,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.handle_params",
+                      name: "live_view.handle_params /resources/:resource_id",
                       attributes: attributes
                     )}
 
@@ -166,7 +166,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.handle_event#hello",
+                      name: "live_view.handle_event /resources/:resource_id hello",
                       attributes: attributes
                     )}
 
@@ -202,7 +202,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.mount",
+                      name: "live_view.mount /resources/:resource_id",
                       attributes: attributes
                     )}
 
@@ -210,7 +210,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.handle_params",
+                      name: "live_view.handle_params /resources/:resource_id",
                       attributes: attributes,
                       events: events
                     )}
@@ -249,7 +249,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.ResourceLive.Show.handle_event#hello",
+                      name: "live_view.handle_event /resources/:resource_id hello",
                       attributes: attributes,
                       events: events
                     )}
