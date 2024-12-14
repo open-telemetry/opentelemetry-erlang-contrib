@@ -122,7 +122,11 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert :otel_attributes.map(attributes) == %{
+                                                  :"url.template" => "/resources/:resource_id",
+                                                  :"code.function" => :mount,
+                                                  :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                                }
   end
 
   test "records spans for Phoenix LiveView handle_params" do
@@ -146,7 +150,11 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert :otel_attributes.map(attributes) == %{
+                                                 :"url.template" => "/resources/:resource_id",
+                                                 :"code.function" => :handle_params,
+                                                 :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                               }
   end
 
   test "records spans for Phoenix LiveView handle_event" do
@@ -170,7 +178,11 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert :otel_attributes.map(attributes) == %{
+                                                 :"url.template" => "/resources/:resource_id",
+                                                 :"code.function" => :handle_event,
+                                                 :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                               }
   end
 
   test "handles exception during Phoenix LiveView handle_params" do
@@ -206,7 +218,11 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert :otel_attributes.map(attributes) == %{
+                                                  :"url.template" => "/resources/:resource_id",
+                                                  :"code.function" => :mount,
+                                                  :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                                }
 
     assert_receive {:span,
                     span(
@@ -215,7 +231,11 @@ defmodule OpentelemetryPhoenixTest do
                       events: events
                     )}
 
-    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert :otel_attributes.map(attributes) == %{
+                                                  :"url.template" => "/resources/:resource_id",
+                                                  :"code.function" => :handle_params,
+                                                  :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                                }
 
     [
       event(
@@ -254,7 +274,11 @@ defmodule OpentelemetryPhoenixTest do
                       events: events
                     )}
 
-    assert  :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
+    assert  :otel_attributes.map(attributes) == %{
+                                                  :"url.template" => "/resources/:resource_id",
+                                                  :"code.function" => :handle_event,
+                                                  :"code.namespace" => NnnnnWeb.ResourceLive.Show
+                                                }
 
     [
       event(
