@@ -53,7 +53,7 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.Incubating.{CodeAttributes, URLAttributes}
 
   alias OpenTelemetry.Tracer
 
@@ -148,8 +148,8 @@ defmodule OpentelemetryPhoenix do
   @doc false
   def handle_router_dispatch_start(_event, _measurements, meta, _config) do
     attributes = %{
-      :"phoenix.plug" => meta.plug,
-      :"phoenix.action" => meta.plug_opts,
+      unquote(CodeAttributes.code_namespace()) => meta.plug,
+      unquote(CodeAttributes.code_function()) => meta.plug_opts,
       URLAttributes.url_template() => meta.route
     }
 
@@ -167,7 +167,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.mount",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta, :mount)
     )
   end
 
@@ -181,7 +181,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.handle_params",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta, :handle_params)
     )
   end
 
@@ -195,7 +195,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.handle_event##{event}",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta, :handle_event)
     )
   end
 
@@ -221,5 +221,30 @@ defmodule OpentelemetryPhoenix do
     OpenTelemetry.Span.record_exception(ctx, exception, stacktrace, [])
     OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  defp live_view_start_opts(meta, function) do
+    %{
+      kind: :server,
+      attributes: url_attributes(meta) ++ code_attributes(meta.socket.view, function)
+    }
+  end
+
+  defp url_attributes(%{uri: uri, socket: %{router: router}}) do
+    uri = URI.parse(uri)
+
+    case Phoenix.Router.route_info(router, "GET", uri.path, uri.host) do
+      :error -> []
+      route_info -> [{URLAttributes.url_template(), route_info.route}]
+    end
+  end
+
+  defp url_attributes(_meta), do: %{}
+
+  defp code_attributes(module, function) do
+    [
+      {unquote(CodeAttributes.code_namespace()), module},
+      {unquote(CodeAttributes.code_function()), function}
+    ]
   end
 end
