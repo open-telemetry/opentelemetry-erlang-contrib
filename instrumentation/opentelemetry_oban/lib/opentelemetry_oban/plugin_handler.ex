@@ -12,7 +12,7 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp attach_plugin_start_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.plugin_start",
+      {__MODULE__, [:plugin, :start]},
       [:oban, :plugin, :start],
       &__MODULE__.handle_plugin_start/4,
       []
@@ -21,7 +21,7 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp attach_plugin_stop_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.plugin_stop",
+      {__MODULE__, [:plugin, :stop]},
       [:oban, :plugin, :stop],
       &__MODULE__.handle_plugin_stop/4,
       []
@@ -30,7 +30,7 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp attach_plugin_exception_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.plugin_exception",
+      {__MODULE__, [:plugin, :exception]},
       [:oban, :plugin, :exception],
       &__MODULE__.handle_plugin_exception/4,
       []
