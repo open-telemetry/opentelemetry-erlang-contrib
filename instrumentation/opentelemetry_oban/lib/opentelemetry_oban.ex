@@ -26,19 +26,17 @@ defmodule OpentelemetryOban do
   @doc """
   Initializes and configures telemetry handlers.
 
-  By default jobs and plugins are traced. If you wish to trace only jobs then
-  use:
+  By default everything is traced. If you wish to trace only jobs then use:
 
       OpentelemetryOban.setup(trace: [:jobs])
 
-  Note that if you don't trace plugins, but inside the plugins, there are spans
-  from other instrumentation libraries (e.g. ecto) then these will still be
-  traced. This setting controls only the spans that are created by
-  opentelemetry_oban.
+  Note that if you don't trace plugins or internal, there will be spans from
+  other instrumentation libraries (e.g. ecto) that would be traced. This setting
+  controls only the spans that are created by opentelemetry_oban.
   """
   @spec setup() :: :ok
   def setup(opts \\ []) do
-    trace = Keyword.get(opts, :trace, [:jobs, :plugins])
+    trace = Keyword.get(opts, :trace, [:jobs, :plugins, :internal])
 
     if Enum.member?(trace, :jobs) do
       OpentelemetryOban.JobHandler.attach()
@@ -46,6 +44,10 @@ defmodule OpentelemetryOban do
 
     if Enum.member?(trace, :plugins) do
       OpentelemetryOban.PluginHandler.attach()
+    end
+
+    if Enum.member?(trace, :internal) do
+      OpentelemetryOban.InternalHandler.attach()
     end
 
     :ok
