@@ -45,7 +45,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{plugin: Elixir.Oban.Plugins.Stager}
     )
 
-    refute_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+    refute_receive {:span, span(name: "oban.plugin Oban.Plugins.Stager")}
   end
 
   test "records span on plugin execution" do
@@ -61,7 +61,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{plugin: Elixir.Oban.Plugins.Stager}
     )
 
-    assert_receive {:span, span(name: "Elixir.Oban.Plugins.Stager process")}
+    assert_receive {:span, span(name: "oban.plugin Oban.Plugins.Stager")}
   end
 
   test "records span on plugin error" do
@@ -96,7 +96,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
 
     assert_receive {:span,
                     span(
-                      name: "Elixir.Oban.Plugins.Stager process",
+                      name: "oban.plugin Oban.Plugins.Stager",
                       events: events,
                       status: ^expected_status
                     )}
@@ -210,7 +210,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
   end
 
   defp receive_span_attrs(name) do
-    name = "#{name} process"
+    name = "oban.plugin #{inspect(name)}"
 
     assert_receive(
       {:span, span(name: ^name, attributes: attributes)},
