@@ -78,6 +78,7 @@ defmodule OpentelemetryPhoenix do
     opts = NimbleOptions.validate!(opts, @options_schema)
 
     attach_endpoint_start_handler(opts)
+    attach_socket_start_handler(opts)
     attach_router_start_handler(opts)
 
     if opts[:liveview] do
@@ -93,6 +94,16 @@ defmodule OpentelemetryPhoenix do
       {__MODULE__, :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
+      %{adapter: opts[:adapter]}
+    )
+  end
+
+  @doc false
+  def attach_socket_start_handler(opts) do
+    :telemetry.attach(
+      {__MODULE__, :socket_dispatch_start},
+      [:phoenix, :socket_dispatch, :start],
+      &__MODULE__.handle_socket_dispatch_start/4,
       %{adapter: opts[:adapter]}
     )
   end
@@ -143,6 +154,18 @@ defmodule OpentelemetryPhoenix do
   defp cowboy2_start do
     OpentelemetryProcessPropagator.fetch_parent_ctx()
     |> OpenTelemetry.Ctx.attach()
+  end
+
+  @doc false
+  def handle_socket_dispatch_start(_event, _measurements, meta, config) do
+    if config.adapter == :cowboy2, do: cowboy2_start()
+
+    attributes = %{
+      URLAttributes.url_template() => meta.route
+    }
+
+    Tracer.update_name("#{meta.conn.method} #{meta.route}")
+    Tracer.set_attributes(attributes)
   end
 
   @doc false
