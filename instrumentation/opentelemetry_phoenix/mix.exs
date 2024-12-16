@@ -70,18 +70,18 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:otel_http, "~> 0.2"},
       {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},
+      {:phoenix_live_view, "~> 1.0", optional: true},
       {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
       {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
       {:opentelemetry, "~> 1.5", only: [:dev, :test]},
       {:opentelemetry_bandit, "~> 0.2.0", only: [:dev, :test]},
       {:opentelemetry_cowboy, "~> 1.0.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.35", only: [:dev], runtime: false},
-      {:phoenix, "~> 1.7", only: [:dev, :test]},
-      {:phoenix_html, "~> 4.1", only: [:dev, :test]},
       {:plug_cowboy, "~> 2.5", only: [:dev, :test]},
       {:bandit, "~> 1.5", only: [:dev, :test]},
       {:req, "~> 0.5", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
+      {:floki, ">= 0.30.0", only: :test}
     ]
   end
 end

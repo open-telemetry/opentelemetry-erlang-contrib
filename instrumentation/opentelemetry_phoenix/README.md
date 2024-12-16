@@ -47,3 +47,59 @@ end
 ```
 
 The [Phoenix endpoint.ex template](https://github.com/phoenixframework/phoenix/blob/v1.6.0/installer/templates/phx_web/endpoint.ex#L39) can be used as a reference
+
+## Note on Phoenix LiveView
+
+Phoenix LiveView async operations does not have automatic propagation. It is necessary to replace `Phoenix.LiveView.assign_async/4` and `Phoenix.LiveView.start_async/4` with `OpentelemetryPhoenix.LiveView.assign_async/4` and `OpentelemetryPhoenix.LiveView.start_async/4`.
+
+Before:
+
+```elixir
+def mount(%{"slug" => slug}, _, socket) do
+  {:ok,
+   socket
+   |> assign(:foo, "bar")
+   |> assign_async(:org, fn -> {:ok, %{org: fetch_org!(slug)}} end)
+   |> assign_async([:profile, :rank], fn -> {:ok, %{profile: ..., rank: ...}} end)}
+end
+```
+
+After:
+
+```elixir
+def mount(%{"slug" => slug}, _, socket) do
+  {:ok,
+   socket
+   |> assign(:foo, "bar")
+   |> OpentelemetryPhoenix.LiveView.assign_async(:org, fn -> {:ok, %{org: fetch_org!(slug)}} end)
+   |> OpentelemetryPhoenix.LiveView.assign_async([:profile, :rank], fn -> {:ok, %{profile: ..., rank: ...}} end)}
+end
+```
+
+`OpentelemetryPhoenix.LiveView` must be required in all the live vie wmodules where it is used, sucha s the `live_view` and `live_component` macros:
+
+```elixir
+defmodule MyAppWeb do
+  # ...
+  def live_view do
+    quote do
+      use Phoenix.LiveView,
+        layout: {MyAppWeb.Layouts, :app}
+
+      require OpentelemetryPhoenix.LiveView
+
+      unquote(html_helpers())
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+
+      require OpentelemetryPhoenix.LiveView
+
+      unquote(html_helpers())
+    end
+  end
+end
+```
