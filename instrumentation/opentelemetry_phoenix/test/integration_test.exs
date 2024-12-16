@@ -68,6 +68,17 @@ if otp_vsn >= 27 do
       get("/halted", TestController, :halted)
     end
 
+
+    defmodule TestSocket do
+      @behaviour Phoenix.Socket.Transport
+      def child_spec(_), do: :ignore
+      def connect(_), do: {:ok, []}
+      def init(state), do: {:ok, state}
+      def handle_in(_, state), do: {:ok, state}
+      def handle_info(_, state), do: {:ok, state}
+      def terminate(_, _), do: :ok
+    end
+
     for adapter <- @adapters do
       defmodule Module.concat(["#{String.capitalize(to_string(adapter))}Endpoint"]) do
         defmodule ErrorView do
@@ -85,6 +96,8 @@ if otp_vsn >= 27 do
         end
 
         use Phoenix.Endpoint, otp_app: :endpoint_int
+
+        socket("/socket/:partition", TestSocket)
 
         plug(Plug.Telemetry, event_prefix: [:phoenix, adapter, :endpoint])
 
@@ -580,6 +593,65 @@ if otp_vsn >= 27 do
             for {attr, val} <- expected_attrs do
               assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
             end
+          end)
+        end
+
+        test "basic socket request", %{unquote(adapter) => adapter_info} do
+          capture_log(fn ->
+            {:ok, _} = start_supervised(adapter_info.spec)
+            setup_adapter(unquote(adapter))
+
+            connection_headers =
+              case unquote(protocol) do
+                :http1 ->
+                  %{
+                    "connection" => "upgrade",
+                    "upgrade" => "websocket",
+                    "sec-websocket-key" => "foo",
+                    "sec-websocket-version" => "13"
+                  }
+
+                :http2 ->
+                  %{}
+              end
+
+            Req.get("http://localhost:#{adapter_info.port}/socket/12/websocket",
+              headers: Map.merge(%{
+                "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+                "tracestate" => "congo=t61rcWkgMzE"
+              }, connection_headers),
+              retry: false,
+              connect_options: [protocols: [unquote(protocol)]]
+            )
+
+            assert_receive {:span,
+                            span(
+                              name: "GET /socket/:partition/websocket",
+                              kind: :server,
+                              attributes: span_attrs,
+                              parent_span_id: 13_235_353_014_750_950_193
+                            )}
+
+            attrs = :otel_attributes.map(span_attrs)
+
+            expected_proto = if unquote(protocol) == :http1, do: :"1.1", else: :"2"
+
+            expected_attrs = [
+              {ClientAttributes.client_address(), "127.0.0.1"},
+              {HTTPAttributes.http_request_method(), :GET},
+              {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+              {NetworkAttributes.network_protocol_version(), expected_proto},
+              {URLAttributes.url_path(), "/socket/12/websocket"},
+              {URLAttributes.url_template(), "/socket/:partition/websocket"}
+            ]
+
+            for {attr, val} <- expected_attrs do
+              assert Map.get(attrs, attr) == val
+            end
+
+            user_agent = Map.get(attrs, UserAgentAttributes.user_agent_original())
+            assert String.starts_with?(user_agent, "req/")
+            assert OpenTelemetry.Tracer.current_span_ctx() == :undefined
           end)
         end
       end
