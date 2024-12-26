@@ -17,6 +17,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
     Defaults to calling `:otel_propagator_text_map.get_text_map_injector/0`
     - `:mark_status_ok` - configures spans with a list of expected HTTP error codes to be marked as `ok`,
     not as an error-containing spans
+    - `:trace_attrs` - trace attributes to be added to the span.
   """
 
   alias OpenTelemetry.SemanticConventions.Trace
@@ -28,13 +29,14 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   def call(env, next, opts) do
     span_name = get_span_name(env, Keyword.get(opts, :span_name))
+    trace_attrs = Keyword.get(opts, :trace_attrs, %{})
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
       |> maybe_put_additional_ok_statuses(opts[:mark_status_ok])
       |> maybe_propagate(Keyword.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
       |> Tesla.run(next)
-      |> set_span_attributes()
+      |> set_span_attributes(trace_attrs)
       |> handle_result()
     end
   end
@@ -73,13 +75,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   defp maybe_put_additional_ok_statuses(env, _additional_ok_statuses), do: env
 
-  defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
-    OpenTelemetry.Tracer.set_attributes(build_attrs(env))
+  defp set_span_attributes({_, %Tesla.Env{} = env} = result, trace_attrs) do
+    trace_attrs
+    |> Map.merge(build_attrs(env))
+    |> OpenTelemetry.Tracer.set_attributes()
 
     result
   end
 
-  defp set_span_attributes(result) do
+  defp set_span_attributes(result, _trace_attrs) do
     result
   end
 

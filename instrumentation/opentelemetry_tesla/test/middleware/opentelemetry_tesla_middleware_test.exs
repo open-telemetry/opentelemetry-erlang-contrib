@@ -163,6 +163,35 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
   end
 
+  test "span with trace attrs", %{bypass: bypass} do
+    defmodule TestClient do
+      def get(client) do
+        Tesla.get(client, "/users/")
+      end
+
+      def client(url) do
+        middleware = [
+          {Tesla.Middleware.BaseUrl, url},
+          {Tesla.Middleware.OpenTelemetry, trace_attrs: %{"peer.service" => "myservicename"}}
+        ]
+
+        Tesla.client(middleware)
+      end
+    end
+
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      Plug.Conn.resp(conn, 204, "")
+    end)
+
+    bypass.port
+    |> endpoint_url()
+    |> TestClient.client()
+    |> TestClient.get()
+
+    assert_receive {:span, span(name: "HTTP GET", attributes: attributes)}
+    assert %{"peer.service" => "myservicename"} = :otel_attributes.map(attributes)
+  end
+
   test "Records spans for Tesla HTTP client", %{bypass: bypass} do
     defmodule TestClient do
       def get(client) do
