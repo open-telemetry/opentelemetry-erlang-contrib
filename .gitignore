@@ -25,3 +25,5 @@ doc
 
 .tool-versions
 **/.tool-versions
+
+.DS_Store
