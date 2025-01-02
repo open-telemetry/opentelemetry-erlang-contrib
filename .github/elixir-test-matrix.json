@@ -10,5 +10,10 @@
       "check_formatted": true
     }
   ],
-  "exclude": []
+  "exclude": [
+    {
+      "elixir_version": "1.15.8",
+      "otp_version": "27.2"
+    }
+  ]
 }
