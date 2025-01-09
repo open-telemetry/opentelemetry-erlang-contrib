@@ -60,10 +60,10 @@ defmodule OpentelemetryOban.JobHandler do
     OpenTelemetry.Tracer.set_current_span(:undefined)
 
     attributes = %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
-      Trace.messaging_operation() => :process,
+      :"messaging.system" => :oban,
+      :"messaging.destination" => queue,
+      :"messaging.destination_kind" => :queue,
+      :"messaging.operation" => :process,
       :"oban.job.job_id" => id,
       :"oban.job.worker" => worker,
       :"oban.job.priority" => priority,

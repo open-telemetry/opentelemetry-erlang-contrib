@@ -130,9 +130,9 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker)
 
     %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
+      :"messaging.system" => :oban,
+      :"messaging.destination" => queue,
+      :"messaging.destination_kind" => :queue,
       :"oban.job.worker" => worker
     }
   end
