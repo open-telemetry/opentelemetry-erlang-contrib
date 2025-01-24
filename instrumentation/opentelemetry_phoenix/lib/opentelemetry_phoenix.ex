@@ -170,7 +170,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.mount",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta)
     )
   end
 
@@ -184,7 +184,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.handle_params",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta)
     )
   end
 
@@ -198,7 +198,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.handle_event##{event}",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta)
     )
   end
 
@@ -225,4 +225,22 @@ defmodule OpentelemetryPhoenix do
     OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
   end
+
+  defp live_view_start_opts(meta) do
+    %{
+      kind: :server,
+      attributes: url_attributes(meta)
+    }
+  end
+
+  defp url_attributes(%{uri: uri, socket: %{router: router}}) do
+    uri = URI.parse(uri)
+
+    case Phoenix.Router.route_info(router, "GET", uri.path, uri.host) do
+      :error -> %{}
+      route_info -> %{URLAttributes.url_template() => route_info.route}
+    end
+  end
+
+  defp url_attributes(_meta), do: %{}
 end
