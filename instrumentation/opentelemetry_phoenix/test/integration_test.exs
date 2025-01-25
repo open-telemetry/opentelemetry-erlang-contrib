@@ -170,8 +170,7 @@ if otp_vsn >= 27 do
       }
 
       on_exit(fn ->
-        :telemetry.list_handlers([])
-        |> Enum.each(fn h -> :telemetry.detach(h.id) end)
+        Enum.each(:telemetry.list_handlers([]), &:telemetry.detach(&1.id))
       end)
 
       adapters

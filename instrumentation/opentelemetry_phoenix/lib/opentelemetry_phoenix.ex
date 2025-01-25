@@ -166,11 +166,14 @@ defmodule OpentelemetryPhoenix do
         %{socket: %{view: live_view}} = meta,
         _handler_configuration
       ) do
+    start_opts = live_view_start_opts(meta)
+    target = target(start_opts.attributes, live_view)
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.mount",
+      "live_view.mount #{target}",
       meta,
-      %{kind: :server}
+      start_opts
     )
   end
 
@@ -180,11 +183,14 @@ defmodule OpentelemetryPhoenix do
         %{socket: %{view: live_view}} = meta,
         _handler_configuration
       ) do
+    start_opts = live_view_start_opts(meta)
+    target = target(start_opts.attributes, live_view)
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.handle_params",
+      "live_view.handle_params #{target}",
       meta,
-      %{kind: :server}
+      start_opts
     )
   end
 
@@ -194,11 +200,14 @@ defmodule OpentelemetryPhoenix do
         %{socket: %{view: live_view}, event: event} = meta,
         _handler_configuration
       ) do
+    start_opts = live_view_start_opts(meta)
+    target = target(start_opts.attributes, live_view)
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.handle_event##{event}",
+      "live_view.handle_event #{target} #{event}",
       meta,
-      %{kind: :server}
+      live_view_start_opts(meta)
     )
   end
 
@@ -224,5 +233,27 @@ defmodule OpentelemetryPhoenix do
     OpenTelemetry.Span.record_exception(ctx, exception, stacktrace, [])
     OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  defp live_view_start_opts(meta) do
+    %{
+      kind: :server,
+      attributes: url_attributes(meta)
+    }
+  end
+
+  defp url_attributes(%{uri: uri, socket: %{router: router}}) do
+    uri = URI.parse(uri)
+
+    case Phoenix.Router.route_info(router, "GET", uri.path, uri.host) do
+      :error -> %{}
+      route_info -> %{URLAttributes.url_template() => route_info.route}
+    end
+  end
+
+  defp url_attributes(_meta), do: %{}
+
+  defp target(attributes, live_view) do
+    attributes[URLAttributes.url_template()] || inspect(live_view)
   end
 end

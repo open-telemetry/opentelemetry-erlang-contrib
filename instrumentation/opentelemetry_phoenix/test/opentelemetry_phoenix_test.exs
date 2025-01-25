@@ -1,3 +1,19 @@
+defmodule NnnnnWeb.Router do
+  use Phoenix.Router, helpers: false
+
+  import Phoenix.LiveView.Router
+
+  scope "/", NnnnnWeb do
+    scope "/resources/", ResourceLive do
+      live "/:resource_id", Show, :show
+    end
+  end
+end
+
+defmodule NnnnnWeb.ResourceLive.Show do
+  use Phoenix.LiveView, log: false
+end
+
 defmodule OpentelemetryPhoenixTest do
   use ExUnit.Case, async: false
   doctest OpentelemetryPhoenix
@@ -7,7 +23,64 @@ defmodule OpentelemetryPhoenixTest do
   require Record
 
   alias OpenTelemetry.SemConv.ExceptionAttributes
-  alias PhoenixLiveViewMeta, as: LiveViewMeta
+
+  @socket Phoenix.LiveView.Utils.configure_socket(
+            %Phoenix.LiveView.Socket{
+              endpoint: NnnnWeb.Endpoint,
+              router: NnnnnWeb.Router,
+              view: NnnnnWeb.ResourceLive.Show
+            },
+            %{
+              connect_params: %{},
+              connect_info: %{},
+              root_view: NnnnnWeb.ResourceLive.Show,
+              live_temp: %{}
+            },
+            :show,
+            %{},
+            URI.parse("https://localhost:4000/resources/123?foo=bar")
+          )
+
+  @telemetry_meta_base %{
+    socket: @socket,
+    params: %{"foo" => "bar"},
+    uri: "https://localhost:4000/resources/123?foo=bar",
+    session: %{},
+    telemetry_span_context: :dummy_ref
+  }
+
+  @telemetry_meta_handle_params Map.put(@telemetry_meta_base, :event, "hello")
+
+  @exception_meta %{
+    reason: %RuntimeError{message: "stop"},
+    stacktrace: [
+      {NnnnnWeb.ResourceLive.Show, :handle_params, 3,
+       [
+         file: ~c"lib/nnnnn_web/live/resources_live/show.ex",
+         line: 28,
+         error_info: %{module: Exception}
+       ]}
+    ],
+    kind: :error
+  }
+
+  @telemetry_meta %{
+    mount: %{
+      start: @telemetry_meta_base,
+      stop: @telemetry_meta_base,
+      exception: @telemetry_meta_base
+    },
+    handle_params: %{
+      start: @telemetry_meta_base,
+      stop: @telemetry_meta_base,
+      exception: Map.merge(@telemetry_meta_base, @exception_meta)
+    },
+    handle_event: %{
+      start: @telemetry_meta_handle_params,
+      stop: @telemetry_meta_handle_params,
+      exception: Map.merge(@telemetry_meta_handle_params, @exception_meta)
+    }
+  }
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
@@ -18,131 +91,124 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   setup do
-    Application.ensure_all_started([:telemetry])
     :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
     on_exit(fn ->
-      Application.stop(:telemetry)
+      Enum.each(:telemetry.list_handlers([]), &:telemetry.detach(&1.id))
     end)
 
     :ok
   end
 
   test "records spans for Phoenix LiveView mount" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.mount_start()
+      @telemetry_meta.mount.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :stop],
-      %{system_time: System.system_time()},
-      LiveViewMeta.mount_stop()
+      %{system_time: System.system_time(), duration: 10},
+      @telemetry_meta.mount.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "live_view.mount /resources/:resource_id",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "records spans for Phoenix LiveView handle_params" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_params_start()
+      @telemetry_meta.handle_params.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :stop],
-      %{system_time: System.system_time()},
-      LiveViewMeta.handle_params_stop()
+      %{system_time: System.system_time(), duration: 10},
+      @telemetry_meta.handle_params.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "live_view.handle_params /resources/:resource_id",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "records spans for Phoenix LiveView handle_event" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_event_start()
+      @telemetry_meta.handle_event.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :stop],
-      %{system_time: System.system_time()},
-      LiveViewMeta.handle_event_stop()
+      %{system_time: System.system_time(), duration: 10},
+      @telemetry_meta.handle_event.stop
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "live_view.handle_event /resources/:resource_id hello",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
   end
 
   test "handles exception during Phoenix LiveView handle_params" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.mount_start(:exception)
+      @telemetry_meta.mount.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :stop],
       %{system_time: System.system_time()},
-      LiveViewMeta.mount_stop(:exception)
+      @telemetry_meta.mount.stop
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_params_start(:exception)
+      @telemetry_meta.handle_params.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :exception],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_params_exception(:exception)
+      @telemetry_meta.handle_params.exception
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "live_view.mount /resources/:resource_id",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "live_view.handle_params /resources/:resource_id",
                       attributes: attributes,
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     [
       event(
@@ -160,28 +226,26 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "handles exceptions during Phoenix LiveView handle_event" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :start],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_event_start(:exception)
+      @telemetry_meta.handle_event.start
     )
 
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :exception],
       %{system_time: System.system_time()},
-      LiveViewMeta.handle_event_exception(:exception)
+      @telemetry_meta.handle_event.exception
     )
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "live_view.handle_event /resources/:resource_id hello",
                       attributes: attributes,
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{:"url.template" => "/resources/:resource_id"}
 
     [
       event(
