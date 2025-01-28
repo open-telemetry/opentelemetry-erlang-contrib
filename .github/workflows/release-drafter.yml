@@ -206,3 +206,13 @@ jobs:
           config-name: release-drafter-templates/otel-http.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-commanded-release:
+    name: '[opentelemetry-commanded-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-commanded.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
