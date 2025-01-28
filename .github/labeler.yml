@@ -97,6 +97,9 @@ opentelemetry_redix:
 opentelemetry_req:
   - instrumentation/opentelemetry_req/**/*
 
+opentelemetry_sqlcomenter:
+  - instrumentation/opentelemetry_sqlcomenter/**/*
+
 opentelemetry_telemetry:
   - utilities/opentelemetry_telemetry/**/*
 
