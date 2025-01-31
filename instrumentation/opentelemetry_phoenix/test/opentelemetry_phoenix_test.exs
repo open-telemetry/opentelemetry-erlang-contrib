@@ -18,19 +18,18 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   setup do
-    Application.ensure_all_started([:telemetry])
     :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
     on_exit(fn ->
-      Application.stop(:telemetry)
+      Enum.each(:telemetry.list_handlers([]), &:telemetry.detach(&1.id))
     end)
 
     :ok
   end
 
   test "records spans for Phoenix LiveView mount" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :start],
       %{system_time: System.system_time()},
@@ -53,8 +52,6 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "records spans for Phoenix LiveView handle_params" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_params, :start],
       %{system_time: System.system_time()},
@@ -77,8 +74,6 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "records spans for Phoenix LiveView handle_event" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :start],
       %{system_time: System.system_time()},
@@ -101,8 +96,6 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "handles exception during Phoenix LiveView handle_params" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :start],
       %{system_time: System.system_time()},
@@ -160,8 +153,6 @@ defmodule OpentelemetryPhoenixTest do
   end
 
   test "handles exceptions during Phoenix LiveView handle_event" do
-    OpentelemetryPhoenix.setup(adapter: :cowboy2)
-
     :telemetry.execute(
       [:phoenix, :live_view, :handle_event, :start],
       %{system_time: System.system_time()},
