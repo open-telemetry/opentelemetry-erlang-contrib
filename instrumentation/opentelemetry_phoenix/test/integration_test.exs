@@ -228,6 +228,7 @@ if otp_vsn >= 27 do
             attrs = :otel_attributes.map(span_attrs)
 
             expected_proto = if unquote(protocol) == :http1, do: :"1.1", else: :"2"
+            expected_route = "/users/:user_id"
 
             expected_attrs = [
               {ClientAttributes.client_address(), "127.0.0.1"},
@@ -238,7 +239,8 @@ if otp_vsn >= 27 do
               {URLAttributes.url_path(), "/users/1234"},
               {URLAttributes.url_query(), "a=1&b=abc"},
               {URLAttributes.url_scheme(), :http},
-              {URLAttributes.url_template(), "/users/:user_id"},
+              {URLAttributes.url_template(), expected_route},
+              {HTTPAttributes.http_route(), expected_route},
               {:"phoenix.action", :user},
               {:"phoenix.plug", OpentelemetryPhoenix.Integration.TracingTest.TestController}
             ]
