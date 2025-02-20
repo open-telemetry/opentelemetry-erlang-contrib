@@ -19,10 +19,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
     not as an error-containing spans
   """
 
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.{
+    HTTPAttributes,
+    Incubating,
+    ServerAttributes,
+    URLAttributes,
+    ErrorAttributes
+  }
 
   require OpenTelemetry.Tracer
-  require Trace
 
   @behaviour Tesla.Middleware
 
@@ -39,18 +44,18 @@ defmodule Tesla.Middleware.OpenTelemetry do
     end
   end
 
-  defp get_span_name(_env, span_name) when is_binary(span_name) do
-    span_name
+  defp get_span_name(env, span_name) when is_binary(span_name) do
+    "#{http_method(env.method)} #{span_name}"
   end
 
   defp get_span_name(env, span_name_fun) when is_function(span_name_fun, 1) do
-    span_name_fun.(env)
+    "#{http_method(env.method)} #{span_name_fun.(env)}"
   end
 
   defp get_span_name(env, _) do
     case env.opts[:path_params] do
-      nil -> "HTTP #{http_method(env.method)}"
-      _ -> URI.parse(env.url).path
+      nil -> "#{http_method(env.method)}"
+      _ -> "#{http_method(env.method)} #{URI.parse(env.url).path}"
     end
   end
 
@@ -85,7 +90,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   defp handle_result({:ok, %Tesla.Env{status: status, opts: opts} = env}) when status >= 400 do
     span_status =
-      if status in Keyword.get(opts, :additional_ok_statuses, []), do: :ok, else: :error
+      if status in Keyword.get(opts, :additional_ok_statuses, []) do
+        :ok
+      else
+        OpenTelemetry.Tracer.set_attribute(ErrorAttributes.error_type(), "#{status}")
+        :error
+      end
 
     span_status
     |> OpenTelemetry.status("")
@@ -95,6 +105,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp handle_result({:error, {Tesla.Middleware.FollowRedirects, :too_many_redirects}} = result) do
+    OpenTelemetry.Tracer.set_attribute(ErrorAttributes.error_type(), "too_many_redirects")
     OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
 
     result
@@ -105,6 +116,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp handle_result(result) do
+    OpenTelemetry.Tracer.set_attribute(ErrorAttributes.error_type(), "undefined")
     OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
 
     result
@@ -120,16 +132,15 @@ defmodule Tesla.Middleware.OpenTelemetry do
     url = Tesla.build_url(url, query)
     uri = URI.parse(url)
 
-    attrs = %{
-      Trace.http_method() => http_method(method),
-      Trace.http_url() => url,
-      Trace.http_target() => uri.path,
-      Trace.net_host_name() => uri.host,
-      Trace.http_scheme() => uri.scheme,
-      Trace.http_status_code() => status_code
+    %{
+      HTTPAttributes.http_request_method() => http_method(method),
+      ServerAttributes.server_address() => uri.host,
+      ServerAttributes.server_port() => uri.port,
+      URLAttributes.url_full() => url,
+      URLAttributes.url_scheme() => uri.scheme,
+      HTTPAttributes.http_response_status_code() => status_code
     }
-
-    maybe_append_content_length(attrs, headers)
+    |> maybe_append_content_length(headers)
   end
 
   defp maybe_append_content_length(attrs, headers) do
@@ -138,7 +149,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
         attrs
 
       {_key, content_length} ->
-        Map.put(attrs, Trace.http_response_content_length(), content_length)
+        Map.put(attrs, Incubating.HTTPAttributes.http_response_body_size(), content_length)
     end
   end
 
