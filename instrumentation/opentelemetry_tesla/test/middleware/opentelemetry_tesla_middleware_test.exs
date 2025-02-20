@@ -2,6 +2,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
   use ExUnit.Case
   require Record
 
+  alias OpenTelemetry.SemConv.{NetworkAttributes, UserAgentAttributes, Incubating}
+
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
   end
@@ -44,7 +46,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       Tesla.get(client, "/users/:id", opts: [path_params: [id: "3"]])
 
-      assert_receive {:span, span(name: "/users/:id", attributes: _attributes)}
+      assert_receive {:span, span(name: "GET /users/:id", attributes: _attributes)}
     end
 
     test "uses low-cardinality method name when path params middleware is not used",
@@ -64,7 +66,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
       Tesla.get(client, "/users/")
 
-      assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
+      assert_receive {:span, span(name: "GET", attributes: _attributes)}
     end
 
     test "uses custom span name when passed in middleware opts",
@@ -79,13 +81,13 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       client =
         Tesla.client([
           {Tesla.Middleware.BaseUrl, base_url},
-          {Tesla.Middleware.OpenTelemetry, span_name: "POST :my-high-cardinality-url"},
+          {Tesla.Middleware.OpenTelemetry, span_name: "my-high-cardinality-url"},
           Tesla.Middleware.PathParams
         ])
 
       Tesla.get(client, "/users/:id", opts: [path_params: [id: "3"]])
 
-      assert_receive {:span, span(name: "POST :my-high-cardinality-url", attributes: _attributes)}
+      assert_receive {:span, span(name: "GET my-high-cardinality-url", attributes: _attributes)}
     end
 
     test "uses custom span name function when passed in middleware opts",
@@ -100,10 +102,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       client =
         Tesla.client([
           {Tesla.Middleware.BaseUrl, base_url},
-          {Tesla.Middleware.OpenTelemetry,
-           span_name: fn env ->
-             "#{String.upcase(to_string(env.method))} potato"
-           end},
+          {Tesla.Middleware.OpenTelemetry, span_name: fn _env -> "potato" end},
           Tesla.Middleware.PathParams
         ])
 
@@ -126,7 +125,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     Tesla.get(client, "/users/")
 
-    assert_receive {:span, span(name: "HTTP GET", attributes: _attributes)}
+    assert_receive {:span, span(name: "GET", attributes: _attributes)}
   end
 
   @error_codes [
@@ -206,10 +205,14 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     Tesla.get(client, "/users/")
 
-    assert_receive {:span, span(status: {:status, :error, ""})}
+    assert_receive {:span, span(status: {:status, :error, _}, attributes: attributes)}
+
+    mapped_attributes = :otel_attributes.map(attributes)
+
+    assert mapped_attributes[:"error.type"] == Tesla.Middleware.FollowRedirects
   end
 
-  test "Marks Span status as :error if error status is within `mark_status_ok` opt list",
+  test "Marks Span status as :ok if error status is within `mark_status_ok` opt list",
        %{bypass: bypass, base_url: base_url} do
     Bypass.expect_once(bypass, "GET", "/users", fn conn ->
       Plug.Conn.resp(conn, 404, "")
@@ -226,7 +229,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(status: {:status, :ok, ""})}
   end
 
-  test "Marks Span status as :ok unless error status is within `mark_status_ok` opt list",
+  test "Marks Span status as :error unless error status is within `mark_status_ok` opt list",
        %{bypass: bypass, base_url: base_url} do
     Bypass.expect_once(bypass, "GET", "/users", fn conn ->
       Plug.Conn.resp(conn, 404, "")
@@ -243,7 +246,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(status: {:status, :error, ""})}
   end
 
-  test "Appends query string parameters to http.url attribute", %{
+  test "Appends query string parameters to url.full attribute", %{
     bypass: bypass,
     base_url: base_url
   } do
@@ -265,11 +268,11 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"http.url"] ==
+    assert mapped_attributes[:"url.full"] ==
              "http://localhost:#{bypass.port}/users/2?token=some-token&array%5B%5D=foo&array%5B%5D=bar"
   end
 
-  test "http.url attribute is correct when request doesn't contain query string parameters", %{
+  test "url.full attribute is correct when request doesn't contain query string parameters", %{
     bypass: bypass,
     base_url: base_url
   } do
@@ -291,7 +294,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"http.url"] ==
+    assert mapped_attributes[:"url.full"] ==
              "http://localhost:#{bypass.port}/users/2"
   end
 
@@ -311,10 +314,14 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     Tesla.get(client, "/users/:id", opts: [path_params: [id: "2"]])
 
     assert_receive {:span, span(name: _name, attributes: attributes)}
-    assert %{"http.target": "/users/2"} = :otel_attributes.map(attributes)
+
+    mapped_attributes = :otel_attributes.map(attributes)
+
+    assert mapped_attributes[:"url.full"] ==
+             "http://localhost:#{bypass.port}/users/2?token=some-token"
   end
 
-  test "Records http.response_content_length param into the span", %{
+  test "Records http.response.body.size param into the span", %{
     bypass: bypass,
     base_url: base_url
   } do
@@ -325,7 +332,8 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     client =
       Tesla.client([
         {Tesla.Middleware.BaseUrl, base_url},
-        Tesla.Middleware.OpenTelemetry,
+        {Tesla.Middleware.OpenTelemetry,
+         opt_in_attrs: [Incubating.HTTPAttributes.http_response_body_size()]},
         Tesla.Middleware.PathParams,
         {Tesla.Middleware.Query, [token: "some-token"]}
       ])
@@ -335,9 +343,118 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(name: _name, attributes: attributes)}
 
     mapped_attributes = :otel_attributes.map(attributes)
+    {response_size, _} = Integer.parse(mapped_attributes[:"http.response.body.size"])
 
-    {response_size, _} = Integer.parse(mapped_attributes[:"http.response_content_length"])
     assert response_size == byte_size("HELLO 👋")
+  end
+
+  test "Marks Span status as :error when adapter returns {:error, _}", %{
+    bypass: bypass,
+    base_url: base_url
+  } do
+    Bypass.down(bypass)
+
+    client =
+      Tesla.client([
+        {Tesla.Middleware.BaseUrl, base_url},
+        Tesla.Middleware.OpenTelemetry
+      ])
+
+    Tesla.get(client, "/users/")
+
+    assert_receive {:span, span(status: {:status, :error, _}, attributes: attributes)}
+
+    mapped_attributes = :otel_attributes.map(attributes)
+
+    assert mapped_attributes == %{
+             "error.type": "",
+             "http.request.method": "GET",
+             "server.address": "localhost",
+             "server.port": bypass.port
+           }
+  end
+
+  test "Adds opt-in attributes only from opt_in_attrs list", %{bypass: bypass, base_url: base_url} do
+    Bypass.expect_once(bypass, "GET", "/users/2", fn conn ->
+      Plug.Conn.resp(conn, 200, "HELLO")
+    end)
+
+    otel_opts = [
+      opt_in_attrs: [
+        Incubating.HTTPAttributes.http_request_body_size(),
+        Incubating.HTTPAttributes.http_response_body_size(),
+        NetworkAttributes.network_transport(),
+        Incubating.URLAttributes.url_scheme(),
+        Incubating.URLAttributes.url_template(),
+        UserAgentAttributes.user_agent_original()
+      ]
+    ]
+
+    client =
+      Tesla.client([
+        {Tesla.Middleware.BaseUrl, base_url},
+        {Tesla.Middleware.OpenTelemetry, otel_opts},
+        Tesla.Middleware.PathParams
+      ])
+
+    Tesla.get(client, "/users/:id", opts: [path_params: [id: "2"]])
+
+    assert_receive {:span, span(name: _name, attributes: attributes)}
+
+    mapped_attributes = :otel_attributes.map(attributes)
+
+    assert mapped_attributes == %{
+             "http.request.method": "GET",
+             "server.address": "localhost",
+             "server.port": bypass.port,
+             "url.full": "http://localhost:#{bypass.port}/users/2",
+             "http.response.status_code": 200,
+             "url.scheme": "http",
+             "url.template": "/users/:id",
+             "http.request.body.size": "0",
+             "http.response.body.size": "5",
+             "network.transport": :tcp,
+             "user_agent.original": ""
+           }
+  end
+
+  test "Adds request and response headers only from request_header_attrs and response_header_attrs lists",
+       %{
+         bypass: bypass,
+         base_url: base_url
+       } do
+    Bypass.expect_once(bypass, "GET", "/users", fn conn ->
+      Plug.Conn.resp(conn, 200, "HELLO")
+    end)
+
+    otel_opts = [
+      request_header_attrs: ["authorization"],
+      response_header_attrs: ["content-length", "server"]
+    ]
+
+    client =
+      Tesla.client([
+        {Tesla.Middleware.BaseUrl, base_url},
+        {Tesla.Middleware.Headers, [{"authorization", "Bearer token"}]},
+        {Tesla.Middleware.OpenTelemetry, otel_opts}
+      ])
+
+    Tesla.get(client, "/users")
+
+    assert_receive {:span, span(name: _name, attributes: attributes)}
+
+    mapped_attributes = :otel_attributes.map(attributes)
+
+    assert mapped_attributes == %{
+             "http.request.method": "GET",
+             "server.address": "localhost",
+             "server.port": bypass.port,
+             "url.full": "http://localhost:#{bypass.port}/users",
+             "http.request.header.authorization": ["Bearer token"],
+             "http.response.header.content-length": ["5"],
+             "http.response.header.server": ["Cowboy"],
+             "http.response.status_code": 200
+           }
   end
 
   describe "trace propagation" do
@@ -348,7 +465,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       assert is_binary(traceparent)
 
       assert_receive {:span, span(name: _name, attributes: attributes)}
-      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+      assert %{"url.full": "/propagate-traces"} = :otel_attributes.map(attributes)
     end
 
     test "optionally disable propagation but keep span report" do
@@ -357,7 +474,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       refute Tesla.get_header(env, "traceparent")
 
       assert_receive {:span, span(name: _name, attributes: attributes)}
-      assert %{"http.target": "/propagate-traces"} = :otel_attributes.map(attributes)
+      assert %{"url.full": "/propagate-traces"} = :otel_attributes.map(attributes)
     end
   end
 
