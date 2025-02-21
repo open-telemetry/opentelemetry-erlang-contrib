@@ -22,7 +22,8 @@ defmodule OpentelemetryPhoenixTest do
     :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
     on_exit(fn ->
-      Application.stop(:telemetry)
+      :telemetry.list_handlers([])
+      |> Enum.each(fn h -> :telemetry.detach(h.id) end)
     end)
 
     :ok
