@@ -1,5 +1,5 @@
 {
-  "otp_version": ["27.24", "25.3.2.16"],
+  "otp_version": ["27.2.4", "25.3.2.16"],
   "elixir_version": ["1.18.2", "1.15.8"],
   "rebar3_version": ["3.24.0"],
   "os": ["ubuntu-24.04"],
