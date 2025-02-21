@@ -43,22 +43,32 @@ defmodule OpentelemetryEctoTest do
 
     assert_receive {:span,
                     span(
-                      name: "opentelemetry_ecto.test_repo.query:users",
+                      name: "SELECT users",
                       attributes: attributes,
                       kind: :client
                     )}
 
+    attributes = :otel_attributes.map(attributes)
+
     assert %{
+             "db.client.operation.duration": _,
+             "db.client.connection.wait_time": _,
+             "db.client.connection.use_time": _
+           } = attributes
+
+    attributes =
+      Map.drop(
+        attributes,
+        ~w(db.client.operation.duration db.client.connection.wait_time db.client.connection.use_time)a
+      )
+
+    assert attributes == %{
              "db.system": :postgresql,
-             "db.instance": "opentelemetry_ecto_test",
-             "db.type": :sql,
-             "db.url": "ecto://localhost",
-             decode_time_microseconds: _,
-             query_time_microseconds: _,
-             queue_time_microseconds: _,
-             source: "users",
-             total_time_microseconds: _
-           } = :otel_attributes.map(attributes)
+             "db.collection.name": "users",
+             "db.namespace": "opentelemetry_ecto_test",
+             "server.address": "localhost",
+             "db.operation.name": "SELECT"
+           }
   end
 
   test "exclude unsantized query" do
@@ -66,70 +76,38 @@ defmodule OpentelemetryEctoTest do
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
-    assert !Map.has_key?(:otel_attributes.map(attributes), :"db.statement")
+    assert !Map.has_key?(:otel_attributes.map(attributes), :"db.query.text")
   end
 
   test "include unsanitized query when enabled" do
-    attach_handler(db_statement: :enabled)
+    attach_handler(db_query: :enabled)
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
 
-    assert %{"db.statement": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
+    assert %{"db.query.text": "SELECT u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
              :otel_attributes.map(attributes)
   end
 
   test "include sanitized query with sanitizer function" do
-    attach_handler(db_statement: fn str -> String.replace(str, "SELECT", "") end)
+    attach_handler(db_query: fn str -> String.replace(str, "SELECT", "") end)
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
 
-    assert %{"db.statement": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
+    assert %{"db.query.text": " u0.\"id\", u0.\"email\" FROM \"users\" AS u0"} =
              :otel_attributes.map(attributes)
   end
 
   test "include additional_attributes" do
-    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.instance": "my_instance"})
+    attach_handler(additional_attributes: %{"config.attribute": "special value", "db.system": "my_system"})
 
     Repo.all(User)
 
     assert_receive {:span, span(attributes: attributes)}
 
-    assert %{"config.attribute": "special value", "db.instance": "my_instance"} =
+    assert %{"config.attribute": "special value", "db.system": "my_system"} =
              :otel_attributes.map(attributes)
-  end
-
-  test "changes the time unit" do
-    attach_handler(time_unit: :millisecond)
-
-    Repo.all(Post)
-
-    assert_receive {:span,
-                    span(
-                      name: "opentelemetry_ecto.test_repo.query:posts",
-                      attributes: attributes
-                    )}
-
-    assert %{
-             "db.system": :postgresql,
-             "db.instance": "opentelemetry_ecto_test",
-             "db.type": :sql,
-             "db.url": "ecto://localhost",
-             decode_time_milliseconds: _,
-             query_time_milliseconds: _,
-             queue_time_milliseconds: _,
-             source: "posts",
-             total_time_milliseconds: _
-           } = :otel_attributes.map(attributes)
-  end
-
-  test "changes the span name prefix" do
-    attach_handler(span_prefix: "Ecto")
-
-    Repo.all(User)
-
-    assert_receive {:span, span(name: "Ecto:users")}
   end
 
   test "collects multiple spans" do
@@ -142,8 +120,8 @@ defmodule OpentelemetryEctoTest do
     |> Repo.all()
     |> Repo.preload([:posts])
 
-    assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:users")}
-    assert_receive {:span, span(name: "opentelemetry_ecto.test_repo.query:posts")}
+    assert_receive {:span, span(name: "SELECT users")}
+    assert_receive {:span, span(name: "SELECT posts")}
   end
 
   test "sets error message on error" do
@@ -157,11 +135,14 @@ defmodule OpentelemetryEctoTest do
 
     assert_receive {:span,
                     span(
-                      name: "opentelemetry_ecto.test_repo.query:users",
-                      status: {:status, :error, message}
+                      name: "SELECT users",
+                      status: {:status, :error, message},
+                      attributes: attributes
                     )}
 
     assert message =~ "non_existent_field does not exist"
+
+    assert %{"error.type": :undefined_column} = :otel_attributes.map(attributes)
   end
 
   test "preloads in sequence are tied to the parent span" do
@@ -180,19 +161,19 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:users"
+                      name: "SELECT users"
                     )}
 
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:posts"
+                      name: "SELECT posts"
                     )}
 
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:comments"
+                      name: "SELECT comments"
                     )}
   end
 
@@ -212,19 +193,19 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:users"
+                      name: "SELECT users"
                     )}
 
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:posts"
+                      name: "SELECT posts"
                     )}
 
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:comments"
+                      name: "SELECT comments"
                     )}
   end
 
@@ -246,34 +227,34 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:users"
+                      name: "SELECT users"
                     )}
 
     # comments preload
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:comments"
+                      name: "SELECT comments"
                     )}
 
     # users preload
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:users"
+                      name: "SELECT users"
                     )}
 
     # preloads of user
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:posts"
+                      name: "SELECT posts"
                     )}
 
     assert_receive {:span,
                     span(
                       parent_span_id: ^root_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:comments"
+                      name: "SELECT comments"
                     )}
   end
 
@@ -301,7 +282,7 @@ defmodule OpentelemetryEctoTest do
     assert_receive {:span,
                     span(
                       parent_span_id: ^parent_span_id,
-                      name: "opentelemetry_ecto.test_repo.query:users"
+                      name: "SELECT users"
                     )}
   end
 
