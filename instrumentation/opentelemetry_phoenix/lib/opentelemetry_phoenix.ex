@@ -53,7 +53,7 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
 
   alias OpenTelemetry.Tracer
 
@@ -153,7 +153,7 @@ defmodule OpentelemetryPhoenix do
     attributes = %{
       :"phoenix.plug" => meta.plug,
       :"phoenix.action" => meta.plug_opts,
-      URLAttributes.url_template() => meta.route
+      HTTPAttributes.http_route() => meta.route
     }
 
     Tracer.update_name("#{meta.conn.method} #{meta.route}")
