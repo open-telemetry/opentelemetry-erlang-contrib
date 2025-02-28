@@ -479,7 +479,7 @@ defmodule OpentelemetryBandit do
       }
       |> Map.take(config.opt_in_attrs)
 
-    if conn.status >= 500 do
+    if conn.status != nil and conn.status >= 500 do
       Tracer.set_status(OpenTelemetry.status(:error, ""))
 
       %{
