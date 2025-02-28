@@ -1,19 +1,19 @@
 {
-  "otp_version": ["27.2", "25.3.2.16"],
-  "elixir_version": ["1.18.1", "1.15.8"],
+  "otp_version": ["27.2.4", "25.3.2.16"],
+  "elixir_version": ["1.18.2", "1.15.8"],
   "rebar3_version": ["3.24.0"],
   "os": ["ubuntu-24.04"],
   "include": [
     {
-      "elixir_version": "1.18.1",
-      "otp_version": "27.2",
+      "elixir_version": "1.18.2",
+      "otp_version": "27.2.4",
       "check_formatted": true
     }
   ],
   "exclude": [
     {
       "elixir_version": "1.15.8",
-      "otp_version": "27.2"
+      "otp_version": "27.2.4"
     }
   ]
 }
