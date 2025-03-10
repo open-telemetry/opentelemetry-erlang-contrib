@@ -7,7 +7,7 @@
     "@opentelemetry/exporter-zipkin": "^1.13.0",
     "@opentelemetry/instrumentation-document-load": "^0.32.2",
     "@opentelemetry/sdk-trace-web": "^1.13.0",
-    "esbuild": "0.17.19",
+    "esbuild": "0.25.0",
     "htmx.org": "^1.9.2"
   },
   "scripts": {
