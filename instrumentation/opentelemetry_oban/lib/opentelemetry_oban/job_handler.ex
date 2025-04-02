@@ -14,7 +14,7 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp attach_job_start_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.job_start",
+      {__MODULE__, [:job, :start]},
       [:oban, :job, :start],
       &__MODULE__.handle_job_start/4,
       []
@@ -23,7 +23,7 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp attach_job_stop_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.job_stop",
+      {__MODULE__, [:job, :stop]},
       [:oban, :job, :stop],
       &__MODULE__.handle_job_stop/4,
       []
@@ -32,7 +32,7 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp attach_job_exception_handler() do
     :telemetry.attach(
-      "#{__MODULE__}.job_exception",
+      {__MODULE__, [:job, :exception]},
       [:oban, :job, :exception],
       &__MODULE__.handle_job_exception/4,
       []
