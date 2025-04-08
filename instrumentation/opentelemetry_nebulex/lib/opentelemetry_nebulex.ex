@@ -4,6 +4,8 @@ defmodule OpentelemetryNebulex do
   from Nebulex command events.
   """
 
+  require OpenTelemetry.SemanticConventions.Trace, as: Trace
+
   @tracer_id __MODULE__
 
   @doc """
@@ -66,7 +68,10 @@ defmodule OpentelemetryNebulex do
 
     attributes =
       %{
-        "nebulex.cache": metadata.adapter_meta.cache
+        :"nebulex.cache" => metadata.adapter_meta.cache,
+        Trace.db_system() => metadata.adapter_meta[:backend],
+        Trace.db_operation() => db_operation(metadata),
+        Trace.db_statement() => db_statement(metadata)
       }
       |> maybe_put(:"nebulex.backend", metadata.adapter_meta[:backend])
       |> maybe_put(:"nebulex.keyslot", metadata.adapter_meta[:keyslot])
@@ -108,4 +113,11 @@ defmodule OpentelemetryNebulex do
 
   defp format_error(exception) when is_exception(exception), do: Exception.message(exception)
   defp format_error(error), do: inspect(error)
+
+  defp db_operation(%{function_name: operation}), do: operation
+  defp db_operation(_), do: nil
+
+  defp db_statement(%{function_name: :get, args: [key]}), do: "GET #{inspect(key)}"
+  defp db_statement(%{function_name: :put, args: [key | _tail]}), do: "PUT #{inspect(key)}"
+  defp db_statement(_), do: nil
 end
