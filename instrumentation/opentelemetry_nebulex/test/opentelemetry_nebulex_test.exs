@@ -68,7 +68,10 @@ defmodule OpentelemetryNebulexTest do
     assert %{
              "nebulex.action": :miss,
              "nebulex.backend": :ets,
-             "nebulex.cache": OpentelemetryNebulexTest.Local
+             "nebulex.cache": OpentelemetryNebulexTest.Local,
+             "db.system": :ets,
+             "db.operation": :get,
+             "db.statement": "GET :my_key"
            } = :otel_attributes.map(attributes)
 
     # write
@@ -125,7 +128,10 @@ defmodule OpentelemetryNebulexTest do
 
     assert %{
              "nebulex.backend": :ets,
-             "nebulex.cache": OpentelemetryNebulexTest.Partitioned.Primary
+             "nebulex.cache": OpentelemetryNebulexTest.Partitioned.Primary,
+             "db.system": :ets,
+             "db.operation": :put,
+             "db.statement": "PUT :my_key"
            } = :otel_attributes.map(attributes)
 
     assert_receive {:span, span(name: "nebulex put", kind: :internal, attributes: attributes)}
