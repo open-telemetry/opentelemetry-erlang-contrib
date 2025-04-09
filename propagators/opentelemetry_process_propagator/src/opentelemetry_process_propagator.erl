@@ -46,17 +46,22 @@ fetch_ctx(Pid) when is_pid(Pid) ->
 %% Fetching a single key from another process's dictionary was introduced in 26.2,
 %% so we can't depend on it until 27.
 pdict(Pid) ->
-    case process_info(Pid, {dictionary, '$__current_otel_ctx'}) of
-        undefined -> undefined;
-        {{dictionary, '$__current_otel_ctx'}, Ctx} -> Ctx
+    try process_info(Pid, {dictionary, '$__current_otel_ctx'}) of
+            undefined -> undefined;
+            {{dictionary, '$__current_otel_ctx'}, Ctx} -> Ctx
+    catch
+        error:badarg ->
+            undefined
     end.
 -else.
 pdict(Pid) when is_pid(Pid) ->
-    case process_info(Pid, dictionary) of
+    try process_info(Pid, dictionary) of
         undefined -> undefined;
         {dictionary, Dict} -> otel_ctx(Dict)
+    catch
+        error:badarg ->
+            undefined
     end.
--endif.
 
 -spec otel_ctx([{term(), term()}]) -> otel_ctx:t() | undefined.
 otel_ctx(Dictionary) ->
@@ -66,3 +71,4 @@ otel_ctx(Dictionary) ->
         {'$__current_otel_ctx', Ctx} ->
             Ctx
     end.
+-endif.
