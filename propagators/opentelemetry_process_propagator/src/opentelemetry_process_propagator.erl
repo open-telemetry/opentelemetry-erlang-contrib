@@ -42,21 +42,26 @@ fetch_ctx(Name) when is_atom(Name) ->
 fetch_ctx(Pid) when is_pid(Pid) ->
     pdict(Pid).
 
+-spec pdict(pid()) -> otel_ctx:t() | undefined.
 -if(?OTP_RELEASE >= 27).
 %% Fetching a single key from another process's dictionary was introduced in 26.2,
 %% so we can't depend on it until 27.
-pdict(Pid) ->
+pdict(Pid) when node(Pid) =:= node() ->
     case process_info(Pid, {dictionary, '$__current_otel_ctx'}) of
         undefined -> undefined;
         {{dictionary, '$__current_otel_ctx'}, Ctx} -> Ctx
-    end.
+    end;
+pdict(_) ->
+    undefined.
+
 -else.
-pdict(Pid) when is_pid(Pid) ->
+pdict(Pid) when node(Pid) =:= node() ->
     case process_info(Pid, dictionary) of
         undefined -> undefined;
         {dictionary, Dict} -> otel_ctx(Dict)
-    end.
--endif.
+    end;
+pdict(_) ->
+    undefined.
 
 -spec otel_ctx([{term(), term()}]) -> otel_ctx:t() | undefined.
 otel_ctx(Dictionary) ->
@@ -66,3 +71,4 @@ otel_ctx(Dictionary) ->
         {'$__current_otel_ctx', Ctx} ->
             Ctx
     end.
+-endif.
