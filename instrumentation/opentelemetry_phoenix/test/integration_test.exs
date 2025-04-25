@@ -238,7 +238,7 @@ if otp_vsn >= 27 do
               {URLAttributes.url_path(), "/users/1234"},
               {URLAttributes.url_query(), "a=1&b=abc"},
               {URLAttributes.url_scheme(), :http},
-              {URLAttributes.url_template(), "/users/:user_id"},
+              {HTTPAttributes.http_route(), "/users/:user_id"},
               {:"phoenix.action", :user},
               {:"phoenix.plug", OpentelemetryPhoenix.Integration.TracingTest.TestController}
             ]

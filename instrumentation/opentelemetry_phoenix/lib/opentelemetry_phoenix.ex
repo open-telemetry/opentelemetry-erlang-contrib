@@ -53,7 +53,7 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
 
   alias OpenTelemetry.Tracer
 
@@ -62,13 +62,16 @@ defmodule OpentelemetryPhoenix do
   @tracer_id __MODULE__
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix() | adapter()]
+  @type opts :: [endpoint_prefix() | adapter() | liveview()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
 
   @typedoc "The phoenix server adapter being used. Required"
   @type adapter :: {:adapter, :cowboy2 | :bandit}
+
+  @typedoc "Attach LiveView handlers. Optional"
+  @type liveview :: {:liveview, boolean()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -150,7 +153,7 @@ defmodule OpentelemetryPhoenix do
     attributes = %{
       :"phoenix.plug" => meta.plug,
       :"phoenix.action" => meta.plug_opts,
-      URLAttributes.url_template() => meta.route
+      HTTPAttributes.http_route() => meta.route
     }
 
     Tracer.update_name("#{meta.conn.method} #{meta.route}")
