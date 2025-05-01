@@ -178,5 +178,14 @@
     "buildTool": "mix",
     "language": "elixir",
     "authorizedUsers": ["whatyouhide"]
+  },
+  "commanded": {
+    "workingDirectory": "instrumentation/opentelemetry_commanded",
+    "name": "Commanded Instrumentation",
+    "packageName": "opentelemetry_commanded",
+    "tagPrefix": "opentelemetry-commanded-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele", "tsloughter"]
   }
 }

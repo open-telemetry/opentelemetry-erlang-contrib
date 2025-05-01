@@ -106,5 +106,8 @@ opentelemetry_tesla:
 opentelemetry_xandra:
   - instrumentation/opentelemetry_xandra/**/*
 
+opentelemetry_commanded:
+  - instrumentation/opentelemetry_commanded/**/*
+
 otel_http:
   - utilities/otel_http/**/*
