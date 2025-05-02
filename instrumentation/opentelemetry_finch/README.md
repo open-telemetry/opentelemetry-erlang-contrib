@@ -11,7 +11,7 @@ dependencies in `mix.exs`:
 ```elixir
   def deps do
     [
-      {:opentelemetry_finch, "~> 0.1"}
+      {:opentelemetry_finch, "~> 0.3"}
     ]
   end
 ```
@@ -61,4 +61,3 @@ In your application start:
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/opentelemetry_finch](https://hexdocs.pm/opentelemetry_finch).
-
