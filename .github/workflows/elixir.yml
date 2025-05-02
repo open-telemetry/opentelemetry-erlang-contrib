@@ -171,7 +171,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: postgres:17.2
+        image: postgres:17.4
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -180,7 +180,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       postgres-r1:
-        image: postgres:17.2
+        image: postgres:17.4
         ports:
           - 5433:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
