@@ -171,13 +171,38 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: circleci/postgres:13.5-ram
-        ports: ["5432:5432"]
+        image: postgres:17.2
+        ports:
+          - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
+      postgres-r1:
+        image: postgres:17.2
+        ports:
+          - 5433:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opentelemetry_ecto_test
+      mysql:
+        image: mysql:9.2
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_ROOT_PASSWORD: mysql
+        ports:
+          - 3306:3306
+      mssql:
+        image: mcr.microsoft.com/azure-sql-edge
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: MSSQLpass1!
+        ports:
+          - 1433:1433
     steps:
       - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
