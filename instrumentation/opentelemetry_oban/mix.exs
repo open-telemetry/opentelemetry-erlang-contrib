@@ -10,13 +10,14 @@ defmodule OpentelemetryOban.MixProject do
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       docs: [
         source_url_pattern:
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_oban/%{path}#L%{line}",
         main: "OpentelemetryOban",
         extras: ["README.md"]
       ],
-      elixirc_paths: elixirc_paths(Mix.env()),
       package: [
         name: "opentelemetry_oban",
         description: "OpenTelemetry tracing for Oban",
@@ -41,7 +42,13 @@ defmodule OpentelemetryOban.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
+  defp aliases() do
+    [test: ["ecto.drop -q", "ecto.create -q", "ecto.migrate --quiet", "test"]]
+  end
+
   defp deps do
     [
       {:oban, "~> 2.0"},
@@ -55,7 +62,4 @@ defmodule OpentelemetryOban.MixProject do
       {:postgrex, ">= 0.0.0", only: [:dev, :test]}
     ]
   end
-
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
 end
