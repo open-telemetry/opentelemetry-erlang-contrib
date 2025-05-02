@@ -514,12 +514,20 @@ defmodule OpentelemetryBandit do
 
     %{
       HTTPAttributes.http_response_status_code() => status_code,
-      ErrorAttributes.error_type() => meta.exception.__struct__
+      ErrorAttributes.error_type() => error_type(meta.exception)
     }
     |> set_resp_header_attrs(meta.conn, config)
     |> Tracer.set_attributes()
 
     Tracer.end_span()
     OpenTelemetry.Ctx.clear()
+  end
+
+  defp error_type(%struct_name{} = reason) when is_exception(reason) do
+    struct_name
+  end
+
+  defp error_type(reason) do
+    reason
   end
 end
