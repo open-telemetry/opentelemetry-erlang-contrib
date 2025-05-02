@@ -1,7 +1,7 @@
 defmodule OpentelemetryFinch.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
 
   def project do
     [
@@ -54,14 +54,14 @@ defmodule OpentelemetryFinch.MixProject do
 
   defp deps do
     [
-      {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.36.0", only: [:dev], runtime: false},
+      {:telemetry, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
+      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
+      {:ex_doc, "~> 0.37", only: [:dev], runtime: false},
       {:finch, "~> 0.19", only: [:dev, :test]},
-      {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:bypass, "~> 2.0", only: :test}
     ]
   end
