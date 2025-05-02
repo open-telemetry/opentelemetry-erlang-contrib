@@ -18,7 +18,7 @@ services:
       - 5433:5432
 
   mysql:
-    image: mysql:9.2
+    image: mysql:9.3
     environment:
       - MYSQL_USER=mysql
       - MYSQL_PASSWORD=mysql
