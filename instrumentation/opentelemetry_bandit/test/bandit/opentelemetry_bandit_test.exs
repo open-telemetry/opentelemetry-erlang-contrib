@@ -14,6 +14,8 @@ defmodule OpentelemetryBanditTest do
   alias OpenTelemetry.SemConv.UserAgentAttributes
   alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
 
+  import ExUnit.CaptureLog, only: [capture_log: 1]
+
   use ServerHelper
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -375,7 +377,9 @@ defmodule OpentelemetryBanditTest do
       OpentelemetryBandit.setup()
       port = start_server()
 
-      Req.get("http://localhost:#{port}/arithmetic_error", retry: false)
+      capture_log(fn ->
+        Req.get("http://localhost:#{port}/arithmetic_error", retry: false)
+      end)
 
       expected_status = OpenTelemetry.status(:error, "")
 
@@ -416,6 +420,72 @@ defmodule OpentelemetryBanditTest do
                ExceptionAttributes.exception_type()
              ] ==
                Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+    end
+
+    test "with throw" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      capture_log(fn ->
+        Req.get("http://localhost:#{port}/throw_error", retry: false)
+      end)
+
+      expected_status = OpenTelemetry.status(:error, "")
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        attributes: span_attributes,
+                        events: events,
+                        status: ^expected_status
+                      )}
+
+      for {attribute, expected_value} <- [
+            {ClientAttributes.client_address(), "127.0.0.1"},
+            {ErrorAttributes.error_type(), "something"},
+            {HTTPAttributes.http_request_method(), :GET},
+            {HTTPAttributes.http_response_status_code(), 500},
+            {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+            {URLAttributes.url_path(), "/throw_error"},
+            {URLAttributes.url_scheme(), :http}
+          ] do
+        assert Map.get(:otel_attributes.map(span_attributes), attribute) == expected_value
+      end
+
+      assert [] = :otel_events.list(events)
+    end
+
+    test "with exit" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      capture_log(fn ->
+        Req.get("http://localhost:#{port}/exit_error", retry: false)
+      end)
+
+      expected_status = OpenTelemetry.status(:error, "")
+
+      assert_receive {:span,
+                      span(
+                        name: :GET,
+                        attributes: span_attributes,
+                        events: events,
+                        status: ^expected_status
+                      )}
+
+      for {attribute, expected_value} <- [
+            {ClientAttributes.client_address(), "127.0.0.1"},
+            {ErrorAttributes.error_type(), :abnormal_reason},
+            {HTTPAttributes.http_request_method(), :GET},
+            {HTTPAttributes.http_response_status_code(), 500},
+            {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+            {URLAttributes.url_path(), "/exit_error"},
+            {URLAttributes.url_scheme(), :http}
+          ] do
+        assert Map.get(:otel_attributes.map(span_attributes), attribute) == expected_value
+      end
+
+      assert [] = :otel_events.list(events)
     end
 
     test "with halted request" do
@@ -464,5 +534,13 @@ defmodule OpentelemetryBanditTest do
 
   def arithmetic_error(_conn) do
     1 / 0
+  end
+
+  def throw_error(_conn) do
+    throw("something")
+  end
+
+  def exit_error(_conn) do
+    exit(:abnormal_reason)
   end
 end
