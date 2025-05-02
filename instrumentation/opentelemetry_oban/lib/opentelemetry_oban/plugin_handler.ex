@@ -38,13 +38,18 @@ defmodule OpentelemetryOban.PluginHandler do
   end
 
   def handle_plugin_start(_event, _measurements, %{plugin: plugin} = metadata, _config) do
+    attributes = %{"oban.plugin": plugin}
+    span_name = span_name(attributes)
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{plugin} process",
+      span_name,
       metadata,
-      %{attributes: %{"oban.plugin": plugin}}
+      %{attributes: attributes}
     )
   end
+
+  defp span_name(%{"oban.plugin": plugin}), do: "oban.plugin #{inspect(plugin)}"
 
   def handle_plugin_stop(_event, _measurements, metadata, _config) do
     Tracer.set_attributes(end_span_plugin_attrs(metadata))

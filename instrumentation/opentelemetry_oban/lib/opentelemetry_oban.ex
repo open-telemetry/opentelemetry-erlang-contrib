@@ -18,9 +18,8 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
-  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -53,9 +52,9 @@ defmodule OpentelemetryOban do
 
   def insert(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    span_name = span_name(attributes)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span span_name, attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       case Oban.insert(name, changeset) do
@@ -75,9 +74,9 @@ defmodule OpentelemetryOban do
 
   def insert!(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    span_name = span_name(attributes)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span span_name, attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do
@@ -101,10 +100,10 @@ defmodule OpentelemetryOban do
   end
 
   def insert_all(name, changesets) when is_list(changesets) do
-    # changesets in insert_all can include different workers and different
-    # queues. This means we cannot provide much information here, but we can
-    # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span :"Oban bulk insert", kind: :producer do
+    attributes = attributes_before_insert(changesets)
+    span_name = span_name(attributes)
+
+    OpenTelemetry.Tracer.with_span span_name, kind: :producer, attributes: attributes do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end
@@ -125,23 +124,76 @@ defmodule OpentelemetryOban do
     Changeset.change(changeset, %{meta: new_meta})
   end
 
+  defp attributes_before_insert(changesets) when is_list(changesets) do
+    {queues, workers} =
+      Enum.reduce(changesets, {[], []}, fn changeset, {queues, workers} ->
+        queue = Changeset.get_field(changeset, :queue)
+        worker = Changeset.get_field(changeset, :worker)
+
+        {Enum.uniq([queue | queues]), Enum.uniq([worker | workers])}
+      end)
+
+    %{
+      unquote(MessagingAttributes.messaging_system()) => :oban,
+      unquote(MessagingAttributes.messaging_operation_name()) => :send,
+      unquote(MessagingAttributes.messaging_operation_type()) =>
+        unquote(MessagingAttributes.messaging_operation_type_values().publish)
+    }
+    # If the attribute value is the same for all messages in the batch, the instrumentation SHOULD set such attribute on the span representing the batch operation.
+    |> then(fn attributes ->
+      case queues do
+        [queue] ->
+          Map.put(attributes, unquote(MessagingAttributes.messaging_consumer_group_name()), queue)
+
+        _ ->
+          attributes
+      end
+    end)
+    |> then(fn attributes ->
+      case workers do
+        [worker] ->
+          Map.put(attributes, unquote(MessagingAttributes.messaging_destination_name()), worker)
+
+        _ ->
+          attributes
+      end
+    end)
+  end
+
   defp attributes_before_insert(changeset) do
     queue = Changeset.get_field(changeset, :queue)
     worker = Changeset.get_field(changeset, :worker)
 
     %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
+      unquote(MessagingAttributes.messaging_system()) => :oban,
+      unquote(MessagingAttributes.messaging_consumer_group_name()) => queue,
+      unquote(MessagingAttributes.messaging_destination_name()) => worker,
+      unquote(MessagingAttributes.messaging_operation_name()) => :send,
+      unquote(MessagingAttributes.messaging_operation_type()) =>
+        unquote(MessagingAttributes.messaging_operation_type_values().publish),
       :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
+      unquote(MessagingAttributes.messaging_message_id()) => job.id,
       "oban.job.job_id": job.id,
       "oban.job.priority": job.priority,
       "oban.job.max_attempts": job.max_attempts
     }
+  end
+
+  # `messaging.destination.name` SHOULD be used when the destination is known to be neither temporary nor anonymous.
+  defp span_name(%{
+         unquote(MessagingAttributes.messaging_operation_name()) => operation,
+         unquote(MessagingAttributes.messaging_destination_name()) => destination
+       }) do
+    "#{operation} #{destination}"
+  end
+
+  # If a corresponding `{destination}` value is not available for a specific operation, the instrumentation SHOULD omit the {destination}.
+  defp span_name(%{unquote(MessagingAttributes.messaging_operation_name()) => operation}) do
+    "#{operation}"
   end
 end
