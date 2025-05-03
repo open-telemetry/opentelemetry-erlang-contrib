@@ -87,4 +87,74 @@ defmodule OpentelemetryBroadwayTest do
                       status: ^expected_status
                     )}
   end
+
+  test "records span on successful batch" do
+    ref = Broadway.test_batch(TestBroadway, ["batch success", "batch success"])
+
+    assert_receive {:ack, ^ref, [%{data: "batch success"}, %{data: "batch success"}], []}
+
+    expected_status = OpenTelemetry.status(:ok, "")
+
+    assert_receive {:span,
+                    span(
+                      name: "TestBroadway/default batching process",
+                      attributes: attributes,
+                      parent_span_id: :undefined,
+                      kind: :internal,
+                      status: ^expected_status
+                    )}
+
+    assert %{
+              "broadway.batch.count": 2,
+              "broadway.batch.failed.count": 0,
+              "broadway.batch.success.count": 2
+            } = :otel_attributes.map(attributes)
+  end
+
+  test "records span on batch with exception" do
+    ref = Broadway.test_batch(TestBroadway, ["batch success", "batch exception"])
+
+    # Uncaught exceptions cause Broadway to fail the whole batch
+    assert_receive {:ack, ^ref, [], [%{data: "batch success"}, %{data: "batch exception"}]}
+
+    expected_status = OpenTelemetry.status(:error, "Batch completed with failed messages")
+
+    assert_receive {:span,
+                    span(
+                      name: "TestBroadway/default batching process",
+                      attributes: attributes,
+                      parent_span_id: :undefined,
+                      kind: :internal,
+                      status: ^expected_status
+                    )}
+
+    assert %{
+              "broadway.batch.count": 2,
+              "broadway.batch.failed.count": 2,
+              "broadway.batch.success.count": 0
+            } = :otel_attributes.map(attributes)
+  end
+
+  test "records span on batch with failed messages" do
+    ref = Broadway.test_batch(TestBroadway, ["batch success", "batch error"])
+
+    assert_receive {:ack, ^ref, [%{data: "batch success"}], [%{data: "batch error"}]}
+
+    expected_status = OpenTelemetry.status(:error, "Batch completed with failed messages")
+
+    assert_receive {:span,
+                    span(
+                      name: "TestBroadway/default batching process",
+                      attributes: attributes,
+                      parent_span_id: :undefined,
+                      kind: :internal,
+                      status: ^expected_status
+                    )}
+
+    assert %{
+              "broadway.batch.count": 2,
+              "broadway.batch.failed.count": 1,
+              "broadway.batch.success.count": 1
+            } = :otel_attributes.map(attributes)
+  end
 end
