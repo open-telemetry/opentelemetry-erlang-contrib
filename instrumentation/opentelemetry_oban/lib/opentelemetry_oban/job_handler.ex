@@ -57,7 +57,7 @@ defmodule OpentelemetryOban.JobHandler do
     :otel_propagator_text_map.extract(Map.to_list(job_meta))
     parent = OpenTelemetry.Tracer.current_span_ctx()
     links = if parent == :undefined, do: [], else: [OpenTelemetry.link(parent)]
-    OpenTelemetry.Tracer.set_current_span(:undefined)
+    OpenTelemetry.Tracer.set_current_span(parent)
 
     attributes = %{
       Trace.messaging_system() => :oban,
