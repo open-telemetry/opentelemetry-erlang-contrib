@@ -61,24 +61,21 @@ defmodule OpentelemetryFinch do
   ```
   """
 
-  alias OpenTelemetry.SemConv.{
-    ErrorAttributes,
-    HTTPAttributes,
-    ServerAttributes,
-    URLAttributes,
-    NetworkAttributes,
-    UserAgentAttributes,
-    Incubating
-  }
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
 
   require OpenTelemetry.Tracer
 
   opt_ins = [
-    Incubating.HTTPAttributes.http_request_body_size(),
-    Incubating.HTTPAttributes.http_response_body_size(),
+    HTTPAttributes.http_request_body_size(),
+    HTTPAttributes.http_response_body_size(),
     NetworkAttributes.network_transport(),
-    Incubating.URLAttributes.url_scheme(),
-    Incubating.URLAttributes.url_template(),
+    URLAttributes.url_scheme(),
+    URLAttributes.url_template(),
     UserAgentAttributes.user_agent_original()
   ]
 
@@ -117,11 +114,11 @@ defmodule OpentelemetryFinch do
                   )
 
   @type opt_in_attr() ::
-          unquote(Incubating.HTTPAttributes.http_request_body_size())
-          | unquote(Incubating.HTTPAttributes.http_response_body_size())
+          unquote(HTTPAttributes.http_request_body_size())
+          | unquote(HTTPAttributes.http_response_body_size())
           | unquote(NetworkAttributes.network_transport())
-          | unquote(Incubating.URLAttributes.url_scheme())
-          | unquote(Incubating.URLAttributes.url_template())
+          | unquote(URLAttributes.url_scheme())
+          | unquote(URLAttributes.url_template())
           | unquote(UserAgentAttributes.user_agent_original())
 
   @type opt_in_attrs() :: [opt_in_attr()]
@@ -205,10 +202,10 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_req_attrs(attrs, request, %{opt_in_attrs: [_ | _] = opt_in_attrs} = otel_config) do
     %{
-      Incubating.HTTPAttributes.http_request_body_size() => extract_request_body_size(request),
+      HTTPAttributes.http_request_body_size() => extract_request_body_size(request),
       NetworkAttributes.network_transport() => :tcp,
       URLAttributes.url_scheme() => request.scheme,
-      Incubating.URLAttributes.url_template() => extract_url_template(otel_config),
+      URLAttributes.url_template() => extract_url_template(otel_config),
       UserAgentAttributes.user_agent_original() => extract_user_agent(request)
     }
     |> Map.take(opt_in_attrs)
@@ -232,7 +229,7 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_resp_attrs(attrs, response, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
     %{
-      Incubating.HTTPAttributes.http_response_body_size() => extract_response_body_size(response)
+      HTTPAttributes.http_response_body_size() => extract_response_body_size(response)
     }
     |> Map.take(opt_in_attrs)
     |> then(&Map.merge(attrs, &1))
