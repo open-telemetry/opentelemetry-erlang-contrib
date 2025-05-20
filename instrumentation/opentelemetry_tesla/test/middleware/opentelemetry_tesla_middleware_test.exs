@@ -2,7 +2,12 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
   use ExUnit.Case
   require Record
 
-  alias OpenTelemetry.SemConv.{NetworkAttributes, UserAgentAttributes, Incubating}
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
@@ -209,7 +214,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"error.type"] == Tesla.Middleware.FollowRedirects
+    assert mapped_attributes[ErrorAttributes.error_type()] == Tesla.Middleware.FollowRedirects
   end
 
   test "Marks Span status as :ok if error status is within `mark_status_ok` opt list",
@@ -268,7 +273,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"url.full"] ==
+    assert mapped_attributes[URLAttributes.url_full()] ==
              "http://localhost:#{bypass.port}/users/2?token=some-token&array%5B%5D=foo&array%5B%5D=bar"
   end
 
@@ -294,7 +299,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"url.full"] ==
+    assert mapped_attributes[URLAttributes.url_full()] ==
              "http://localhost:#{bypass.port}/users/2"
   end
 
@@ -317,7 +322,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes[:"url.full"] ==
+    assert mapped_attributes[URLAttributes.url_full()] ==
              "http://localhost:#{bypass.port}/users/2?token=some-token"
   end
 
@@ -333,7 +338,7 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       Tesla.client([
         {Tesla.Middleware.BaseUrl, base_url},
         {Tesla.Middleware.OpenTelemetry,
-         opt_in_attrs: [Incubating.HTTPAttributes.http_response_body_size()]},
+         opt_in_attrs: [HTTPAttributes.http_response_body_size()]},
         Tesla.Middleware.PathParams,
         {Tesla.Middleware.Query, [token: "some-token"]}
       ])
@@ -343,7 +348,9 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     assert_receive {:span, span(name: _name, attributes: attributes)}
 
     mapped_attributes = :otel_attributes.map(attributes)
-    {response_size, _} = Integer.parse(mapped_attributes[:"http.response.body.size"])
+
+    {response_size, _} =
+      Integer.parse(mapped_attributes[HTTPAttributes.http_response_body_size()])
 
     assert response_size == byte_size("HELLO 👋")
   end
@@ -366,12 +373,16 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes == %{
-             "error.type": "",
-             "http.request.method": "GET",
-             "server.address": "localhost",
-             "server.port": bypass.port
-           }
+    expected_attrs = [
+      {ErrorAttributes.error_type(), ""},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(mapped_attributes, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "Adds opt-in attributes only from opt_in_attrs list", %{bypass: bypass, base_url: base_url} do
@@ -381,11 +392,11 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     otel_opts = [
       opt_in_attrs: [
-        Incubating.HTTPAttributes.http_request_body_size(),
-        Incubating.HTTPAttributes.http_response_body_size(),
+        HTTPAttributes.http_request_body_size(),
+        HTTPAttributes.http_response_body_size(),
         NetworkAttributes.network_transport(),
-        Incubating.URLAttributes.url_scheme(),
-        Incubating.URLAttributes.url_template(),
+        URLAttributes.url_scheme(),
+        URLAttributes.url_template(),
         UserAgentAttributes.user_agent_original()
       ]
     ]
@@ -403,19 +414,23 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes == %{
-             "http.request.method": "GET",
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "url.full": "http://localhost:#{bypass.port}/users/2",
-             "http.response.status_code": 200,
-             "url.scheme": "http",
-             "url.template": "/users/:id",
-             "http.request.body.size": "0",
-             "http.response.body.size": "5",
-             "network.transport": :tcp,
-             "user_agent.original": ""
-           }
+    expected_attrs = [
+      {HTTPAttributes.http_request_method(), "GET"},
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {URLAttributes.url_full(), "http://localhost:#{bypass.port}/users/2"},
+      {HTTPAttributes.http_response_status_code(), 200},
+      {URLAttributes.url_scheme(), "http"},
+      {URLAttributes.url_template(), "/users/:id"},
+      {HTTPAttributes.http_request_body_size(), "0"},
+      {HTTPAttributes.http_response_body_size(), "5"},
+      {NetworkAttributes.network_transport(), :tcp},
+      {UserAgentAttributes.user_agent_original(), ""}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(mapped_attributes, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "Adds request and response headers only from request_header_attrs and response_header_attrs lists",
@@ -445,16 +460,20 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
 
     mapped_attributes = :otel_attributes.map(attributes)
 
-    assert mapped_attributes == %{
-             "http.request.method": "GET",
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "url.full": "http://localhost:#{bypass.port}/users",
-             "http.request.header.authorization": ["Bearer token"],
-             "http.response.header.content-length": ["5"],
-             "http.response.header.server": ["Cowboy"],
-             "http.response.status_code": 200
-           }
+    expected_attrs = [
+      {HTTPAttributes.http_request_method(), "GET"},
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {URLAttributes.url_full(), "http://localhost:#{bypass.port}/users"},
+      {HTTPAttributes.http_response_status_code(), 200},
+      {String.to_atom("#{HTTPAttributes.http_response_header()}.content-length"), ["5"]},
+      {String.to_atom("#{HTTPAttributes.http_response_header()}.server"), ["Cowboy"]},
+      {String.to_atom("#{HTTPAttributes.http_request_header()}.authorization"), ["Bearer token"]}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(mapped_attributes, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   describe "trace propagation" do
@@ -465,7 +484,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       assert is_binary(traceparent)
 
       assert_receive {:span, span(name: _name, attributes: attributes)}
-      assert %{"url.full": "/propagate-traces"} = :otel_attributes.map(attributes)
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[URLAttributes.url_full()] == "/propagate-traces"
     end
 
     test "optionally disable propagation but keep span report" do
@@ -474,7 +496,10 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
       refute Tesla.get_header(env, "traceparent")
 
       assert_receive {:span, span(name: _name, attributes: attributes)}
-      assert %{"url.full": "/propagate-traces"} = :otel_attributes.map(attributes)
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[URLAttributes.url_full()] == "/propagate-traces"
     end
   end
 
