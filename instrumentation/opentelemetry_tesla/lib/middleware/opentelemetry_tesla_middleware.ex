@@ -22,15 +22,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
     - `:response_header_attrs` - list of response headers to be added as attributes, e.g. `["content-length"]`
   """
 
-  alias OpenTelemetry.SemConv.{
-    HTTPAttributes,
-    Incubating,
-    ServerAttributes,
-    URLAttributes,
-    NetworkAttributes,
-    UserAgentAttributes,
-    ErrorAttributes
-  }
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
 
   require OpenTelemetry.Tracer
 
@@ -166,11 +163,10 @@ defmodule Tesla.Middleware.OpenTelemetry do
     uri = URI.parse(env.url)
 
     %{
-      Incubating.HTTPAttributes.http_request_body_size() =>
-        get_header(env.headers, "content-length", "0"),
+      HTTPAttributes.http_request_body_size() => get_header(env.headers, "content-length", "0"),
       NetworkAttributes.network_transport() => :tcp,
       URLAttributes.url_scheme() => uri.scheme,
-      Incubating.URLAttributes.url_template() => get_url_template(env),
+      URLAttributes.url_template() => get_url_template(env),
       UserAgentAttributes.user_agent_original() => get_header(env.headers, "user-agent", "")
     }
     |> Map.take(opt_in_attrs)
@@ -181,8 +177,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   defp add_opt_in_resp_attrs(attrs, env, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
     %{
-      Incubating.HTTPAttributes.http_response_body_size() =>
-        get_header(env.headers, "content-length", "0")
+      HTTPAttributes.http_response_body_size() => get_header(env.headers, "content-length", "0")
     }
     |> Map.take(opt_in_attrs)
     |> then(&Map.merge(attrs, &1))
