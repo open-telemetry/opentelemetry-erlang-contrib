@@ -7,7 +7,12 @@ defmodule OpentelemetryFinchTest do
   require OpenTelemetry.Span
   require Record
 
-  alias OpenTelemetry.SemConv.{NetworkAttributes, UserAgentAttributes, Incubating}
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
@@ -46,13 +51,19 @@ defmodule OpentelemetryFinchTest do
                       attributes: attributes
                     )}
 
-    assert %{
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "http.request.method": "GET",
-             "url.full": url,
-             "http.response.status_code": 200
-           } == :otel_attributes.map(attributes)
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), url},
+      {HTTPAttributes.http_response_status_code(), 200}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "records span on requests with custom span name", %{bypass: bypass} do
@@ -86,11 +97,11 @@ defmodule OpentelemetryFinchTest do
 
     otel_config = %{
       opt_in_attrs: [
-        Incubating.HTTPAttributes.http_request_body_size(),
-        Incubating.HTTPAttributes.http_response_body_size(),
+        HTTPAttributes.http_request_body_size(),
+        HTTPAttributes.http_response_body_size(),
         NetworkAttributes.network_transport(),
-        Incubating.URLAttributes.url_scheme(),
-        Incubating.URLAttributes.url_template(),
+        URLAttributes.url_scheme(),
+        URLAttributes.url_template(),
         UserAgentAttributes.user_agent_original()
       ],
       url_template: "/users/:user_id"
@@ -108,19 +119,25 @@ defmodule OpentelemetryFinchTest do
                       attributes: attributes
                     )}
 
-    assert %{
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "http.request.method": "GET",
-             "url.full": endpoint_url(bypass.port),
-             "http.response.status_code": 200,
-             "http.request.body.size": 0,
-             "http.response.body.size": 0,
-             "network.transport": :tcp,
-             "url.scheme": :http,
-             "url.template": "/users/:user_id",
-             "user_agent.original": ""
-           } == :otel_attributes.map(attributes)
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), endpoint_url(bypass.port)},
+      {HTTPAttributes.http_response_status_code(), 200},
+      {HTTPAttributes.http_request_body_size(), 0},
+      {HTTPAttributes.http_response_body_size(), 0},
+      {NetworkAttributes.network_transport(), :tcp},
+      {URLAttributes.url_scheme(), :http},
+      {URLAttributes.url_template(), "/users/:user_id"},
+      {UserAgentAttributes.user_agent_original(), ""}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "adds request and response headers to span when request_header_attrs and response_header_attrs are set",
@@ -144,16 +161,22 @@ defmodule OpentelemetryFinchTest do
                       attributes: attributes
                     )}
 
-    assert %{
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "http.request.method": "GET",
-             "url.full": endpoint_url(bypass.port),
-             "http.response.status_code": 200,
-             "http.response.header.content-length": ["0"],
-             "http.response.header.server": ["Cowboy"],
-             "http.request.header.authorization": ["Bearer token"]
-           } == :otel_attributes.map(attributes)
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), endpoint_url(bypass.port)},
+      {HTTPAttributes.http_response_status_code(), 200},
+      {String.to_atom("#{HTTPAttributes.http_response_header()}.content-length"), ["0"]},
+      {String.to_atom("#{HTTPAttributes.http_response_header()}.server"), ["Cowboy"]},
+      {String.to_atom("#{HTTPAttributes.http_request_header()}.authorization"), ["Bearer token"]}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "records span on requests failed", %{bypass: _} do
@@ -167,13 +190,19 @@ defmodule OpentelemetryFinchTest do
                       attributes: attributes
                     )}
 
-    assert %{
-             "server.address": "localhost",
-             "server.port": 3333,
-             "http.request.method": "GET",
-             "url.full": "http://localhost:3333/",
-             "error.type": "connection refused"
-           } == :otel_attributes.map(attributes)
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), 3333},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), "http://localhost:3333/"},
+      {ErrorAttributes.error_type(), "connection refused"}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "records span on request response with 4xx status code", %{bypass: bypass} do
@@ -189,14 +218,20 @@ defmodule OpentelemetryFinchTest do
                       attributes: attributes
                     )}
 
-    assert %{
-             "server.address": "localhost",
-             "server.port": bypass.port,
-             "http.request.method": "GET",
-             "url.full": endpoint_url(bypass.port),
-             "http.response.status_code": 404,
-             "error.type": "404"
-           } == :otel_attributes.map(attributes)
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), endpoint_url(bypass.port)},
+      {HTTPAttributes.http_response_status_code(), 404},
+      {ErrorAttributes.error_type(), "404"}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "logs error and doesn't record span if invalid otel option is passed", %{bypass: bypass} do
