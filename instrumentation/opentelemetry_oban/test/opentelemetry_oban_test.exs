@@ -153,6 +153,8 @@ defmodule OpentelemetryObanTest do
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
+             "oban.job.queue": "events",
+             "oban.job.attempted_at": _attempted_at,
              "oban.job.worker": "TestJob",
              "messaging.operation": :process,
              "messaging.system": :oban
