@@ -156,6 +156,7 @@ defmodule OpentelemetryObanTest do
              "oban.job.queue": "events",
              "oban.job.attempted_at": _attempted_at,
              "oban.job.worker": "TestJob",
+             "oban.job.workflow_id": _workflow_id,
              "messaging.operation": :process,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
