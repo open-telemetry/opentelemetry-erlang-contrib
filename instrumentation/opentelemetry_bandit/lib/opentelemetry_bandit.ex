@@ -394,25 +394,12 @@ defmodule OpentelemetryBandit do
 
     case otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]) do
       %{ip: :undefined} ->
-        %{adapter: {Bandit.Adapter, adapter}} = conn
-
-        extract_client_info_from_transport(adapter.transport)
+        %{address: peer_address, port: peer_port} = Plug.Conn.get_peer_data(conn)
+        %{ip: ip_to_string(peer_address), port: peer_port}
 
       client_address ->
         client_address
     end
-  end
-
-  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP1.Socket} = transport) do
-    start_meta = transport.socket.span.start_metadata
-
-    %{ip: ip_to_string(start_meta.remote_address), port: start_meta.remote_port}
-  end
-
-  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP2.Stream} = transport) do
-    {ip, port} = transport.transport_info.peername
-
-    %{ip: ip_to_string(ip), port: port}
   end
 
   defp otel_http_extract_client_info(headers, nil) do
