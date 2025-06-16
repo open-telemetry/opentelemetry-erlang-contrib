@@ -55,7 +55,7 @@ defmodule OpentelemetryNebulex.MixProject do
   defp deps do
     [
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.37", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
       {:nebulex, "~> 2.1", only: [:dev, :test]},
       {:opentelemetry, "~> 1.5", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.4"},
