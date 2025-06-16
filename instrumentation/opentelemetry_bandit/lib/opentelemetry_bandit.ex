@@ -314,12 +314,11 @@ defmodule OpentelemetryBandit do
   end
 
   defp set_network_protocol_attrs(attrs, conn) do
-    case extract_network_protocol(conn.adapter) do
-      {:error, _reason} ->
-        attrs
-
-      {:http, version} ->
-        Map.put(attrs, NetworkAttributes.network_protocol_version(), version)
+    case Plug.Conn.get_http_protocol(conn) do
+      :"HTTP/1.0" -> Map.put(attrs, NetworkAttributes.network_protocol_version(), :"1.0")
+      :"HTTP/1.1" -> Map.put(attrs, NetworkAttributes.network_protocol_version(), :"1.1")
+      :"HTTP/2" -> Map.put(attrs, NetworkAttributes.network_protocol_version(), :"2")
+      _ -> attrs
     end
   end
 
@@ -348,22 +347,6 @@ defmodule OpentelemetryBandit do
         )
     end
   end
-
-  defp extract_network_protocol(
-         {_adapter_name, %{transport: %{__struct__: Bandit.HTTP1.Socket} = transport}}
-       ) do
-    case transport.version do
-      :"HTTP/1.0" -> {:http, :"1.0"}
-      :"HTTP/1.1" -> {:http, :"1.1"}
-      nil -> {:error, "Invalid protocol"}
-    end
-  end
-
-  defp extract_network_protocol({_adapter_name, %{transport: %{__struct__: Bandit.HTTP2.Stream}}}) do
-    {:http, :"2"}
-  end
-
-  defp extract_network_protocol(_), do: {:error, "Invalid protocol"}
 
   defp parse_method(method) do
     case method do
@@ -411,25 +394,12 @@ defmodule OpentelemetryBandit do
 
     case otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]) do
       %{ip: :undefined} ->
-        %{adapter: {Bandit.Adapter, adapter}} = conn
-
-        extract_client_info_from_transport(adapter.transport)
+        %{address: peer_address, port: peer_port} = Plug.Conn.get_peer_data(conn)
+        %{ip: ip_to_string(peer_address), port: peer_port}
 
       client_address ->
         client_address
     end
-  end
-
-  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP1.Socket} = transport) do
-    start_meta = transport.socket.span.start_metadata
-
-    %{ip: ip_to_string(start_meta.remote_address), port: start_meta.remote_port}
-  end
-
-  defp extract_client_info_from_transport(%{__struct__: Bandit.HTTP2.Stream} = transport) do
-    {ip, port} = transport.transport_info.peername
-
-    %{ip: ip_to_string(ip), port: port}
   end
 
   defp otel_http_extract_client_info(headers, nil) do

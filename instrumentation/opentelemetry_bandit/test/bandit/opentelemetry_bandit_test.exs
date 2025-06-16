@@ -533,7 +533,7 @@ defmodule OpentelemetryBanditTest do
   end
 
   def arithmetic_error(_conn) do
-    1 / 0
+    apply(:erlang, :+, [1, self()])
   end
 
   def throw_error(_conn) do
