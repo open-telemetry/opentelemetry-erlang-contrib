@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   postgres:
-    image: postgres:17.4
+    image: postgres:17.5
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -10,7 +10,7 @@ services:
       - 5432:5432
 
   postgres-r1:
-    image: postgres:17.4
+    image: postgres:17.5
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
