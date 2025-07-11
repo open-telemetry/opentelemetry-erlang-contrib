@@ -45,8 +45,7 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
-             "messaging.destination_kind": :queue,
+             "messaging.destination.name": "events",
              "oban.job.job_id": _job_id,
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
@@ -145,8 +144,7 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
-             "messaging.destination_kind": :queue,
+             "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
              "oban.job.job_id": _job_id,
@@ -154,7 +152,7 @@ defmodule OpentelemetryObanTest do
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJob",
-             "messaging.operation": :process,
+             "messaging.operation.type": :process,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
   end
@@ -175,8 +173,7 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
-             "messaging.destination_kind": :queue,
+             "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
              "oban.job.job_id": _job_id,
@@ -184,13 +181,13 @@ defmodule OpentelemetryObanTest do
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJobThatReturnsError",
-             "messaging.operation": :process,
+             "messaging.operation.type": :process,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
@@ -253,8 +250,7 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination": "events",
-             "messaging.destination_kind": :queue,
+             "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
              "oban.job.job_id": _job_id,
@@ -262,13 +258,13 @@ defmodule OpentelemetryObanTest do
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJobThatThrowsException",
-             "messaging.operation": :process,
+             "messaging.operation.type": :process,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
@@ -324,7 +320,7 @@ defmodule OpentelemetryObanTest do
 
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
