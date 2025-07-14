@@ -32,7 +32,7 @@ defmodule OpentelemetryObanTest do
   end
 
   test "records span on job insertion" do
-    OpentelemetryOban.insert(TestJob.new(%{}))
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJob.new(%{}))
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :events)
 
     assert_receive {:span,
@@ -50,6 +50,9 @@ defmodule OpentelemetryObanTest do
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.worker": "TestJob",
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJob",
+             "messaging.operation.type": :create,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
   end
@@ -132,7 +135,7 @@ defmodule OpentelemetryObanTest do
   end
 
   test "records spans for successful Oban jobs" do
-    OpentelemetryOban.insert(TestJob.new(%{}))
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJob.new(%{}))
     assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :events)
 
     assert_receive {:span,
@@ -147,18 +150,20 @@ defmodule OpentelemetryObanTest do
              "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
-             "oban.job.job_id": _job_id,
+             "oban.job.job_id": ^id,
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJob",
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJob",
              "messaging.operation.type": :process,
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
   end
 
   test "records spans for Oban jobs that stop with {:error, :something}" do
-    OpentelemetryOban.insert(TestJobThatReturnsError.new(%{}))
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatReturnsError.new(%{}))
     assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
     expected_status = OpenTelemetry.status(:error, "")
@@ -173,16 +178,18 @@ defmodule OpentelemetryObanTest do
                     )}
 
     assert %{
-             "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
-             "oban.job.job_id": _job_id,
+             "oban.job.job_id": ^id,
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJobThatReturnsError",
+             "messaging.destination.name": "events",
              "messaging.operation.type": :process,
-             "messaging.system": :oban
+             "messaging.system": :oban,
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJobThatReturnsError"
            } = :otel_attributes.map(attributes)
 
     [
@@ -235,7 +242,7 @@ defmodule OpentelemetryObanTest do
   end
 
   test "records spans for Oban jobs that stop with an exception" do
-    OpentelemetryOban.insert(TestJobThatThrowsException.new(%{}))
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatThrowsException.new(%{}))
     assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
     expected_status = OpenTelemetry.status(:error, "")
@@ -253,12 +260,14 @@ defmodule OpentelemetryObanTest do
              "messaging.destination.name": "events",
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
-             "oban.job.job_id": _job_id,
+             "oban.job.job_id": ^id,
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
              "oban.job.worker": "TestJobThatThrowsException",
              "messaging.operation.type": :process,
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJobThatThrowsException",
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
 
