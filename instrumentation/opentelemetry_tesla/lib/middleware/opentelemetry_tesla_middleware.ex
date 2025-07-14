@@ -59,6 +59,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp get_span_name(env, _) do
+    # `path_params` is used by `Tesla.Middleware.PathParams`
+    # if `path_params` is not set, the path potentially has high cardinality and we cannot use it in the span name
+    # if `path_params` is set, it means that the path is a template and we can use it in the span name
     case env.opts[:path_params] do
       nil -> "#{http_method(env.method)}"
       _ -> "#{http_method(env.method)} #{URI.parse(env.url).path}"
