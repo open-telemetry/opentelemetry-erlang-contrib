@@ -49,6 +49,9 @@ on:
           - prep
           - publish
 
+permissions:
+  contents: read
+
 jobs:
   config:
     runs-on: ubuntu-latest
