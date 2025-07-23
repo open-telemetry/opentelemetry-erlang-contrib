@@ -1,7 +1,7 @@
 defmodule OpentelemetryPhoenix.MixProject do
   use Mix.Project
 
-  @version "2.0.0"
+  @version "2.0.1"
 
   def project do
     [
@@ -75,7 +75,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry, "~> 1.5", only: [:dev, :test]},
       {:opentelemetry_bandit, "~> 0.2.0", only: [:dev, :test]},
       {:opentelemetry_cowboy, "~> 1.0.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.36", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
       {:phoenix, "~> 1.7", only: [:dev, :test]},
       {:phoenix_html, "~> 4.1", only: [:dev, :test]},
       {:plug_cowboy, "~> 2.5", only: [:dev, :test]},

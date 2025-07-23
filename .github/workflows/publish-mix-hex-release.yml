@@ -27,6 +27,7 @@ on:
           - "req"
           - "tesla"
           - "xandra"
+          - "commanded"
         required: true
       otp-version:
         description: "OTP version"
@@ -47,6 +48,9 @@ on:
         options:
           - prep
           - publish
+
+permissions:
+  contents: read
 
 jobs:
   config:
@@ -205,7 +209,7 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451 # v1.18.2
+      - uses: erlef/setup-beam@e6d7c94229049569db56a7ad5a540c051a010af9 # v1.20.4
         with:
           version-type: strict
           otp-version: ${{ inputs.otp-version }}
@@ -233,7 +237,7 @@ jobs:
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}

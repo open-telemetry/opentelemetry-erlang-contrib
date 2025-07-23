@@ -79,7 +79,7 @@ defmodule OpentelemetryBandit.MixProject do
       {:telemetry, "~> 1.2"},
 
       # dev dependencies
-      {:ex_doc, "~> 0.36", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.38", only: :dev, runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       {:bandit, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
