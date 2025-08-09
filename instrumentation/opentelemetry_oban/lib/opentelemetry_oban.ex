@@ -18,9 +18,8 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
-  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -130,15 +129,18 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker)
 
     %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
+      MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_client_id() => worker,
+      MessagingAttributes.messaging_destination_name() => queue,
+      MessagingAttributes.messaging_operation_type() =>
+        MessagingAttributes.messaging_operation_type_values().create,
       :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
+      MessagingAttributes.messaging_message_id() => job.id,
       "oban.job.job_id": job.id,
       "oban.job.priority": job.priority,
       "oban.job.max_attempts": job.max_attempts
