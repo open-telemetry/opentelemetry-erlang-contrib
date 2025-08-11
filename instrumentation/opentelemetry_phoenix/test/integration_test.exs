@@ -591,6 +591,68 @@ if otp_vsn >= 27 do
       end
     end
 
+    for {adapter, protocol} <- adapter_suites do
+      describe "Multiple endpoints support: #{adapter} - #{protocol}" do
+        test "spans are recorded correctly even with multiple endpoints on a basic request", context do
+          adapter_specs =
+            Enum.map(@endpoint_variants, fn variant ->
+              {[unquote(adapter), variant], Map.fetch!(context, [unquote(adapter), variant])}
+            end)
+
+          capture_log(fn ->
+            Enum.each(adapter_specs, fn {key, adapter_info} ->
+              start_supervised!(adapter_info.spec)
+              setup_adapter(key)
+            end)
+
+            Enum.each(adapter_specs, fn {_key, adapter_info} ->
+              Req.get("http://localhost:#{adapter_info.port}/users/1234",
+                params: [a: 1, b: "abc"],
+                headers: %{
+                  "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+                  "tracestate" => "congo=t61rcWkgMzE"
+                },
+                retry: false,
+                connect_options: [protocols: [unquote(protocol)]]
+              )
+
+              assert_receive {:span,
+                              span(
+                                name: "GET /users/:user_id",
+                                kind: :server,
+                                attributes: span_attrs,
+                                parent_span_id: 13_235_353_014_750_950_193
+                              )}
+
+              attrs = :otel_attributes.map(span_attrs)
+
+              expected_proto = if unquote(protocol) == :http1, do: :"1.1", else: :"2"
+
+              expected_attrs = [
+                {ClientAttributes.client_address(), "127.0.0.1"},
+                {HTTPAttributes.http_request_method(), :GET},
+                {HTTPAttributes.http_response_status_code(), 200},
+                {NetworkAttributes.network_peer_address(), "127.0.0.1"},
+                {NetworkAttributes.network_protocol_version(), expected_proto},
+                {URLAttributes.url_path(), "/users/1234"},
+                {URLAttributes.url_query(), "a=1&b=abc"},
+                {URLAttributes.url_scheme(), :http},
+                {HTTPAttributes.http_route(), "/users/:user_id"},
+                {:"phoenix.action", :user},
+                {:"phoenix.plug", OpentelemetryPhoenix.Integration.TracingTest.TestController}
+              ]
+
+              for {attr, val} <- expected_attrs do
+                assert Map.get(attrs, attr) == val
+              end
+            end)
+
+            assert OpenTelemetry.Tracer.current_span_ctx() == :undefined
+          end)
+        end
+      end
+    end
+
     def custom_client_header_sort(h1, h2) do
       h1_priority = custom_client_header_priority(h1)
       h2_priority = custom_client_header_priority(h2)
