@@ -14,6 +14,7 @@ if otp_vsn >= 27 do
     @moduletag :integration
 
     @adapters [:cowboy, :bandit]
+    @endpoint_variants [:web, :api]
 
     defmodule TestController do
       use Phoenix.Controller,
@@ -69,45 +70,47 @@ if otp_vsn >= 27 do
     end
 
     for adapter <- @adapters do
-      defmodule Module.concat(["#{String.capitalize(to_string(adapter))}Endpoint"]) do
-        defmodule ErrorView do
-          def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
-            %{error: "Got 404 from #{kind} with #{conn.method}"}
-          end
-
-          def render(template, %{conn: conn}) do
-            unless conn.private.phoenix_endpoint do
-              raise "no endpoint in error view"
+      for variant <- @endpoint_variants do
+        defmodule endpoint_name(adapter, variant) do
+          defmodule ErrorView do
+            def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
+              %{error: "Got 404 from #{kind} with #{conn.method}"}
             end
 
-            "#{template} from Phoenix.ErrorView"
+            def render(template, %{conn: conn}) do
+              unless conn.private.phoenix_endpoint do
+                raise "no endpoint in error view"
+              end
+
+              "#{template} from Phoenix.ErrorView"
+            end
           end
-        end
 
-        use Phoenix.Endpoint, otp_app: :endpoint_int
+          use Phoenix.Endpoint, otp_app: :endpoint_int
 
-        plug(Plug.Telemetry, event_prefix: [:phoenix, adapter, :endpoint])
+          plug(Plug.Telemetry, event_prefix: [:phoenix, variant, adapter, :endpoint])
 
-        plug(Plug.Parsers,
-          parsers: [:urlencoded, :multipart, :json],
-          pass: ["*/*"],
-          json_decoder: Phoenix.json_library()
-        )
+          plug(Plug.Parsers,
+            parsers: [:urlencoded, :multipart, :json],
+            pass: ["*/*"],
+            json_decoder: Phoenix.json_library()
+          )
 
-        plug(Plug.MethodOverride)
-        plug(Plug.Head)
+          plug(Plug.MethodOverride)
+          plug(Plug.Head)
 
-        plug(:oops)
-        plug(Router)
+          plug(:oops)
+          plug(Router)
 
-        @doc """
-        Verify errors from the plug stack too (before the router).
-        """
-        def oops(conn, _opts) do
-          if conn.path_info == ~w(oops) do
-            raise "oops"
-          else
-            conn
+          @doc """
+          Verify errors from the plug stack too (before the router).
+          """
+          def oops(conn, _opts) do
+            if conn.path_info == ~w(oops) do
+              raise "oops"
+            else
+              conn
+            end
           end
         end
       end
@@ -137,37 +140,18 @@ if otp_vsn >= 27 do
     setup do
       :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
-      # Find available ports to use for this test
-      [bandit, cowboy] = get_unused_port_numbers(2)
+      adapter_specs =
+        for adapter <- @adapters,
+            variant <- @endpoint_variants do
+          {adapter, variant}
+        end
 
-      adapters = %{
-        bandit: %{
-          port: bandit,
-          spec:
-            {BanditEndpoint,
-             [
-               http: [port: bandit],
-               url: [host: "bandit-example.com"],
-               adapter: Bandit.PhoenixAdapter,
-               server: true,
-               drainer: false,
-               render_errors: [accepts: ~w(html json)]
-             ]}
-        },
-        cowboy: %{
-          port: cowboy,
-          spec:
-            {CowboyEndpoint,
-             [
-               http: [port: cowboy],
-               url: [host: "cowboy-example.com"],
-               adapter: Phoenix.Endpoint.Cowboy2Adapter,
-               server: true,
-               drainer: false,
-               render_errors: [accepts: ~w(html json)]
-             ]}
-        }
-      }
+      adapter_specs = Enum.zip(adapter_specs, get_unused_port_numbers(4))
+
+      adapters =
+        Map.new(adapter_specs, fn {{adapter, variant}, port} ->
+          adapter_spec(adapter, variant, port)
+        end)
 
       on_exit(fn ->
         :telemetry.list_handlers([])
@@ -177,23 +161,44 @@ if otp_vsn >= 27 do
       adapters
     end
 
+    @adapter_lookup %{
+      :bandit => Bandit.PhoenixAdapter,
+      :cowboy => Phoenix.Endpoint.Cowboy2Adapter
+    }
+    defp adapter_spec(adapter, variant, port) do
+      {[adapter, variant],
+       %{
+         port: port,
+         spec:
+           {endpoint_name(adapter, variant),
+            [
+              http: [port: port],
+              url: [host: "#{variant}-#{adapter}-example.com"],
+              adapter: Map.fetch!(@adapter_lookup, adapter),
+              server: true,
+              drainer: false,
+              render_errors: [accepts: ~w(html json)]
+            ]}
+       }}
+    end
+
     defp setup_adapter(adapter, opts \\ [])
 
-    defp setup_adapter(:bandit, opts) do
+    defp setup_adapter([:bandit, variant], opts) do
       OpentelemetryBandit.setup(opts)
 
       OpentelemetryPhoenix.setup(
         adapter: :bandit,
-        endpoint_prefix: [:phoenix, :bandit, :endpoint]
+        endpoint_prefix: [:phoenix, variant, :bandit, :endpoint]
       )
     end
 
-    defp setup_adapter(:cowboy, opts) do
+    defp setup_adapter([:cowboy, variant], opts) do
       :opentelemetry_cowboy.setup(opts)
 
       OpentelemetryPhoenix.setup(
         adapter: :cowboy2,
-        endpoint_prefix: [:phoenix, :cowboy, :endpoint]
+        endpoint_prefix: [:phoenix, variant, :cowboy, :endpoint]
       )
     end
 
@@ -201,11 +206,12 @@ if otp_vsn >= 27 do
       for adapter <- [:bandit, :cowboy], protocol <- [:http1, :http2], do: {adapter, protocol}
 
     for {adapter, protocol} <- adapter_suites do
+      @default_variant :web
       describe "#{adapter} - #{protocol}" do
-        test "basic request with default options", %{unquote(adapter) => adapter_info} do
+        test "basic request with default options", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
-            setup_adapter(unquote(adapter))
+            setup_adapter([unquote(adapter), @default_variant])
 
             Req.get("http://localhost:#{adapter_info.port}/users/1234",
               params: [a: 1, b: "abc"],
@@ -253,10 +259,10 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "public endpoint true", %{unquote(adapter) => adapter_info} do
+        test "public endpoint true", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
-            setup_adapter(unquote(adapter), public_endpoint: true)
+            setup_adapter([unquote(adapter), @default_variant], public_endpoint: true)
 
             Req.get("http://localhost:#{adapter_info.port}/hello",
               headers: %{
@@ -286,11 +292,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "public endpoint fn", %{unquote(adapter) => adapter_info} do
+        test "public endpoint fn", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter),
+            setup_adapter([unquote(adapter), @default_variant],
               public_endpoint_fn: {__MODULE__, :public_endpoint_fn, []}
             )
 
@@ -351,11 +357,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "with all opt-ins", %{unquote(adapter) => adapter_info} do
+        test "with all opt-ins", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter),
+            setup_adapter([unquote(adapter), @default_variant],
               opt_in_attrs: [
                 ClientAttributes.client_port(),
                 HTTPAttributes.http_request_body_size(),
@@ -416,11 +422,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "with custom header settings", %{unquote(adapter) => adapter_info} do
+        test "with custom header settings", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter),
+            setup_adapter([unquote(adapter), @default_variant],
               client_address_headers: ["x-forwarded-for", "custom-client"],
               client_headers_sort_fn: &__MODULE__.custom_client_header_sort/2,
               scheme_headers: ["custom-scheme", "x-forwarded-proto"],
@@ -471,11 +477,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "with missing user-agent", %{unquote(adapter) => adapter_info} do
+        test "with missing user-agent", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter))
+            setup_adapter([unquote(adapter), @default_variant])
 
             {:ok, {{_, 200, _}, _, _}} =
               :httpc.request(
@@ -493,11 +499,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "with exception", %{unquote(adapter) => adapter_info} do
+        test "with exception", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter))
+            setup_adapter([unquote(adapter), @default_variant])
 
             Req.get("http://localhost:#{adapter_info.port}/router/oops",
               retry: false,
@@ -548,11 +554,11 @@ if otp_vsn >= 27 do
           end)
         end
 
-        test "with halted request", %{unquote(adapter) => adapter_info} do
+        test "with halted request", %{[unquote(adapter), @default_variant] => adapter_info} do
           capture_log(fn ->
             {:ok, _} = start_supervised(adapter_info.spec)
 
-            setup_adapter(unquote(adapter))
+            setup_adapter([unquote(adapter), @default_variant])
 
             Req.get("http://localhost:#{adapter_info.port}/halted",
               retry: false,
