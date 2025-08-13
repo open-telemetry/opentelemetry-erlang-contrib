@@ -33,8 +33,9 @@ defmodule Tesla.Middleware.OpenTelemetry do
       env
       |> maybe_put_additional_ok_statuses(opts[:mark_status_ok])
       |> maybe_propagate(Keyword.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
+      |> set_request_span_attributes()
       |> Tesla.run(next)
-      |> set_span_attributes()
+      |> set_response_span_attributes()
       |> handle_result()
     end
   end
@@ -73,13 +74,19 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   defp maybe_put_additional_ok_statuses(env, _additional_ok_statuses), do: env
 
-  defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
-    OpenTelemetry.Tracer.set_attributes(build_attrs(env))
+  defp set_request_span_attributes(%Tesla.Env{} = env) do
+    OpenTelemetry.Tracer.set_attributes(build_base_attrs(env))
+
+    env
+  end
+
+  defp set_response_span_attributes({_, %Tesla.Env{} = env} = result) do
+    OpenTelemetry.Tracer.set_attributes(build_response_attrs(env))
 
     result
   end
 
-  defp set_span_attributes(result) do
+  defp set_response_span_attributes(result) do
     result
   end
 
@@ -110,24 +117,37 @@ defmodule Tesla.Middleware.OpenTelemetry do
     result
   end
 
-  defp build_attrs(%Tesla.Env{
+  # This is used before processing the request so that we ensure to add the
+  # attrs even if the request returns {:error, _}. It is used after processing
+  # the request as a middleware may have manipulated any of these attributes,
+  # so we must override them.
+  defp build_base_attrs(%Tesla.Env{
          method: method,
          url: url,
-         status: status_code,
-         headers: headers,
          query: query
        }) do
     url = Tesla.build_url(url, query)
     uri = URI.parse(url)
 
-    attrs = %{
+    %{
       Trace.http_method() => http_method(method),
       Trace.http_url() => url,
       Trace.http_target() => uri.path,
       Trace.net_host_name() => uri.host,
-      Trace.http_scheme() => uri.scheme,
-      Trace.http_status_code() => status_code
+      Trace.http_scheme() => uri.scheme
     }
+  end
+
+  defp build_response_attrs(
+         %Tesla.Env{
+           status: status_code,
+           headers: headers
+         } = env
+       ) do
+    attrs =
+      Map.merge(build_base_attrs(env), %{
+        Trace.http_status_code() => status_code
+      })
 
     maybe_append_content_length(attrs, headers)
   end
