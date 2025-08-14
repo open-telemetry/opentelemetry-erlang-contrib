@@ -1,10 +1,12 @@
 defmodule OpentelemetryBroadway do
   @moduledoc """
-  OpenTelemetry tracing for [Broadway](https://elixir-broadway.org/) pipelines.
+  OpenTelemetry tracing for [Broadway](https://elixir-broadway.org/) pipelines with optional trace propagation support.
 
-  It supports job start, stop, and exception events.
+  It supports job start, stop, and exception events with automatic distributed tracing context extraction.
 
   ## Usage
+
+  ### Basic Setup
 
   In your application's `c:Application.start/2` callback:
 
@@ -14,6 +16,38 @@ defmodule OpentelemetryBroadway do
         # ...
       end
 
+  ### With Trace Propagation (RabbitMQ)
+
+  For Broadway pipelines that need distributed tracing context extraction from message headers:
+
+      def start(_type, _args) do
+        :ok = OpentelemetryBroadway.setup(propagation: true)
+
+        # ...
+      end
+
+  **Important**: When using trace propagation, your producer must be configured to extract headers.
+  For RabbitMQ, configure your `BroadwayRabbitMQ.Producer` with `metadata: [:headers]`:
+
+      Broadway.start_link(MyBroadway,
+        name: MyBroadway,
+        producer: [
+          module: {BroadwayRabbitMQ.Producer,
+            queue: "my_queue",
+            metadata: [:headers],  # Required for trace propagation!
+            connection: [...]
+          }
+        ],
+        processors: [default: [concurrency: 10]]
+      )
+
+  ## Features
+
+  - Creates spans for Broadway message processing
+  - Tracks message processing duration and outcomes
+  - Records exceptions and failures with proper error status
+  - **Trace Propagation**: Automatically extracts distributed tracing context from message headers
+  - **Standards Compliance**: Supports W3C Trace Context and other OpenTelemetry propagation formats
   """
 
   alias OpenTelemetry.SemanticConventions
@@ -26,32 +60,51 @@ defmodule OpentelemetryBroadway do
 
   @doc """
   Attaches the Telemetry handlers, returning `:ok` if successful.
+
+  ## Options
+
+  - `[]` or no argument - Basic Broadway instrumentation
+  - `[propagation: true]` - Enable trace propagation from message headers
+
+  ## Examples
+
+      # Basic setup
+      OpentelemetryBroadway.setup()
+
+      # With trace propagation
+      OpentelemetryBroadway.setup(propagation: true)
+
   """
   @spec setup :: :ok
-  def setup do
-    :ok =
-      :telemetry.attach(
-        "#{__MODULE__}.message_start",
-        [:broadway, :processor, :message, :start],
-        &__MODULE__.handle_message_start/4,
-        []
-      )
+  @spec setup(keyword()) :: :ok
+  def setup(opts \\ [])
 
-    :ok =
-      :telemetry.attach(
-        "#{__MODULE__}.message_stop",
-        [:broadway, :processor, :message, :stop],
-        &__MODULE__.handle_message_stop/4,
-        []
-      )
+  def setup(opts) do
+    opts =
+      opts
+      |> Enum.into(%{})
+      |> Map.put_new(:propagation, true)
 
-    :ok =
-      :telemetry.attach(
-        "#{__MODULE__}.job_exception",
-        [:broadway, :processor, :message, :exception],
-        &__MODULE__.handle_message_exception/4,
-        []
-      )
+    :telemetry.attach(
+      "#{__MODULE__}.message_start",
+      [:broadway, :processor, :message, :start],
+      &__MODULE__.handle_message_start/4,
+      opts
+    )
+
+    :telemetry.attach(
+      "#{__MODULE__}.message_stop",
+      [:broadway, :processor, :message, :stop],
+      &__MODULE__.handle_message_stop/4,
+      opts
+    )
+
+    :telemetry.attach(
+      "#{__MODULE__}.message_exception",
+      [:broadway, :processor, :message, :exception],
+      &__MODULE__.handle_message_exception/4,
+      opts
+    )
 
     :ok
   end
@@ -66,10 +119,18 @@ defmodule OpentelemetryBroadway do
           name: name,
           message: %Broadway.Message{} = message
         } = metadata,
-        _config
+        opts
       ) do
     span_name = "#{inspect(topology_name)}/#{Atom.to_string(processor_key)} process"
     client_id = inspect(name)
+
+    # Extract trace context if propagation is enabled
+    {parent_ctx, links} = extract_trace_context(message, opts)
+
+    # Clear current span context and set up links if we have a parent context
+    if parent_ctx != :undefined do
+      OpenTelemetry.Tracer.set_current_span(:undefined)
+    end
 
     attributes = %{
       SemanticConventions.Trace.messaging_system() => :broadway,
@@ -90,6 +151,7 @@ defmodule OpentelemetryBroadway do
 
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       kind: :consumer,
+      links: links,
       attributes: attributes
     })
   end
@@ -139,4 +201,49 @@ defmodule OpentelemetryBroadway do
 
   defp format_error(err) when is_binary(err), do: err
   defp format_error(err), do: inspect(err)
+
+  # Extract trace context from message headers if propagation is enabled
+  defp extract_trace_context(message, %{propagation: true}) do
+    case get_message_headers(message) do
+      headers when is_list(headers) and length(headers) > 0 ->
+        # Convert headers to a format suitable for otel_propagator_text_map
+        header_map = convert_headers_to_map(headers)
+
+        if Enum.empty?(header_map) do
+          {:undefined, []}
+        else
+          # Extract trace context using OpenTelemetry propagator
+          parent_ctx =
+            :otel_propagator_text_map.extract_to(OpenTelemetry.Ctx.new(), header_map)
+            |> OpenTelemetry.Tracer.current_span_ctx()
+
+          links = if parent_ctx != :undefined, do: [OpenTelemetry.link(parent_ctx)], else: []
+          {parent_ctx, links}
+        end
+
+      _ ->
+        {:undefined, []}
+    end
+  end
+
+  defp extract_trace_context(_message, _opts), do: {:undefined, []}
+
+  # Get headers from message metadata
+  defp get_message_headers(%Broadway.Message{metadata: %{headers: headers}}) when is_list(headers), do: headers
+  defp get_message_headers(_message), do: []
+
+  # Convert various header formats to string key-value pairs
+  defp convert_headers_to_map(headers) do
+    headers
+    |> Enum.map(fn
+      # RabbitMQ format: {key, type, value}
+      {key, _type, value} when is_binary(key) and is_binary(value) -> {key, value}
+      {key, _type, value} when is_binary(key) -> {key, to_string(value)}
+      # Simple key-value pairs
+      {key, value} when is_binary(key) and is_binary(value) -> {key, value}
+      {key, value} when is_binary(key) -> {key, to_string(value)}
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
 end
