@@ -17,40 +17,54 @@ defmodule Tesla.Middleware.OpenTelemetry do
     Defaults to calling `:otel_propagator_text_map.get_text_map_injector/0`
     - `:mark_status_ok` - configures spans with a list of expected HTTP error codes to be marked as `ok`,
     not as an error-containing spans
+    - `:opt_in_attrs` - list of opt-in and experimental attributes to be added. Use semantic conventions library to ensure compatibility, e.g. `[HTTPAttributes.http_request_body_size()]`
+    - `:request_header_attrs` - list of request headers to be added as attributes, e.g. `["content-type"]`
+    - `:response_header_attrs` - list of response headers to be added as attributes, e.g. `["content-length"]`
   """
 
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.NetworkAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.UserAgentAttributes
 
   require OpenTelemetry.Tracer
-  require Trace
 
   @behaviour Tesla.Middleware
 
+  @otel_opts ~w[span_name propagator mark_status_ok opt_in_attrs request_header_attrs response_header_attrs]a
+
   def call(env, next, opts) do
-    span_name = get_span_name(env, Keyword.get(opts, :span_name))
+    opts = opts |> Keyword.take(@otel_opts) |> Enum.into(%{})
+    span_name = get_span_name(env, Map.get(opts, :span_name))
 
     OpenTelemetry.Tracer.with_span span_name, %{kind: :client} do
       env
       |> maybe_put_additional_ok_statuses(opts[:mark_status_ok])
-      |> maybe_propagate(Keyword.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
+      |> maybe_propagate(Map.get(opts, :propagator, :opentelemetry.get_text_map_injector()))
+      |> set_req_span_attributes(opts)
       |> Tesla.run(next)
-      |> set_span_attributes()
+      |> set_resp_span_attributes(opts)
       |> handle_result()
     end
   end
 
-  defp get_span_name(_env, span_name) when is_binary(span_name) do
-    span_name
+  defp get_span_name(env, span_name) when is_binary(span_name) do
+    "#{http_method(env.method)} #{span_name}"
   end
 
   defp get_span_name(env, span_name_fun) when is_function(span_name_fun, 1) do
-    span_name_fun.(env)
+    "#{http_method(env.method)} #{span_name_fun.(env)}"
   end
 
   defp get_span_name(env, _) do
+    # `path_params` is used by `Tesla.Middleware.PathParams`
+    # if `path_params` is not set, the path potentially has high cardinality and we cannot use it in the span name
+    # if `path_params` is set, it means that the path is a template and we can use it in the span name
     case env.opts[:path_params] do
-      nil -> "HTTP #{http_method(env.method)}"
-      _ -> URI.parse(env.url).path
+      nil -> "#{http_method(env.method)}"
+      _ -> "#{http_method(env.method)} #{URI.parse(env.url).path}"
     end
   end
 
@@ -73,19 +87,14 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   defp maybe_put_additional_ok_statuses(env, _additional_ok_statuses), do: env
 
-  defp set_span_attributes({_, %Tesla.Env{} = env} = result) do
-    OpenTelemetry.Tracer.set_attributes(build_attrs(env))
-
-    result
-  end
-
-  defp set_span_attributes(result) do
-    result
-  end
-
   defp handle_result({:ok, %Tesla.Env{status: status, opts: opts} = env}) when status >= 400 do
     span_status =
-      if status in Keyword.get(opts, :additional_ok_statuses, []), do: :ok, else: :error
+      if status in Keyword.get(opts, :additional_ok_statuses, []) do
+        :ok
+      else
+        OpenTelemetry.Tracer.set_attribute(ErrorAttributes.error_type(), "#{status}")
+        :error
+      end
 
     span_status
     |> OpenTelemetry.status("")
@@ -95,7 +104,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp handle_result({:error, {Tesla.Middleware.FollowRedirects, :too_many_redirects}} = result) do
-    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
+    OpenTelemetry.Tracer.set_attribute(
+      ErrorAttributes.error_type(),
+      Tesla.Middleware.FollowRedirects
+    )
+
+    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, "Too many redirects"))
 
     result
   end
@@ -104,41 +118,123 @@ defmodule Tesla.Middleware.OpenTelemetry do
     {:ok, env}
   end
 
-  defp handle_result(result) do
-    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, ""))
+  defp handle_result({:error, reason}) do
+    OpenTelemetry.Tracer.set_attribute(ErrorAttributes.error_type(), get_error_struct(reason))
+    OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, format_error(reason)))
 
+    {:error, reason}
+  end
+
+  defp set_req_span_attributes(%Tesla.Env{method: method, url: url, headers: headers} = env, opts) do
+    uri = URI.parse(url)
+
+    %{
+      HTTPAttributes.http_request_method() => http_method(method),
+      ServerAttributes.server_address() => uri.host,
+      ServerAttributes.server_port() => uri.port
+    }
+    |> add_opt_in_req_attrs(env, opts)
+    |> add_req_headers(headers, opts)
+    |> OpenTelemetry.Tracer.set_attributes()
+
+    env
+  end
+
+  defp set_resp_span_attributes(
+         {:ok, %Tesla.Env{url: url, query: query, status: status_code, headers: headers} = env},
+         opts
+       ) do
+    url = Tesla.build_url(url, query)
+
+    %{
+      # Sets url.full only after the request is completed so that all middleware has been called
+      URLAttributes.url_full() => url,
+      HTTPAttributes.http_response_status_code() => status_code
+    }
+    |> add_opt_in_resp_attrs(env, opts)
+    |> add_resp_headers(headers, opts)
+    |> OpenTelemetry.Tracer.set_attributes()
+
+    {:ok, env}
+  end
+
+  defp set_resp_span_attributes({:error, _} = result, _opts) do
     result
   end
 
-  defp build_attrs(%Tesla.Env{
-         method: method,
-         url: url,
-         status: status_code,
-         headers: headers,
-         query: query
-       }) do
-    url = Tesla.build_url(url, query)
-    uri = URI.parse(url)
+  defp add_opt_in_req_attrs(attrs, env, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
+    uri = URI.parse(env.url)
 
-    attrs = %{
-      Trace.http_method() => http_method(method),
-      Trace.http_url() => url,
-      Trace.http_target() => uri.path,
-      Trace.net_host_name() => uri.host,
-      Trace.http_scheme() => uri.scheme,
-      Trace.http_status_code() => status_code
+    %{
+      HTTPAttributes.http_request_body_size() => get_header(env.headers, "content-length", "0"),
+      NetworkAttributes.network_transport() => :tcp,
+      URLAttributes.url_scheme() => uri.scheme,
+      URLAttributes.url_template() => get_url_template(env),
+      UserAgentAttributes.user_agent_original() => get_header(env.headers, "user-agent", "")
     }
-
-    maybe_append_content_length(attrs, headers)
+    |> Map.take(opt_in_attrs)
+    |> then(&Map.merge(attrs, &1))
   end
 
-  defp maybe_append_content_length(attrs, headers) do
-    case Enum.find(headers, fn {k, _v} -> k == "content-length" end) do
-      nil ->
-        attrs
+  defp add_opt_in_req_attrs(attrs, _uri, _opts), do: attrs
 
-      {_key, content_length} ->
-        Map.put(attrs, Trace.http_response_content_length(), content_length)
+  defp add_opt_in_resp_attrs(attrs, env, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
+    %{
+      HTTPAttributes.http_response_body_size() => get_header(env.headers, "content-length", "0")
+    }
+    |> Map.take(opt_in_attrs)
+    |> then(&Map.merge(attrs, &1))
+  end
+
+  defp add_opt_in_resp_attrs(attrs, _env, _opts), do: attrs
+
+  defp add_req_headers(
+         attrs,
+         req_headers,
+         %{request_header_attrs: [_ | _] = request_header_attrs}
+       ) do
+    Map.merge(
+      attrs,
+      :otel_http.extract_headers_attributes(
+        :request,
+        req_headers,
+        request_header_attrs
+      )
+    )
+  end
+
+  defp add_req_headers(attrs, _req_headers, _opts), do: attrs
+
+  defp add_resp_headers(
+         attrs,
+         resp_headers,
+         %{response_header_attrs: [_ | _] = response_header_attrs}
+       ) do
+    Map.merge(
+      attrs,
+      :otel_http.extract_headers_attributes(
+        :response,
+        resp_headers,
+        response_header_attrs
+      )
+    )
+  end
+
+  defp add_resp_headers(attrs, _resp_headers, _opts), do: attrs
+
+  defp get_url_template(env) do
+    case env.opts[:path_params] do
+      nil -> ""
+      _ -> URI.parse(env.url).path
+    end
+  end
+
+  defp get_header(headers, header_name, default) do
+    headers
+    |> Enum.find(fn {k, _v} -> k == header_name end)
+    |> case do
+      nil -> default
+      {_key, value} -> value
     end
   end
 
@@ -147,4 +243,10 @@ defmodule Tesla.Middleware.OpenTelemetry do
     |> Atom.to_string()
     |> String.upcase()
   end
+
+  defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
+  defp format_error(reason), do: inspect(reason)
+
+  defp get_error_struct(%{__struct__: struct}), do: struct
+  defp get_error_struct(_), do: ""
 end
