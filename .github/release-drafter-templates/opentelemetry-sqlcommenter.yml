@@ -1,0 +1,6 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry SQLCommenter - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-sqlcommenter-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-sqlcommenter-v
+include-paths:
+  - instrumentation/opentelemetry_sqlcommenter/
