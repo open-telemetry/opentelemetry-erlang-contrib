@@ -4,9 +4,6 @@ receivers:
       grpc:
       http:
 processors:
-  batch:
-    send_batch_size: 1024
-    timeout: 5s
 exporters:
   otlp:
     # Uncomment below for using Honeycomb
@@ -34,7 +31,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: []
       exporters: [jaeger, zipkin]
       # Add 'otlp' if you're exporting to Honeycomb
       # or Lightstep

@@ -10,9 +10,6 @@ receivers:
           - "http://localhost:3000"
         endpoint: "0.0.0.0:4318"
 processors:
-  batch:
-    send_batch_size: 1024
-    timeout: 5s
 exporters:
   otlp:
     endpoint: jaeger-all-in-one:4317
@@ -32,13 +29,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: []
       exporters: [debug, otlp]
     metrics:
       receivers: [otlp]
-      processors: [batch]
+      processors: []
       exporters: [debug]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: []
       exporters: [debug]
