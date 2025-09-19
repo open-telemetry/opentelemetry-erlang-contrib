@@ -19,10 +19,8 @@ exporters:
     endpoint: "http://zipkin:9411/api/v2/spans"
     tls:
       insecure: true
-  jaeger:
-    endpoint: "jaeger:14250"
-    tls:
-      insecure: true
+    sending_queue:
+      batch:
 extensions:
   zpages:
     endpoint: :55679
@@ -32,7 +30,7 @@ service:
     traces:
       receivers: [otlp]
       processors: []
-      exporters: [jaeger, zipkin]
+      exporters: [zipkin]
       # Add 'otlp' if you're exporting to Honeycomb
       # or Lightstep
       # exporters: [zipkin, jaeger, otlp]
