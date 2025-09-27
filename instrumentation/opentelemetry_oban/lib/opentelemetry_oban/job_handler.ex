@@ -50,7 +50,8 @@ defmodule OpentelemetryOban.JobHandler do
         scheduled_at: scheduled_at,
         attempt: attempt,
         max_attempts: max_attempts,
-        meta: job_meta
+        meta: job_meta,
+        attempted_at: attempted_at
       }
     } = metadata
 
@@ -59,6 +60,8 @@ defmodule OpentelemetryOban.JobHandler do
     links = if parent == :undefined, do: [], else: [OpenTelemetry.link(parent)]
     OpenTelemetry.Tracer.set_current_span(:undefined)
 
+    workflow_id = get_in(job_meta, ["workflow_id"])
+
     attributes = %{
       Trace.messaging_system() => :oban,
       Trace.messaging_destination() => queue,
@@ -66,11 +69,14 @@ defmodule OpentelemetryOban.JobHandler do
       Trace.messaging_operation() => :process,
       :"oban.job.job_id" => id,
       :"oban.job.worker" => worker,
+      :"oban.job.queue" => queue,
       :"oban.job.priority" => priority,
       :"oban.job.attempt" => attempt,
       :"oban.job.max_attempts" => max_attempts,
       :"oban.job.inserted_at" => DateTime.to_iso8601(inserted_at),
-      :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
+      :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at),
+      :"oban.job.attempted_at" => DateTime.to_iso8601(attempted_at),
+      :"oban.job.workflow_id" => workflow_id
     }
 
     span_name = "#{worker} process"
