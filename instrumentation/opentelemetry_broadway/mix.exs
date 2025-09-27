@@ -50,7 +50,7 @@ defmodule OpentelemetryBroadway.MixProject do
       {:telemetry, "~> 1.0"},
       {:opentelemetry, "~> 1.5", only: [:test]},
       {:opentelemetry_exporter, "~> 1.8", only: [:test]},
-      {:ex_doc, "~> 0.37", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.38", only: [:dev], runtime: false}
     ]
   end
 

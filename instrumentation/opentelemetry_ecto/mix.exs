@@ -1,15 +1,20 @@
 defmodule OpentelemetryEcto.MixProject do
   use Mix.Project
 
-  @version "1.2.0"
+  @version "2.0.0-beta.1"
 
   def project do
     [
       app: :opentelemetry_ecto,
       description: description(),
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
+      dialyzer: [
+        plt_add_apps: [:ex_unit, :mix],
+        plt_core_path: "plts",
+        plt_local_path: "plts"
+      ],
       deps: deps(),
       aliases: aliases(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -51,21 +56,31 @@ defmodule OpentelemetryEcto.MixProject do
   defp elixirc_paths(_), do: ["lib"]
 
   defp aliases() do
-    [test: ["ecto.drop -q", "ecto.create -q", "ecto.migrate --quiet", "test"]]
+    [
+      test: [
+        "ecto.drop -q",
+        "ecto.create -q",
+        "test"
+      ]
+    ]
   end
 
   defp deps do
     [
-      {:telemetry, "~> 0.4 or ~> 1.0"},
+      {:nimble_options, "~> 1.0"},
+      {:telemetry, "~> 1.0"},
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry, "~> 1.5", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.36", only: [:dev], runtime: false},
-      {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
-      {:postgrex, ">= 0.15.0", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
+      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
+      {:ecto_sqlite3, "~> 0.21", only: [:dev, :test]},
+      {:ecto_sql, "~> 3.12", only: [:dev, :test]},
+      {:postgrex, "~> 0.20", only: [:dev, :test]},
+      {:myxql, "~> 0.7", only: [:dev, :test]},
+      {:tds, "~> 2.3", only: [:dev, :test]},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 end

@@ -4,9 +4,6 @@ receivers:
       grpc:
       http:
 processors:
-  batch:
-    send_batch_size: 1024
-    timeout: 5s
 exporters:
   otlp:
     # Uncomment below for using Honeycomb
@@ -22,10 +19,8 @@ exporters:
     endpoint: "http://zipkin:9411/api/v2/spans"
     tls:
       insecure: true
-  jaeger:
-    endpoint: "jaeger:14250"
-    tls:
-      insecure: true
+    sending_queue:
+      batch:
 extensions:
   zpages:
     endpoint: :55679
@@ -34,8 +29,8 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [jaeger, zipkin]
+      processors: []
+      exporters: [zipkin]
       # Add 'otlp' if you're exporting to Honeycomb
       # or Lightstep
       # exporters: [zipkin, jaeger, otlp]

@@ -9,3 +9,7 @@ erl_crash.dump
 /config/*.secret.exs
 .elixir_ls/
 .rebar3
+
+plts
+opentelemetry_ecto_test
+opentelemetry_ecto_test.db*
