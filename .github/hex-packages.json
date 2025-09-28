@@ -152,6 +152,15 @@
     "language": "elixir",
     "authorizedUsers": ["bryannaegele", "tsloughter"]
   },
+  "sqlcommenter": {
+    "workingDirectory": "instrumentation/opentelemetry_sqlcommenter",
+    "name": "SQLCommenter Instrumentation",
+    "packageName": "opentelemetry_sqlcommenter",
+    "tagPrefix": "opentelemetry-sqlcommenter-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele", "dkuku", "tsloughter"]
+  },
   "tesla": {
     "workingDirectory": "instrumentation/opentelemetry_tesla",
     "name": "Tesla Instrumentation",
