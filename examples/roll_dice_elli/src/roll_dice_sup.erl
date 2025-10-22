@@ -28,7 +28,6 @@ init([]) ->
                                          {roll_dice_handler, []}]}]},
                 {port, Port}],
 
-
     ChildSpecs = [#{id => roll_dice_http,
                     start => {elli, start_link, [ElliOpts]},
                     restart => permanent,
