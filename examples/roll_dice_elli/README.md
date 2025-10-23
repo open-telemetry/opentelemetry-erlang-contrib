@@ -1,6 +1,12 @@
 roll_dice
 =====
 
+Start the OpenTelemetry collector and Jaeger with Docker Compose:
+
+```
+$ docker compose up
+```
+
 Run the project:
 
 ```
@@ -15,6 +21,8 @@ $ curl localhost:3000/rolldice
 ```
 
 Or go to `localhost:3000` in a browser to roll.
+
+View traces in Jaeger at [http://localhost:16686](http://localhost:16686).d
 
 # How It Works
 
@@ -60,6 +68,20 @@ application code.
 
 ## Traces
 
+In `sys.config` the configuration for the OpenTelemetry SDK can be found:
+
+```erlang
+ {opentelemetry,
+  [{span_processor, batch},
+   {traces_exporter, otlp}
+  ]},
+```
+
+This has the SDK setup to use the batch processor which batches up spans
+together before passing them on to the exporter, and to use the OTLP exporter.
+Defaults for the exporter are used since we just have it running in Docker on
+the default port and localhost.
+
 Spans are created both by the `opentelemetry_elli` instrumentation library and
 by the handler module that handles each incoming HTTP request.
 `opentelemetry_elli` is integrated into the application as a middleware:
@@ -101,4 +123,83 @@ handle('GET', [], _Req) ->
 This handler code uses the `?update_name` macro to update the name of the
 current active span in the process dictionary context.
 
+The core logic of the application is `do_roll`, shown here without any calls to
+metric related functions/macros:
+
+```
+-spec do_roll() -> integer().
+do_roll() ->
+    ?with_span(dice_roll, #{},
+               fun(_) ->
+                       Roll = rand:uniform(6),
+                       ?set_attribute('roll.value', Roll),
+                       Roll
+               end).
+```
+
+The `?with_span` macro will start a new span named `dice_roll` with no
+attributes (`#{}`) and set it to be the active span within the process
+dictionary context while the anonymous function is run. When that function
+completes the span is ended. Within the body of that function a random number is
+generated and used as the attribute value for a span attribute `roll.value`.
+This attribute is added through the macro `?set_attribute` that will add an
+attribute to the currently active span in the process dictionary.
+
 ## Metrics
+
+For metrics the Experimental SDK is configured in `sys.config`:
+
+```erlang
+{opentelemetry_experimental,
+  [{readers, [#{module => otel_metric_reader,
+                config => #{export_interval_ms => 1000,
+                            exporter => {otel_metric_exporter_console, #{}}}}]}]},
+```
+
+This configures the SDK to have a single metric reader, using module
+`otel_metric_reader`, that is configured to export metrics every second with an
+exporter that writes to stdout. This results in output to the console showing
+the metric name along with its attributes followed by the aggregate value, like:
+
+```
+roll_counter{roll.value=5} 1
+```
+
+Instruments have names which allow you to reference them from anywhere in your
+code you have that name. To help with this there is `roll_dice_instruments.hrl`:
+
+```erlang
+-define(ROLL_COUNTER, roll_counter).
+```
+
+To initialize the instruments used a call to `create_instruments/0` is added in
+`start/2` of `roll_dice_app`:
+
+```erlang
+start(_StartType, _StartArgs) ->
+    create_instruments(),
+    roll_dice_sup:start_link().
+
+create_instruments() ->
+    ?create_counter(?ROLL_COUNTER, #{description => <<"The number of rolls by roll value.">>,
+                                     unit => '1'}).
+```
+
+This means that when the `roll_dice` Application boots it will first create an
+instrument using the `?create_counter` macro and name it `?ROLL_COUNTER`.
+
+In the handler, `roll_dice_handler`, the header `roll_dice_instruments.hrl` is
+included so the counter can be incremented with the result of the roll as an
+attribute on the measurement:
+
+```erlang
+-spec do_roll() -> integer().
+do_roll() ->
+    ?with_span(dice_roll, #{},
+               fun(_) ->
+                       Roll = rand:uniform(6),
+                       ?set_attribute('roll.value', Roll),
+                       ?counter_add(?ROLL_COUNTER, 1, #{'roll.value' => Roll}),
+                       Roll
+               end).
+```
