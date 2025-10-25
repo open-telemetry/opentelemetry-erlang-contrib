@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package testserver.v1;
+
+// Test service for OpenTelemetry gRPC instrumentation testing
+service TestService {
+  // Simple unary RPC
+  rpc SayHello(HelloRequest) returns (HelloResponse);
+  
+  // Server streaming RPC  
+  rpc ListNumbers(NumberRequest) returns (stream NumberResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
+}
+
+message NumberRequest {
+  int32 count = 1;
+  int32 number = 2;
+}
+
+message NumberResponse {
+  int32 number = 1;
+}
