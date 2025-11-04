@@ -49,7 +49,7 @@ defmodule OpentelemetryObanTest do
              "messaging.destination_kind": :queue,
              "oban.job.job_id": _job_id,
              "oban.job.max_attempts": 1,
-             "oban.job.priority": 0,
+             "oban.job.priority": nil,
              "oban.job.worker": "TestJob",
              "messaging.system": :oban
            } = :otel_attributes.map(attributes)
