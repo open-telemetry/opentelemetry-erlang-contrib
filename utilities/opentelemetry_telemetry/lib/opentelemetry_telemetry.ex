@@ -44,11 +44,11 @@ defmodule OpentelemetryTelemetry do
 
     def handle_event(_event,
                 %{duration: duration},
-                %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
+                %{kind: _kind, reason: reason, stacktrace: stacktrace} = metadata,
                 %{type: :exception, tracer_id: tracer_id}) do
-        ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata),
-        status = Opentelemetry.status(:error, to_string(reason, :utf8))
-        OpenTelemetry.Span.record_exception(ctx, kind, reason, stacktrace, [duration: duration])
+        ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
+        status = OpenTelemetry.status(:error, to_string(reason))
+        OpenTelemetry.Span.record_exception(ctx, reason, stacktrace, [duration: duration])
         OpenTelemetry.Tracer.set_status(status)
         OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
         :ok
