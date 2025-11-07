@@ -93,7 +93,7 @@ defmodule OpentelemetryPhoenix do
   @doc false
   def attach_endpoint_start_handler(opts) do
     :telemetry.attach(
-      {__MODULE__, :endpoint_start},
+      {__MODULE__, opts[:endpoint_prefix], :endpoint_start},
       opts[:endpoint_prefix] ++ [:start],
       &__MODULE__.handle_endpoint_start/4,
       %{adapter: opts[:adapter]}
