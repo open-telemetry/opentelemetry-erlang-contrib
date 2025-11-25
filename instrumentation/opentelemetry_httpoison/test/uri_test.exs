@@ -12,7 +12,7 @@ defmodule OpentelemetryHTTPoison.URITest do
   @base_uri "https://www.test.com"
 
   describe "infer_route_from_request/1" do
-    test "Request URL consisiting of whitespace is inferred as a route of '/'" do
+    test "Request URL consisting of whitespace is inferred as a route of '/'" do
       request = %Request{url: ""}
 
       result = UtilsURI.infer_route_from_request(request)

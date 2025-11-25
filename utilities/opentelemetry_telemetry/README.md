@@ -18,7 +18,7 @@ spans, adding attributes, set span names, etc.
 
 This library is only intended to provide utilities for working with telemetry
 events to instrumentation libraries. As such, it should not be used directly
-within your application code where the OpenTelemery API library should be leveraged.
+within your application code where the OpenTelemetry API library should be leveraged.
 
 ## Installation
 

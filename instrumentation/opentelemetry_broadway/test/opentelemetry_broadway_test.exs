@@ -30,7 +30,7 @@ defmodule OpentelemetryBroadwayTest do
     :ok
   end
 
-  test "records span on succesful message" do
+  test "records span on successful message" do
     ref = Broadway.test_message(TestBroadway, "success")
 
     #  Confirm the message was processed
