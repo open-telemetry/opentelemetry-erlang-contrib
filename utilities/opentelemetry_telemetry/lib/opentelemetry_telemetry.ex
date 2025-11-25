@@ -43,7 +43,7 @@ defmodule OpentelemetryTelemetry do
     end
 
     def handle_event(_event,
-                %{duration: duration},
+                _measurements,
                 %{kind: _kind, reason: reason, stacktrace: stacktrace} = metadata,
                 %{type: :exception, tracer_id: tracer_id}) do
         ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
