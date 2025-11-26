@@ -55,8 +55,7 @@ defmodule OpentelemetryTelemetry do
       ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
       OpenTelemetry.Span.record_exception(ctx, reason, stacktrace)
 
-      OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
-      |> OpenTelemetry.Tracer.set_status()
+      OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace)))
 
       OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
       :ok
