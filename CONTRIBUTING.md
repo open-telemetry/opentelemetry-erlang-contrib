@@ -7,7 +7,7 @@ contrib repository must have an OpenTelemetry CNCF Erlang Contrib Approver or Ma
 process. Following approval, the library can be merged and you will be added as a codeowner for it.
 
 This policy has been enacted to be respectful of the maintainers' time and to ensure users get timely responses
-and regular updates. We want as many libraries to be under the official umbrella but need your commmitment to
+and regular updates. We want as many libraries to be under the official umbrella but need your commitment to
 make that happen.
 
 ### Instrumenting a library
