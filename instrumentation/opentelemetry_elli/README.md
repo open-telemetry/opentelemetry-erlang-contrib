@@ -10,7 +10,7 @@ Elli middleware for OpenTelemetry instrumentation.
 {deps, [opentelemetry_elli]}.
 ```
 
-While using the `elli_middleware` callback, place `oc_elli_middleware` as the first module to be called in the list of handlers:
+While using the `elli_middleware` callback, place `otel_elli_middleware` as the first module to be called in the list of handlers:
 
 ``` erlang
 [{callback, elli_middleware},
