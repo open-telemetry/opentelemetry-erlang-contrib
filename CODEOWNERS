@@ -14,14 +14,14 @@
 
 @open-telemetry/erlang-approvers
 
-/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor
-/instrumentation/opentelemetry_cowboy           @bryannaegele @tsloughter
-/instrumentation/opentelemetry_ecto             @bryannaegele @tsloughter
-/instrumentation/opentelemetry_nebulex          @andrewhr
-/instrumentation/opentelemetry_oban             @indrekj
-/instrumentation/opentelemetry_phoenix          @bryannaegele @tsloughter
-/instrumentation/opentelemetry_redix            @andrewhr
-/instrumentation/opentelemetry_xandra           @whatyouhide
-/utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
-/utilities/otel_http                            @bryannaegele @tsloughter
-/instrumentation/opentelemetry_tesla            @ricardoccpaiva
+/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_ecto             @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_redix            @andrewhr @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_xandra           @whatyouhide @open-telemetry/erlang-maintainers
+/utilities/opentelemetry_telemetry              @open-telemetry/erlang-maintainers
+/utilities/otel_http                            @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-maintainers
