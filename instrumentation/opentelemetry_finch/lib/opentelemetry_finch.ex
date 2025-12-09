@@ -67,6 +67,10 @@ defmodule OpentelemetryFinch do
         kind: :client
       })
 
+    if status >= 500 && status < 600 do
+      OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error))
+    end
+
     if meta.result |> elem(0) == :error do
       OpenTelemetry.Span.set_status(
         s,
