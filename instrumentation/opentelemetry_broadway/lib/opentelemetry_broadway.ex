@@ -16,9 +16,9 @@ defmodule OpentelemetryBroadway do
         # ...
       end
 
-  ### With Trace Propagation (RabbitMQ)
+  ### With Trace Propagation
 
-  For Broadway pipelines that need distributed tracing context extraction from message headers:
+  For Broadway pipelines that need distributed tracing context extraction from message headers/attributes:
 
       def start(_type, _args) do
         :ok = OpentelemetryBroadway.setup(propagation: true)
@@ -26,29 +26,45 @@ defmodule OpentelemetryBroadway do
         # ...
       end
 
-  **Important**: When using trace propagation, your producer must be configured to extract headers.
+  > #### Extracting Headers and Attributes {: .info}
+  > When using trace propagation, your producer must be configured to extract headers/attributes.
+
+  #### RabbitMQ
+
   For RabbitMQ, configure your `BroadwayRabbitMQ.Producer` with `metadata: [:headers]`:
 
       Broadway.start_link(MyBroadway,
         name: MyBroadway,
         producer: [
           module: {BroadwayRabbitMQ.Producer,
-            queue: "my_queue",
             metadata: [:headers],  # Required for trace propagation!
-            connection: [...]
           }
-        ],
-        processors: [default: [concurrency: 10]]
+        ]
+      )
+
+  #### Amazon SQS
+
+  For Amazon SQS, configure your `BroadwaySQS.Producer` to extract trace context.
+  By default, SQS does **not** return attributes - you must explicitly request them:
+
+      Broadway.start_link(MyBroadway,
+        name: MyBroadway,
+        producer: [
+          module: {BroadwaySQS.Producer,
+            queue_url: "https://sqs.amazonaws.com/...",
+            # For AWS X-Ray trace headers (system attribute):
+            attribute_names: [:aws_trace_header],
+            # For W3C Trace Context propagation (custom message attributes):
+            message_attribute_names: ["traceparent", "tracestate"]
+          }
+        ]
       )
   """
 
   alias OpenTelemetry.Ctx
   alias OpenTelemetry.Tracer
-  alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
-
-  require Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   @tracer_id __MODULE__
 
@@ -77,7 +93,7 @@ defmodule OpentelemetryBroadway do
     opts =
       opts
       |> Enum.into(%{})
-      |> Map.put_new(:propagation, false)
+      |> Map.put_new(:propagation, true)
 
     :telemetry.attach(
       "#{__MODULE__}.message_start",
@@ -118,19 +134,19 @@ defmodule OpentelemetryBroadway do
     span_name = "#{inspect(topology_name)}/#{Atom.to_string(processor_key)} process"
     client_id = inspect(name)
 
-    {_parent_ctx, links} = get_propagated_ctx(message, config)
+    links = get_propagated_ctx(message, config)
 
     attributes = %{
-      SemanticConventions.Trace.messaging_system() => :broadway,
-      SemanticConventions.Trace.messaging_operation() => :process,
-      SemanticConventions.Trace.messaging_consumer_id() => client_id
+      MessagingAttributes.messaging_system() => :broadway,
+      MessagingAttributes.messaging_operation_type() => :process,
+      MessagingAttributes.messaging_client_id() => client_id
     }
 
     attributes =
       if is_binary(message.data) do
         Map.put(
           attributes,
-          SemanticConventions.Trace.messaging_message_payload_size_bytes(),
+          MessagingAttributes.messaging_message_body_size(),
           byte_size(message.data)
         )
       else
@@ -198,10 +214,10 @@ defmodule OpentelemetryBroadway do
     |> extract_to_ctx()
   end
 
-  defp get_propagated_ctx(_message, _config), do: {:undefined, []}
+  defp get_propagated_ctx(_message, _config), do: []
 
   defp extract_to_ctx([]) do
-    {:undefined, []}
+    []
   end
 
   defp extract_to_ctx(headers) do
@@ -211,15 +227,49 @@ defmodule OpentelemetryBroadway do
       |> Tracer.current_span_ctx()
 
     # Create links to parent if it exists
-    links = if parent_ctx == :undefined, do: [], else: [OpenTelemetry.link(parent_ctx)]
-    {parent_ctx, links}
+    case parent_ctx do
+      :undefined -> []
+      _ -> [OpenTelemetry.link(parent_ctx)]
+    end
   end
 
+  # RabbitMQ: headers are in metadata.headers as a list
   defp get_message_headers(%Broadway.Message{metadata: %{headers: headers}}) when is_list(headers), do: headers
+
+  # SQS: both standard attributes and custom message attributes can contain trace context
+  defp get_message_headers(%Broadway.Message{metadata: %{attributes: attributes, message_attributes: message_attributes}}) do
+    message_attributes =
+      message_attributes
+      |> normalize_sqs_attributes()
+      |> Enum.to_list()
+
+    attributes
+    |> normalize_sqs_attributes()
+    |> Enum.to_list()
+    |> Enum.concat(message_attributes)
+  end
+
   defp get_message_headers(_message), do: []
 
-  # RabbitMQ format: {key, type, value}
+  # ExAws.SQS returns:
+  #
+  #   - Empty: [] (list)
+  #   - With data: %{"key" => "value"} for attributes
+  #   - With data: %{"key" => %{name: "key", data_type: "String", value: "parsed"}} for message_attributes
+  #
+  # Returning an empty map as the safe fallback for empty array or
+  # unrecognized data format.
+  defp normalize_sqs_attributes(attrs) when is_map(attrs), do: attrs
+  defp normalize_sqs_attributes(_), do: %{}
+
+  # RabbitMQ format:
+  # - {key, type, value}
   defp normalize_header({key, _type, value}) when is_binary(key) and is_binary(value), do: {key, value}
+  # SQS format:
+  # - {key, %{name: "key", data_type: "String", value: "..."}}
+  # - {key, %{name: "key", data_type: "Binary", value: "..."}}
+  defp normalize_header({key, %{name: key, value: value}}) when is_binary(value), do: {key, value}
+  # Standard format: {key, value}
   defp normalize_header({key, value}) when is_binary(key) and is_binary(value), do: {key, value}
   defp normalize_header(_value), do: nil
 end
