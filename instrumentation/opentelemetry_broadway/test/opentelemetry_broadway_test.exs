@@ -49,8 +49,8 @@ defmodule OpentelemetryBroadwayTest do
 
     assert %{
              "messaging.system": :broadway,
-             "messaging.operation": :process,
-             "messaging.message_payload_size_bytes": 7
+             "messaging.operation.type": :process,
+             "messaging.message.body.size": 7
            } = :otel_attributes.map(attributes)
   end
 
@@ -147,7 +147,7 @@ defmodule OpentelemetryBroadwayTest do
 
     attrs_map = :otel_attributes.map(attributes)
     assert attrs_map[:"messaging.system"] == :broadway
-    assert attrs_map[:"messaging.operation"] == :process
+    assert attrs_map[:"messaging.operation.type"] == :process
 
     links_list = elem(links, 5)
     assert length(links_list) == 1

@@ -69,11 +69,8 @@ defmodule OpentelemetryBroadway do
 
   alias OpenTelemetry.Ctx
   alias OpenTelemetry.Tracer
-  alias OpenTelemetry.SemanticConventions
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
-
-  require Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   @tracer_id __MODULE__
 
@@ -146,16 +143,16 @@ defmodule OpentelemetryBroadway do
     links = get_propagated_ctx(message, config)
 
     attributes = %{
-      SemanticConventions.Trace.messaging_system() => :broadway,
-      SemanticConventions.Trace.messaging_operation() => :process,
-      SemanticConventions.Trace.messaging_consumer_id() => client_id
+      MessagingAttributes.messaging_system() => :broadway,
+      MessagingAttributes.messaging_operation_type() => :process,
+      MessagingAttributes.messaging_client_id() => client_id
     }
 
     attributes =
       if is_binary(message.data) do
         Map.put(
           attributes,
-          SemanticConventions.Trace.messaging_message_payload_size_bytes(),
+          MessagingAttributes.messaging_message_body_size(),
           byte_size(message.data)
         )
       else
