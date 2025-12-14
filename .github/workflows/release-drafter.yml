@@ -94,6 +94,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  opentelemetry-grpc-release:
+    permissions:
+      contents: write # required for creating draft releases
+    name: '[opentelemetry-grpc-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter-templates/opentelemetry-grpc.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   opentelemetry-grpcbox-release:
     permissions:
       contents: write # required for creating draft releases

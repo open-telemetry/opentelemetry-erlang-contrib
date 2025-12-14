@@ -1,0 +1,11 @@
+_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+name-template: 'Opentelemetry gRPC - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-grpc-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-grpc-v
+include-paths:
+  - instrumentation/opentelemetry_grpc/
+
+footer: |
+
+  ---
+  [Changelog](https://$REPOSITORY/blob/main/instrumentation/opentelemetry_grpc/CHANGELOG.md)
