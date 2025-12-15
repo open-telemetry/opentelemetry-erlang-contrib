@@ -15,6 +15,7 @@ on:
           - "ecto"
           - "elli"
           - "finch"
+          - "grpc"
           - "grpcbox"
           - "http"
           - "httpoison"
