@@ -49,8 +49,8 @@ defmodule OpentelemetryBroadwayTest do
 
     assert %{
              "messaging.system": :broadway,
-             "messaging.operation": :process,
-             "messaging.message_payload_size_bytes": 7
+             "messaging.operation.type": :process,
+             "messaging.message.body.size": 7
            } = :otel_attributes.map(attributes)
   end
 
@@ -88,27 +88,32 @@ defmodule OpentelemetryBroadwayTest do
 
   test "extracts trace context from RabbitMQ headers when propagation enabled" do
     TestHelpers.remove_handlers()
-    :ok = OpentelemetryBroadway.setup(propagation: true)
+    :ok = OpentelemetryBroadway.setup(span_relationship: :link)
 
     _parent_span_ctx =
       OpenTelemetry.Tracer.start_span("upstream-service")
       |> OpenTelemetry.Tracer.set_current_span()
 
     trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
-    trace_id = elem(trace_ctx, 1)
-    span_id = elem(trace_ctx, 2)
+    # span_ctx record: {span_ctx, trace_id, hex_trace_id, span_id, hex_span_id, ...}
+    trace_id = elem(trace_ctx, 1)          # integer trace_id
+    hex_trace_id = elem(trace_ctx, 2)      # hex string trace_id
+    span_id = elem(trace_ctx, 3)           # integer span_id
+    hex_span_id = elem(trace_ctx, 4)       # hex string span_id
 
     OpenTelemetry.Tracer.end_span()
     OpenTelemetry.Ctx.clear()
 
     assert_receive {:span, span(name: "upstream-service")}
 
+    # Format traceparent header using hex strings
+    traceparent = "00-#{hex_trace_id}-#{hex_span_id}-01"
+
     message = %Broadway.Message{
       data: "test message",
       metadata: %{
         headers: [
-          {"traceparent", :longstr,
-           "00-#{:io_lib.format("~32.16.0b", [trace_id])}-#{:io_lib.format("~16.16.0b", [span_id])}-01"},
+          {"traceparent", :longstr, traceparent},
           {"x-custom-header", :longstr, "custom-value"}
         ],
         routing_key: "test.queue",
@@ -147,34 +152,37 @@ defmodule OpentelemetryBroadwayTest do
 
     attrs_map = :otel_attributes.map(attributes)
     assert attrs_map[:"messaging.system"] == :broadway
-    assert attrs_map[:"messaging.operation"] == :process
+    assert attrs_map[:"messaging.operation.type"] == :process
 
     links_list = elem(links, 5)
     assert length(links_list) == 1
     [link] = links_list
+    # Links use integer IDs
     assert elem(link, 1) == trace_id
     assert elem(link, 2) == span_id
   end
 
   test "creates proper trace relationship when propagation enabled" do
     TestHelpers.remove_handlers()
-    :ok = OpentelemetryBroadway.setup(propagation: true)
+    :ok = OpentelemetryBroadway.setup(span_relationship: :link)
 
     # Create parent trace
     parent_span = OpenTelemetry.Tracer.start_span("parent-service")
     OpenTelemetry.Tracer.set_current_span(parent_span)
     parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
-    parent_trace_id = elem(parent_ctx, 1)
-    parent_span_id = elem(parent_ctx, 2)
+    # span_ctx record: {span_ctx, trace_id, hex_trace_id, span_id, hex_span_id, ...}
+    parent_trace_id = elem(parent_ctx, 1)          # integer trace_id
+    parent_hex_trace_id = elem(parent_ctx, 2)      # hex string trace_id
+    parent_span_id = elem(parent_ctx, 3)           # integer span_id
+    parent_hex_span_id = elem(parent_ctx, 4)       # hex string span_id
 
-    # Create traceparent header from parent context
-    traceparent =
-      "00-#{:io_lib.format("~32.16.0b", [parent_trace_id])}-#{:io_lib.format("~16.16.0b", [parent_span_id])}-01"
+    # Create traceparent header from parent context using hex strings
+    traceparent = "00-#{parent_hex_trace_id}-#{parent_hex_span_id}-01"
 
     OpenTelemetry.Tracer.end_span()
     OpenTelemetry.Ctx.clear()
 
-    # Consume parent span
+    # Consume parent span (span record uses integer IDs)
     assert_receive {:span, span(name: "parent-service", trace_id: ^parent_trace_id, span_id: ^parent_span_id)}
 
     # Create message with propagated context
@@ -219,15 +227,15 @@ defmodule OpentelemetryBroadwayTest do
     links_list = elem(links, 5)
     assert length(links_list) == 1
     [link] = links_list
-    # Link points to parent trace
+    # Link points to parent trace (integer IDs)
     assert elem(link, 1) == parent_trace_id
-    # Link points to parent span
+    # Link points to parent span (integer IDs)
     assert elem(link, 2) == parent_span_id
   end
 
   test "handles message without headers gracefully with propagation enabled" do
     TestHelpers.remove_handlers()
-    :ok = OpentelemetryBroadway.setup(propagation: true)
+    :ok = OpentelemetryBroadway.setup(span_relationship: :link)
 
     message = %Broadway.Message{
       data: "test message",
@@ -272,7 +280,7 @@ defmodule OpentelemetryBroadwayTest do
 
   test "handles malformed headers gracefully with propagation enabled" do
     TestHelpers.remove_handlers()
-    :ok = OpentelemetryBroadway.setup(propagation: true)
+    :ok = OpentelemetryBroadway.setup(span_relationship: :link)
 
     message = %Broadway.Message{
       data: "test message",
