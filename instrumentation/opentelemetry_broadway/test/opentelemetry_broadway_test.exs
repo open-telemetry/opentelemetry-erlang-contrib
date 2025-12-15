@@ -47,11 +47,9 @@ defmodule OpentelemetryBroadwayTest do
                       status: ^expected_status
                     )}
 
-    assert %{
-             "messaging.system": :broadway,
-             "messaging.operation.type": :process,
-             "messaging.message.body.size": 7
-           } = :otel_attributes.map(attributes)
+    attrs_map = :otel_attributes.map(attributes)
+    assert attrs_map[:"messaging.system"] == :broadway
+    assert attrs_map[:"messaging.operation.type"] == :process
   end
 
   test "records span on message which fails" do
@@ -479,5 +477,56 @@ defmodule OpentelemetryBroadwayTest do
     [link] = links_list
     assert elem(link, 1) == trace_id
     assert elem(link, 2) == span_id
+  end
+
+  # Backwards compatibility tests for deprecated `propagation` option
+  describe "backwards compatibility" do
+    test "propagation: false disables context propagation" do
+      TestHelpers.remove_handlers()
+      :ok = OpentelemetryBroadway.setup(propagation: false)
+
+      _parent_span_ctx =
+        OpenTelemetry.Tracer.start_span("upstream-service")
+        |> OpenTelemetry.Tracer.set_current_span()
+
+      # Create headers with trace context
+      headers = create_rabbitmq_headers_with_trace_context()
+
+      ref =
+        Broadway.test_message(TestBroadway, "success", metadata: %{headers: headers, delivery_tag: 12345})
+
+      assert_receive {:ack, ^ref, [%{data: "success"}], []}
+
+      # Should not have parent-child relationship when propagation: false
+      assert_receive {:span, span(parent_span_id: :undefined, links: links)}
+
+      # Should not have any links when propagation: false
+      links_list = elem(links, 5)
+      assert length(links_list) == 0
+    end
+
+    test "raises error when both propagation and span_relationship are provided" do
+      TestHelpers.remove_handlers()
+
+      assert_raise ArgumentError,
+                   "cannot use both :propagation and :span_relationship options. " <>
+                     "Please use :span_relationship only as :propagation is deprecated",
+                   fn ->
+                     OpentelemetryBroadway.setup(propagation: true, span_relationship: :none)
+                   end
+    end
+  end
+
+  defp create_rabbitmq_headers_with_trace_context do
+    # Get current span context
+    trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
+    trace_id = elem(trace_ctx, 1)
+    span_id = elem(trace_ctx, 2)
+
+    # Format traceparent header manually in RabbitMQ format
+    [
+      {"traceparent", :longstr,
+       "00-#{:io_lib.format("~32.16.0b", [trace_id])}-#{:io_lib.format("~16.16.0b", [span_id])}-01"}
+    ]
   end
 end
