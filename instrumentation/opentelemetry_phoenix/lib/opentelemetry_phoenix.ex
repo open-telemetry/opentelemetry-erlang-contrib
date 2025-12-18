@@ -16,6 +16,11 @@ defmodule OpentelemetryPhoenix do
                       type: :boolean,
                       default: true,
                       doc: "Whether LiveView traces will be instrumented."
+                    ],
+                    controller: [
+                      type: :boolean,
+                      default: true,
+                      doc: "Whether controller render traces will be instrumented."
                     ]
                   )
 
@@ -62,7 +67,7 @@ defmodule OpentelemetryPhoenix do
   @tracer_id __MODULE__
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix() | adapter() | liveview()]
+  @type opts :: [endpoint_prefix() | adapter() | liveview() | controller()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
@@ -72,6 +77,9 @@ defmodule OpentelemetryPhoenix do
 
   @typedoc "Attach LiveView handlers. Optional"
   @type liveview :: {:liveview, boolean()}
+
+  @typedoc "Attach controller render handlers. Optional"
+  @type controller :: {:controller, boolean()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -87,7 +95,9 @@ defmodule OpentelemetryPhoenix do
       attach_liveview_handlers()
     end
 
-    attach_controller_render_handlers()
+    if opts[:controller] do
+      attach_controller_render_handlers()
+    end
 
     :ok
   end

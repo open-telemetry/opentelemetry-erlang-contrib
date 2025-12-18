@@ -278,4 +278,30 @@ defmodule OpentelemetryPhoenixTest do
              ExceptionAttributes.exception_type()
            ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
+
+  test "does not record controller render spans when disabled" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2, controller: false)
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :start],
+      %{system_time: System.system_time()},
+      %{
+        template: "index",
+        view: MyAppWeb.PageView,
+        format: "html"
+      }
+    )
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :stop],
+      %{system_time: System.system_time()},
+      %{
+        template: "index",
+        view: MyAppWeb.PageView,
+        format: "html"
+      }
+    )
+
+    refute_receive {:span, span(name: "MyAppWeb.PageView#index.html")}
+  end
 end
