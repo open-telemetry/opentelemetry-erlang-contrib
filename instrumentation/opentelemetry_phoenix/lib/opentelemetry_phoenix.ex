@@ -23,7 +23,7 @@ defmodule OpentelemetryPhoenix do
   OpentelemetryPhoenix uses [telemetry](https://hexdocs.pm/telemetry/) handlers to create `OpenTelemetry` spans.
 
   Current events which are supported include endpoint start/stop, router start/stop,
-  and router exceptions.
+  router exceptions, LiveView lifecycle events, and controller render events.
 
   ### Supported options
   #{NimbleOptions.docs(@options_schema)}
@@ -87,6 +87,8 @@ defmodule OpentelemetryPhoenix do
       attach_liveview_handlers()
     end
 
+    attach_controller_render_handlers()
+
     :ok
   end
 
@@ -128,6 +130,22 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, :live_component, :handle_event, :exception]
       ],
       &__MODULE__.handle_liveview_event/4,
+      %{}
+    )
+
+    :ok
+  end
+
+  @doc false
+  def attach_controller_render_handlers do
+    :telemetry.attach_many(
+      {__MODULE__, :controller_render},
+      [
+        [:phoenix, :controller, :render, :start],
+        [:phoenix, :controller, :render, :stop],
+        [:phoenix, :controller, :render, :exception]
+      ],
+      &__MODULE__.handle_controller_render_event/4,
       %{}
     )
 
@@ -224,5 +242,52 @@ defmodule OpentelemetryPhoenix do
     OpenTelemetry.Span.record_exception(ctx, exception, stacktrace, [])
     OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  def handle_controller_render_event(
+        [:phoenix, :controller, :render, :start],
+        _measurements,
+        %{template: template, view: view, format: format} = meta,
+        _handler_configuration
+      ) do
+    view_name = module_name(view)
+    span_name = "#{view_name}##{template}.#{format}"
+
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      span_name,
+      meta,
+      %{kind: :server}
+    )
+  end
+
+  def handle_controller_render_event(
+        [:phoenix, :controller, :render, :stop],
+        _measurements,
+        meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  def handle_controller_render_event(
+        [:phoenix, :controller, :render, :exception],
+        _,
+        %{kind: kind, reason: reason, stacktrace: stacktrace} = meta,
+        _
+      ) do
+    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+
+    exception = Exception.normalize(kind, reason, stacktrace)
+
+    OpenTelemetry.Span.record_exception(ctx, exception, stacktrace, [])
+    OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+  end
+
+  defp module_name(module) when is_atom(module) do
+    module
+    |> inspect()
+    |> String.trim_leading("Elixir.")
   end
 end

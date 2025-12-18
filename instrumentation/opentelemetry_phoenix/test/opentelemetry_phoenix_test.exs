@@ -197,4 +197,85 @@ defmodule OpentelemetryPhoenixTest do
              ExceptionAttributes.exception_type()
            ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
+
+  test "records spans for Phoenix controller render" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :start],
+      %{system_time: System.system_time()},
+      %{
+        template: "index",
+        view: MyAppWeb.PageView,
+        format: "html"
+      }
+    )
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :stop],
+      %{system_time: System.system_time()},
+      %{
+        template: "index",
+        view: MyAppWeb.PageView,
+        format: "html"
+      }
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "MyAppWeb.PageView#index.html",
+                      attributes: attributes
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "handles exception during Phoenix controller render" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :start],
+      %{system_time: System.system_time()},
+      %{
+        template: "error",
+        view: MyAppWeb.ErrorView,
+        format: "html"
+      }
+    )
+
+    :telemetry.execute(
+      [:phoenix, :controller, :render, :exception],
+      %{system_time: System.system_time()},
+      %{
+        template: "error",
+        view: MyAppWeb.ErrorView,
+        format: "html",
+        kind: :error,
+        reason: %RuntimeError{message: "Template not found"},
+        stacktrace: []
+      }
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "MyAppWeb.ErrorView#error.html",
+                      attributes: attributes,
+                      events: events
+                    )}
+
+    assert %{} == :otel_attributes.map(attributes)
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [
+             ExceptionAttributes.exception_message(),
+             ExceptionAttributes.exception_stacktrace(),
+             ExceptionAttributes.exception_type()
+           ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
 end
