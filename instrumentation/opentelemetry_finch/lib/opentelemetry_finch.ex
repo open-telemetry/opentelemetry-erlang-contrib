@@ -44,7 +44,9 @@ defmodule OpentelemetryFinch do
 
     status =
       case meta.result do
-        {:ok, response} -> response.status
+        {:ok, %{status: status}} when is_integer(status) -> status
+        {:ok, {_request, %{status: status}}} when is_integer(status) -> status
+        {:ok, {status, _headers, _body}} when is_integer(status) -> status
         _ -> 0
       end
 
