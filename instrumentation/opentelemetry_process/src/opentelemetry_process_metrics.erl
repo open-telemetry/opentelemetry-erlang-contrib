@@ -32,7 +32,7 @@ setup(Meter) ->
          %% OTel process metrics defined by semantic conventions
 
          otel_meter:create_observable_counter(
-           Meter, 'process.cpu.time',
+           Meter, 'beam.process.cpu.time',
            #{description => <<"Total CPU seconds broken down by different states.">>,
              unit => 's'}),
          otel_meter:create_observable_updowncounter(
