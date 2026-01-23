@@ -27,10 +27,16 @@ defmodule OtelTelemetryMetrics.MixProject do
     [
       {:telemetry, "~> 1.3"},
       {:telemetry_metrics, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.3"},
-      {:opentelemetry_api_experimental, "~> 0.5"},
-      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
-      {:opentelemetry_experimental, "~> 0.5", only: [:dev, :test]},
+      # {:opentelemetry_api, "~> 1.3"},
+      # {:opentelemetry_api_experimental, "~> 0.5"},
+      # {:opentelemetry, "~> 1.4", only: [:dev, :test]},
+      # {:opentelemetry_experimental, "~> 0.5", only: [:dev, :test]},
+
+      {:opentelemetry_api, github: "open-telemetry/opentelemetry-erlang", sparse: "apps/opentelemetry_api", override: true},
+      {:opentelemetry, github: "open-telemetry/opentelemetry-erlang", sparse: "apps/opentelemetry", override: true, only: [:dev, :test]},
+      {:opentelemetry_api_experimental, github: "open-telemetry/opentelemetry-erlang", sparse: "apps/opentelemetry_api_experimental", override: true},
+      {:opentelemetry_experimental, github: "open-telemetry/opentelemetry-erlang", sparse: "apps/opentelemetry_experimental", override: true, only: [:dev, :test]},
+
       {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end

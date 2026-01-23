@@ -49,6 +49,11 @@ defmodule OtelTelemetryMetrics do
   require Logger
   use GenServer
 
+  require Record
+  @fields Record.extract(:instrument, from_lib: "opentelemetry_api_experimental/include/otel_metrics.hrl")
+  Record.defrecordp(:instrument, @fields)
+
+
   @doc """
   """
   def start_link(options) do
@@ -114,7 +119,7 @@ defmodule OtelTelemetryMetrics do
     nil
   end
 
-  defp unit(:unit), do: 1
+  defp unit(:unit), do: :undefined
   defp unit(unit), do: unit
 
   defp format_name(metric) do
@@ -148,7 +153,7 @@ defmodule OtelTelemetryMetrics do
       if value = keep?(metric, metadata) && extract_measurement(metric, measurements, metadata) do
         ctx = OpenTelemetry.Ctx.get_current()
         tags = extract_tags(metric, metadata)
-        :otel_meter.record(ctx, meter, instrument, value, tags)
+        :otel_meter.record(ctx, meter, instrument(instrument, :name), value, tags)
       end
     end
   end

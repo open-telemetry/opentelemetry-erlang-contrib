@@ -60,13 +60,13 @@ defmodule OtelTelemetryMetricsTest do
 
     Application.put_env(:opentelemetry, :processors, [
       {:otel_simple_processor, %{exporter: :none}}
-        ])
+    ])
 
     Application.put_env(:opentelemetry_experimental, :readers, [
       %{
         module: :otel_metric_reader,
         config: %{
-          exporter: {:otel_metric_exporter_pid, {:metric, self()}}
+          exporter: {:otel_metric_exporter_pid, self()}
         }
       }
     ])
@@ -109,11 +109,11 @@ defmodule OtelTelemetryMetricsTest do
     :otel_meter_server.force_flush()
 
     # last_value type metrics are ignored at this time
-    refute_receive {:metric, metric( name: :'vm.memory.binary')}
+    refute_receive {:otel_metric, metric( name: :"vm.memory.binary")}
 
-    assert_receive {:metric,
+    assert_receive {:otel_metric,
                     metric(
-                      name: :'phoenix.endpoint.stop.duration',
+                      name: :"phoenix.endpoint.stop.duration",
                       data: histogram(datapoints: [histogram_datapoint(
                                                       attributes: %{},
                                                       count: 1,
@@ -126,9 +126,9 @@ defmodule OtelTelemetryMetricsTest do
                     )}
 
     receive do
-      {:metric,
+      {:otel_metric,
        metric(
-         name: :'db.query.duration',
+         name: :"db.query.duration",
          data: sum(datapoints: datapoints))} ->
         assert [datapoint(
                    attributes: %{table: "sessions", operation: "insert"},
@@ -144,23 +144,23 @@ defmodule OtelTelemetryMetricsTest do
 
     # Metric for vm_memory_total is their form of Counter, a metric that increments
     # by 1 on each recording. So should be only 1 here
-    assert_receive {:metric,
+    assert_receive {:otel_metric,
                     metric(
-                      name: :'vm.memory.total',
+                      name: :"vm.memory.total",
                       data: sum(datapoints: [datapoint(value: 2)])
                     )}
-    assert_receive {:metric,
+    assert_receive {:otel_metric,
                     metric(
-                      name: :'telemetry.event_size.metadata',
+                      name: :"telemetry.event_size.metadata",
                       unit: :megabyte,
                       data: sum(datapoints: [datapoint(value: 4.0e-6)])
                     )}
 
     # response_time is a summary, which gets represented as a single bucket histogram
     # since the second event had metadata boom: pow it is ignored and count is just 1
-    assert_receive {:metric,
+    assert_receive {:otel_metric,
                     metric(
-                      name: :'http.request.response_time',
+                      name: :"http.request.response_time",
                       data: histogram(datapoints: [histogram_datapoint(
                                                       attributes: %{bar: :baz},
                                                       count: 1,
@@ -177,9 +177,9 @@ defmodule OtelTelemetryMetricsTest do
     :otel_meter_server.force_flush()
 
     # counter temporality is delta so should reset to 0
-    assert_receive {:metric,
+    assert_receive {:otel_metric,
                     metric(
-                      name: :'vm.memory.total',
+                      name: :"vm.memory.total",
                       data: sum(datapoints: [datapoint(value: 1)])
                     )}
   end
