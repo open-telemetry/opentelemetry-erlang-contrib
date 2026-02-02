@@ -21,7 +21,7 @@ defmodule OpentelemetryBroadway do
   For Broadway pipelines that need distributed tracing context extraction from message headers/attributes:
 
       def start(_type, _args) do
-        :ok = OpentelemetryBroadway.setup(propagation: true)
+        :ok = OpentelemetryBroadway.setup(span_relationship: :link)
 
         # ...
       end
@@ -68,52 +68,78 @@ defmodule OpentelemetryBroadway do
 
   @tracer_id __MODULE__
 
-  @type setup_opts :: [propagation: boolean()]
+  @options_schema [
+    span_relationship: [
+      type: {:in, [:child, :link, :none]},
+      default: :link,
+      doc: """
+      How spans relate to propagated parent context:
+      * `:child` - Extract context and create parent-child relationships
+      * `:link` - Extract context and create span links for loose coupling (default)
+      * `:none` - Disable context propagation entirely
+      """
+    ],
+    propagation: [
+      type: :boolean,
+      deprecated: "Use `:span_relationship` instead. `propagation: true` maps to `span_relationship: :link`",
+      doc: """
+      When `true`, enables context propagation with span links (maps to `span_relationship: :link`).
+      When `false`, disables context propagation (maps to `span_relationship: :none`).
+      """
+    ]
+  ]
+
+  @nimble_options_schema NimbleOptions.new!(@options_schema)
 
   @doc """
   Attaches the Telemetry handlers, returning `:ok` if successful.
 
   ## Options
 
-  - `propagation` - Enable trace propagation from message headers
+  #{NimbleOptions.docs(@nimble_options_schema)}
 
   ## Examples
 
-      # Basic setup
+      # Basic setup (defaults to :link)
       OpentelemetryBroadway.setup()
 
-      # With trace propagation
-      OpentelemetryBroadway.setup(propagation: true)
+      # With parent-child relationships
+      OpentelemetryBroadway.setup(span_relationship: :child)
+
+      # With span links (loose coupling)
+      OpentelemetryBroadway.setup(span_relationship: :link)
+
+      # Disable context propagation
+      OpentelemetryBroadway.setup(span_relationship: :none)
 
   """
-  @spec setup(setup_opts()) :: :ok
-  def setup(opts \\ [])
-
-  def setup(opts) do
-    opts =
+  @spec setup(unquote(NimbleOptions.option_typespec(@options_schema))) :: :ok
+  def setup(opts \\ []) when is_list(opts) do
+    config =
       opts
+      |> validate_deprecated_options()
+      |> NimbleOptions.validate!(@nimble_options_schema)
       |> Enum.into(%{})
-      |> Map.put_new(:propagation, true)
 
     :telemetry.attach(
       "#{__MODULE__}.message_start",
       [:broadway, :processor, :message, :start],
       &__MODULE__.handle_message_start/4,
-      opts
+      config
     )
 
     :telemetry.attach(
       "#{__MODULE__}.message_stop",
       [:broadway, :processor, :message, :stop],
       &__MODULE__.handle_message_stop/4,
-      opts
+      config
     )
 
     :telemetry.attach(
       "#{__MODULE__}.message_exception",
       [:broadway, :processor, :message, :exception],
       &__MODULE__.handle_message_exception/4,
-      opts
+      config
     )
 
     :ok
@@ -134,30 +160,11 @@ defmodule OpentelemetryBroadway do
     span_name = "#{inspect(topology_name)}/#{Atom.to_string(processor_key)} process"
     client_id = inspect(name)
 
-    links = get_propagated_ctx(message, config)
+    span_opts = %{kind: :consumer, attributes: build_message_attributes(message, client_id)}
+    links = setup_context_propagation(message, config.span_relationship)
+    span_opts = put_links(span_opts, links)
 
-    attributes = %{
-      MessagingAttributes.messaging_system() => :broadway,
-      MessagingAttributes.messaging_operation_type() => :process,
-      MessagingAttributes.messaging_client_id() => client_id
-    }
-
-    attributes =
-      if is_binary(message.data) do
-        Map.put(
-          attributes,
-          MessagingAttributes.messaging_message_body_size(),
-          byte_size(message.data)
-        )
-      else
-        attributes
-      end
-
-    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
-      kind: :consumer,
-      links: links,
-      attributes: attributes
-    })
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, span_opts)
   end
 
   @doc false
@@ -167,15 +174,8 @@ defmodule OpentelemetryBroadway do
         %{message: %Broadway.Message{} = message} = metadata,
         _config
       ) do
-    status =
-      case message.status do
-        :ok -> OpenTelemetry.status(:ok)
-        {:failed, err} -> OpenTelemetry.status(:error, format_error(err))
-      end
-
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
-    OpenTelemetry.Span.set_status(ctx, status)
-
+    Span.set_status(ctx, otel_status(message))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
@@ -203,10 +203,77 @@ defmodule OpentelemetryBroadway do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
+  defp otel_status(%{status: :ok}), do: OpenTelemetry.status(:ok)
+  defp otel_status(%{status: {:failed, err}}), do: OpenTelemetry.status(:error, format_error(err))
+  defp otel_status(_), do: OpenTelemetry.status(:unset)
+
+  defp build_message_attributes(%Broadway.Message{}, client_id) do
+    %{
+      MessagingAttributes.messaging_system() => :broadway,
+      MessagingAttributes.messaging_operation_type() => :process,
+      MessagingAttributes.messaging_client_id() => client_id
+    }
+  end
+
   defp format_error(err) when is_binary(err), do: err
   defp format_error(err), do: inspect(err)
 
-  defp get_propagated_ctx(message, %{propagation: true} = _config) do
+  # Backwards compatibility: map deprecated `propagation` option to `span_relationship`
+  defp validate_deprecated_options(opts) do
+    if Keyword.has_key?(opts, :propagation) and Keyword.has_key?(opts, :span_relationship) do
+      raise ArgumentError,
+            "cannot use both :propagation and :span_relationship options. " <>
+              "Please use :span_relationship only as :propagation is deprecated"
+    end
+
+    case Keyword.pop(opts, :propagation) do
+      {true, opts} -> Keyword.put(opts, :span_relationship, :link)
+      {false, opts} -> Keyword.put(opts, :span_relationship, :none)
+      {nil, opts} -> opts
+    end
+  end
+
+  # Context propagation helpers - following OpentelemetryGrpc.Server pattern
+
+  defp put_links(span_opts, []) do
+    span_opts
+  end
+
+  defp put_links(span_opts, links) do
+    Map.put(span_opts, :links, links)
+  end
+
+  defp setup_context_propagation(message, :child) do
+    extract_and_attach(message)
+  end
+
+  defp setup_context_propagation(message, :link) do
+    link_from_propagated_ctx(message)
+  end
+
+  defp setup_context_propagation(_message, :none) do
+    []
+  end
+
+  defp extract_and_attach(message) do
+    case get_propagated_ctx(message) do
+      {_links, parent_ctx} when parent_ctx != :undefined ->
+        Ctx.attach(parent_ctx)
+        # When we attach the context, we don't need links - parent-child relationship is established
+        []
+
+      {links, _undefined_ctx} ->
+        # No parent context to attach, but we can still return links if any
+        links
+    end
+  end
+
+  defp link_from_propagated_ctx(message) do
+    {links, _ctx} = get_propagated_ctx(message)
+    links
+  end
+
+  defp get_propagated_ctx(message) do
     message
     |> get_message_headers()
     |> Enum.map(&normalize_header/1)
@@ -214,22 +281,26 @@ defmodule OpentelemetryBroadway do
     |> extract_to_ctx()
   end
 
-  defp get_propagated_ctx(_message, _config), do: []
-
   defp extract_to_ctx([]) do
-    []
+    {[], :undefined}
   end
 
   defp extract_to_ctx(headers) do
-    # Extract context into separate context to avoid polluting current context
-    parent_ctx =
-      :otel_propagator_text_map.extract_to(Ctx.new(), headers)
-      |> Tracer.current_span_ctx()
+    ctx =
+      Ctx.new()
+      |> :otel_propagator_text_map.extract_to(headers)
 
-    # Create links to parent if it exists
-    case parent_ctx do
-      :undefined -> []
-      _ -> [OpenTelemetry.link(parent_ctx)]
+    # Extract span context to check if it's valid and for creating links
+    span_ctx = Tracer.current_span_ctx(ctx)
+
+    case span_ctx do
+      :undefined ->
+        # No valid parent span - no relationship possible
+        {[], :undefined}
+
+      span_ctx ->
+        # Return links first, then context (for parent-child relationships)
+        {[OpenTelemetry.link(span_ctx)], ctx}
     end
   end
 
