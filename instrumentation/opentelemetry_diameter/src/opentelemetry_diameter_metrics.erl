@@ -38,18 +38,25 @@ setup(Meter) ->
            Meter, 'diameter.connection.count',
            #{description => ~"Number of connections to peers.",
              unit => '{connection}'}),
-         otel_meter:create_observable_gauge(
+         otel_meter:create_observable_counter(
            Meter, 'diameter.message.count',
            #{description => ~"Number of requests.",
              unit => '{request}'}),
-         otel_meter:create_observable_gauge(
+         otel_meter:create_observable_counter(
+           Meter, 'diameter.connection.io',
+           #{description => ~"Bytes sent/received over a connection.",
+             unit => 'By'}),
+         otel_meter:create_observable_counter(
+           Meter, 'diameter.connection.packets',
+           #{description => ~"Packets sent/received over a connection.",
+             unit => '{packet}'}),
+         otel_meter:create_observable_counter(
            Meter, 'diameter.error.count',
            #{description => ~"Number of errors.",
              unit => '{error}'})
         ],
     otel_meter:register_callback(Meter, Meters, fun diameter_metrics/1, []),
     ok.
-
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
@@ -68,92 +75,123 @@ diameter_metrics(_) ->
         lists:foldl(
           fun(SvcName, Stats) ->
                   Info = diameter:service_info(SvcName, [applications, peers]),
-                  gather_service(SvcName, Info, Stats)
+                  SvcAttrs = #{'diameter.service.name' => SvcName},
+                  gather_service(SvcAttrs, Info, Stats)
           end, #{}, Services),
     [{Metric, [{V, Attrs} || Attrs := V <- Values]} || Metric := Values <- Stats].
 
-gather_service(SvcName, Info, Stats) ->
+gather_service(SvcAttrs, Info, Stats) ->
     lists:foldl(
       fun({applications, Apps}, S0) ->
-              Attrs = #{'diameter.service.name' => SvcName},
-              add(['diameter.application.count', Attrs], length(Apps), S0);
+              add(['diameter.application.count', SvcAttrs], length(Apps), S0);
          ({peers, Peers}, S0) ->
               Apps = proplists:get_value(applications, Info, []),
               lists:foldl(
-                fun({PeerName, Peer}, S1) ->
-                        gather_peer(SvcName, PeerName, Peer, Apps, S1)
+                fun({PeerName, PeerInfo}, S1) ->
+                        SvcPeerAttrs = SvcAttrs#{'diameter.peer.origin_host' => PeerName},
+                        gather_peer(SvcPeerAttrs, PeerInfo, Apps, S1)
                 end, S0, Peers)
       end, Stats, Info).
 
-gather_peer(SvcName, Peer, Info, Apps, Stats) ->
+gather_peer(SvcPeerAttrs, Info, Apps, Stats) ->
     lists:foldl(
       fun({connections, C}, S0) ->
               lists:foldl(
                 fun(X, S1) ->
-                        gather_connection(SvcName, Peer, X, S1)
+                        gather_connection(SvcPeerAttrs, X, S1)
                 end, S0, C);
          ({statistics, S}, S0) ->
-              gather_statistics(SvcName, Peer, S, Apps, S0)
+              gather_statistics(SvcPeerAttrs, S, Apps, S0)
       end, Stats, Info).
 
-gather_connection(SvcName, Peer, Values, Stats) ->
+gather_connection(SvcPeerAttrs, Values, Stats0) ->
     {_, _, State} = proplists:get_value(watchdog, Values, {undefine, undefined, unknown}),
     Type = case proplists:get_value(type, Values, unknown) of
                accept  -> responder;
                connect -> initiator;
                Other -> Other
            end,
-    Port = proplists:get_value(port, Values, []),
-    Connection = case proplists:get_value(module, Port, unknown) of
+    PortInfo = proplists:get_value(port, Values, []), % This is {module, Mod}
+    Connection = case proplists:get_value(module, PortInfo, unknown) of
                      diameter_tcp -> tcp;
                      diameter_sctp -> sctp;
                      OtherTP -> OtherTP
                  end,
-    Attrs = #{'diameter.service.name' => SvcName,
-              'diameter.peer.origin_host' => Peer,
-              'network.transport' => Connection,
-              'diameter.connection.watchdog.state' => State,
-              'diameter.role' => Type},
-    add(['diameter.connection.count', Attrs], 1, Stats).
+    {LocalIP, LocalPort} = proplists:get_value(socket, PortInfo),
+    {PeerIP, PeerPort} = proplists:get_value(peer, PortInfo),
 
-gather_statistics(SvcName, Peer, S, Apps, Stats) ->
-    Attrs0 =
-        #{'diameter.service.name' => SvcName,
-          'diameter.peer.origin_host' => Peer},
+    OriginRealm = proplists:get_value(origin_realm, proplists:get_value(caps, Values, [])),
+    Attrs0 = case OriginRealm of
+                {_OR, DR} -> SvcPeerAttrs#{'diameter.peer.origin_realm' => DR};
+                _         -> SvcPeerAttrs
+            end,
+    Attrs =
+        Attrs0#{'network.transport' => Connection,
+                'diameter.connection.watchdog.state' => State,
+                'diameter.role' => Type,
+                'network.local.address' => inet:ntoa(LocalIP),
+                'network.local.port' => LocalPort,
+                'network.peer.address' => inet:ntoa(PeerIP),
+                'network.peer.port' => PeerPort},
+    Stats = add(['diameter.connection.count', Attrs], 1, Stats0),
+
+    %% Extract network statistics
+    lists:foldl(
+      fun({recv_cnt, V}, Acc) ->
+              %% Number of packets received by the socket.
+              add(['diameter.connection.packets', Attrs#{'network.io.direction' => ~"receive"}], V, Acc);
+         ({recv_oct, V}, Acc) ->
+              %% Number of bytes received by the socket.
+              add(['diameter.connection.io', Attrs#{'network.io.direction' => ~"receive"}], V, Acc);
+         ({send_cnt, V}, Acc) ->
+              %% Number of packets transmit from the socket.
+              add(['diameter.connection.packets', Attrs#{'network.io.direction' => ~"transmit"}], V, Acc);
+         ({send_oct, V}, Acc) ->
+              %% Number of bytes transmit from the socket.
+              add(['diameter.connection.io', Attrs#{'network.io.direction' => ~"transmit"}], V, Acc);
+         (_, Acc) ->
+              Acc
+      end, Stats, proplists:get_value(statistics, PortInfo, [])).
+
+gather_statistics(SvcPeerAttrs, S, Apps, Stats) ->
     lists:foldl(
       fun({{{_, _, 1} = Msg, Direction}, Cnt}, S1) ->
-              Attrs1 = Attrs0#{'message.direction' => msg_direction(Direction),
-                               'diameter.command.type' => msg_type(Msg),
-                               'diameter.application.id' => msg_app_id(Msg),
-                               'diameter.command.code' => msg_code(Msg)},
+              Attrs1 =
+                  SvcPeerAttrs#{'message.direction' => msg_direction(Direction),
+                                'diameter.command.type' => msg_type(Msg),
+                                'diameter.application.id' => msg_app_id(Msg),
+                                'diameter.command.code' => msg_code(Msg)},
               Attrs = msg_name(Msg, Apps, Attrs1),
               add(['diameter.message.count', Attrs], Cnt, S1);
          ({{Msg, Direction, {'Result-Code', RC}}, Cnt}, S1) ->
-              Attrs1 = Attrs0#{'message.direction' => msg_direction(Direction),
-                               'diameter.command.type' => msg_type(Msg),
-                               'diameter.application.id' => msg_app_id(Msg),
-                               'diameter.command.code' => msg_code(Msg),
-                               'diameter.result_code' => integer_to_binary(RC)},
+              Attrs1 =
+                  SvcPeerAttrs#{'message.direction' => msg_direction(Direction),
+                                'diameter.command.type' => msg_type(Msg),
+                                'diameter.application.id' => msg_app_id(Msg),
+                                'diameter.command.code' => msg_code(Msg),
+                                'diameter.result_code' => integer_to_binary(RC)},
               Attrs = msg_name(Msg, Apps, Attrs1),
               add(['diameter.message.count', Attrs], Cnt, S1);
          ({{Msg, Direction, error}, Cnt}, S1) ->
-              Attrs1 = Attrs0#{'message.direction' => msg_direction(Direction),
-                               'diameter.command.type' => msg_type(Msg),
-                               'diameter.application.id' => msg_app_id(Msg),
-                               'diameter.command.code' => msg_code(Msg),
-                               'diameter.error.type' => ~"unknown"},
+              Attrs1 =
+                  SvcPeerAttrs#{'message.direction' => msg_direction(Direction),
+                                'diameter.command.type' => msg_type(Msg),
+                                'diameter.application.id' => msg_app_id(Msg),
+                                'diameter.command.code' => msg_code(Msg),
+                                'diameter.error.type' => ~"unknown"},
               Attrs = msg_name(Msg, Apps, Attrs1),
-              add(['diameter.errors.count', Attrs], Cnt, S1);
+              add(['diameter.error.count', Attrs], Cnt, S1);
          ({{Msg, Direction, Result}, Cnt}, S1) when is_atom(Result) ->
-              Attrs1 = Attrs0#{'message.direction' => msg_direction(Direction),
-                               'diameter.command.type' => msg_type(Msg),
-                               'diameter.application.id' => msg_app_id(Msg),
-                               'diameter.command.code' => msg_code(Msg),
-                               'diameter.error.type' => atom_to_binary(Result)},
+              Attrs1 =
+                  SvcPeerAttrs#{'message.direction' => msg_direction(Direction),
+                                'diameter.command.type' => msg_type(Msg),
+                                'diameter.application.id' => msg_app_id(Msg),
+                                'diameter.command.code' => msg_code(Msg),
+                                'diameter.error.type' => atom_to_binary(Result)},
               Attrs = msg_name(Msg, Apps, Attrs1),
-              add(['diameter.errors.count', Attrs], Cnt, S1);
+              add(['diameter.error.count', Attrs], Cnt, S1);
          ({Result, Cnt}, S1) when is_atom(Result) ->
-              add(['diameter.errors.count', Attrs0], Cnt, S1);
+              add(['diameter.error.count', SvcPeerAttrs], Cnt, S1);
          (_, S1) ->
               S1
       end, Stats, S).

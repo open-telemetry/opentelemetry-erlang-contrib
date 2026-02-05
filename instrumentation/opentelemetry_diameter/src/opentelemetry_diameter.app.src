@@ -5,6 +5,7 @@
   {applications,
    [kernel,
     stdlib,
+    diameter,
     opentelemetry_api,
     opentelemetry_api_experimental
    ]},
