@@ -19,6 +19,7 @@
 -export([setup/0, setup/1]).
 -ignore_xref([setup/0, setup/1, setup/2]).
 
+-include_lib("kernel/include/logger.hrl").
 -include_lib("opentelemetry_api_experimental/include/otel_meter.hrl").
 
 %%%===================================================================
@@ -117,22 +118,41 @@ gather_connection(SvcPeerAttrs, Values, Stats0) ->
                      diameter_sctp -> sctp;
                      OtherTP -> OtherTP
                  end,
-    {LocalIP, LocalPort} = proplists:get_value(socket, PortInfo),
-    {PeerIP, PeerPort} = proplists:get_value(peer, PortInfo),
+    Attrs0 =
+        case Connection of
+            tcp ->
+                try
+                    {LocalIP, LocalPort} = proplists:get_value(socket, PortInfo),
+                    {PeerIP, PeerPort} = proplists:get_value(peer, PortInfo),
+                    SvcPeerAttrs#{'network.local.address' => inet:ntoa(LocalIP),
+                                  'network.local.port' => LocalPort,
+                                  'network.peer.address' => inet:ntoa(PeerIP),
+                                  'network.peer.port' => PeerPort}
+                catch
+                    C:E:St ->
+                        ?LOG(debug, "unexpected failure in TCP socket/peer info, C: ~0p, E: ~0, St: ~0p", [C, E, St]),
+                        ok
+                end;
+            sctp ->
+                %% sctp seem broken at least in OTP-28.1
+                %%  * socket contains a list of IPs, which is fine for SCTP, but it also
+                %%    contains IPs that can be never used on that connection, like 127.0.0.1
+                %%  * peer is missing completely
+                %% ... and how would a list of IPs match to the attributes anyhow?
+                SvcPeerAttrs;
+            _ ->
+                SvcPeerAttrs
+        end,
 
     OriginRealm = proplists:get_value(origin_realm, proplists:get_value(caps, Values, [])),
-    Attrs0 = case OriginRealm of
-                {_OR, DR} -> SvcPeerAttrs#{'diameter.peer.origin_realm' => DR};
-                _         -> SvcPeerAttrs
+    Attrs1 = case OriginRealm of
+                 {_OR, DR} -> Attrs0#{'diameter.peer.origin_realm' => DR};
+                 _         -> Attrs0
             end,
     Attrs =
-        Attrs0#{'network.transport' => Connection,
+        Attrs1#{'network.transport' => Connection,
                 'diameter.connection.watchdog.state' => State,
-                'diameter.role' => Type,
-                'network.local.address' => inet:ntoa(LocalIP),
-                'network.local.port' => LocalPort,
-                'network.peer.address' => inet:ntoa(PeerIP),
-                'network.peer.port' => PeerPort},
+                'diameter.role' => Type},
     Stats = add(['diameter.connection.count', Attrs], 1, Stats0),
 
     %% Extract network statistics
