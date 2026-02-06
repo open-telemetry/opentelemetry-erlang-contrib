@@ -11,7 +11,7 @@ defmodule OpentelemetryBroadway.MixProject do
       start_permanent: Mix.env() == :prod,
       docs: [
         source_url_pattern:
-          "https://github.com/opentelemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway/%{path}#L%{line}",
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway/%{path}#L%{line}",
         main: "OpentelemetryBroadway",
         extras: ["README.md"]
       ],
@@ -24,10 +24,10 @@ defmodule OpentelemetryBroadway.MixProject do
         licenses: ["Apache-2.0"],
         files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
         source_url:
-          "https://github.com/opentelemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway",
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway",
         links: %{
           "GitHub" =>
-            "https://github.com/opentelemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway"
+            "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_broadway"
         }
       ]
     ]
