@@ -256,5 +256,100 @@ defmodule OpentelemetryFinchTest do
     refute_receive {:span, _}
   end
 
+  test "records span on request response with 5xx status code", %{bypass: bypass} do
+    Bypass.expect(bypass, fn conn -> Plug.Conn.resp(conn, 503, "") end)
+
+    {:ok, _} = Finch.build(:get, endpoint_url(bypass.port)) |> Finch.request(HttpFinch)
+
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      status: {:status, :error, "503"},
+                      attributes: attributes
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), endpoint_url(bypass.port)},
+      {HTTPAttributes.http_response_status_code(), 503},
+      {ErrorAttributes.error_type(), "503"}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
+  end
+
+  test "handles malformed content-length header gracefully", %{bypass: bypass} do
+    Bypass.expect(bypass, fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-length", "invalid")
+      |> Plug.Conn.resp(200, "")
+    end)
+
+    otel_config = %{
+      opt_in_attrs: [
+        HTTPAttributes.http_response_body_size()
+      ]
+    }
+
+    {:ok, _} =
+      Finch.build(:get, endpoint_url(bypass.port))
+      |> Finch.Request.put_private(:otel, otel_config)
+      |> Finch.request(HttpFinch)
+
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    assert Map.get(attrs, HTTPAttributes.http_response_body_size()) == 0
+  end
+
+  test "records body size when content-length header is present", %{bypass: bypass} do
+    body = "Hello, World!"
+
+    Bypass.expect(bypass, fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-length", "#{byte_size(body)}")
+      |> Plug.Conn.resp(200, body)
+    end)
+
+    otel_config = %{
+      opt_in_attrs: [
+        HTTPAttributes.http_request_body_size(),
+        HTTPAttributes.http_response_body_size()
+      ]
+    }
+
+    request_body = "request body"
+
+    {:ok, _} =
+      Finch.build(:post, endpoint_url(bypass.port), [{"content-length", "#{byte_size(request_body)}"}], request_body)
+      |> Finch.Request.put_private(:otel, otel_config)
+      |> Finch.request(HttpFinch)
+
+    assert_receive {:span,
+                    span(
+                      name: "POST",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    assert Map.get(attrs, HTTPAttributes.http_request_body_size()) == byte_size(request_body)
+    assert Map.get(attrs, HTTPAttributes.http_response_body_size()) == byte_size(body)
+  end
+
   defp endpoint_url(port), do: "http://localhost:#{port}/"
 end

@@ -24,8 +24,8 @@ defmodule OpentelemetryFinch do
   The span name can be as follows in order of precedence:
 
   - `{method}` - default name if no other options are specified
-  - `{span_name}` - custom span name defined with the `span_name` option
-  - `{method} {url_template}` - custom span name defined with the `url_template` options
+  - `{method} {span_name}` - when `span_name` option is provided
+  - `{method} {url_template}` - when `url_template` option is provided
 
   Example:
   ```elixir
@@ -102,7 +102,7 @@ defmodule OpentelemetryFinch do
                       doc: "List of response headers to add as attributes (lowercase)"
                     ],
                     span_name: [
-                      type: {:or, [:atom, nil, :string]},
+                      type: {:or, [nil, :string]},
                       default: nil,
                       doc: "User defined span name override"
                     ],
@@ -265,7 +265,10 @@ defmodule OpentelemetryFinch do
         0
 
       [length_str | _] when is_binary(length_str) ->
-        String.to_integer(length_str)
+        case Integer.parse(length_str) do
+          {int, _} -> int
+          :error -> 0
+        end
     end
   end
 
@@ -289,7 +292,10 @@ defmodule OpentelemetryFinch do
         0
 
       [length_str | _] when is_binary(length_str) ->
-        String.to_integer(length_str)
+        case Integer.parse(length_str) do
+          {int, _} -> int
+          :error -> 0
+        end
     end
   end
 
