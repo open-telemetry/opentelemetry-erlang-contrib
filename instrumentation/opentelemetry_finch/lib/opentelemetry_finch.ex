@@ -15,7 +15,7 @@ defmodule OpentelemetryFinch do
 
   ## Semantic Conventions
 
-  Module follows [Client HTTP Span v1.27](https://github.com/open-telemetry/semantic-conventions/blob/v1.27.0/docs/http/http-spans.md) semantic conventions.
+  Module follows [Client HTTP Span v1.39](https://github.com/open-telemetry/semantic-conventions/blob/v1.39.0/docs/http/http-spans.md) semantic conventions.
   Otel configuration should be provided as a map in the `:otel` key of the `Finch.Request.private` map.
   See the headings below for examples.
 
@@ -319,9 +319,7 @@ defmodule OpentelemetryFinch do
     OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:error, format_error(reason)))
   end
 
-  defp set_span_status(span, _result, _status) do
-    OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:ok, ""))
-  end
+  defp set_span_status(_span, _result, _status), do: :ok
 
   defp get_header(headers, header_name) do
     headers
