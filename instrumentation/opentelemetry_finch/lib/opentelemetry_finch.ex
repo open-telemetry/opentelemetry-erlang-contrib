@@ -45,7 +45,7 @@ defmodule OpentelemetryFinch do
   Finch.build(:get, url)
   |> Finch.Request.put_private(
     :otel,
-    %{opt_in_attrs: [SemConv.URLAttributes.url_template()]}
+    %{opt_in_attrs: [OpenTelemetry.SemConv.Incubating.URLAttributes.url_template()]}
   )
   |> Finch.request(HttpFinch)
   ```
