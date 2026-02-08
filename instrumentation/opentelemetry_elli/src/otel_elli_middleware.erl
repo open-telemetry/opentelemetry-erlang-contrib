@@ -24,6 +24,8 @@
 -include_lib("elli/include/elli.hrl").
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/error_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/incubating/attributes/http_attributes.hrl").
 
 -define(EXCLUDED_URLS, {?MODULE, excluded_urls}).
 
@@ -100,7 +102,13 @@ handle_full_response(_Type, [_Req, Code, _Hs, _B, {_Timings, Sizes}], _Config) -
 set_status(Code) ->
     Status = opentelemetry:status(http_to_otel_status(Code), <<>>),
     ?set_status(Status),
-    ?set_attribute(<<"http.status">>, Code).
+    ?set_attribute(?HTTP_RESPONSE_STATUS_CODE, Code),
+    case Code >= 500 of
+        true ->
+            ?set_attribute(?ERROR_TYPE, integer_to_binary(Code));
+        false ->
+            ok
+    end.
 
 %% Elli doesn't support any decompression so it would be up to the
 %% user or their middleware/handover handler to set the attribute
