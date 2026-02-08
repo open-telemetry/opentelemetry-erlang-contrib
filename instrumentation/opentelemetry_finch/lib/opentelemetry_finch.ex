@@ -68,7 +68,7 @@ defmodule OpentelemetryFinch do
   alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.SemConv.UserAgentAttributes
 
-  require OpenTelemetry.Tracer
+  require OpenTelemetry.Tracer, as: Tracer
 
   opt_ins = [
     HTTPAttributes.http_request_body_size(),
@@ -202,14 +202,14 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_req_attrs(attrs, request, %{opt_in_attrs: [_ | _] = opt_in_attrs} = otel_config) do
     %{
-      HTTPAttributes.http_request_body_size() => extract_request_body_size(request),
+      HTTPAttributes.http_request_body_size() => extract_content_length(request.headers),
       NetworkAttributes.network_transport() => :tcp,
       URLAttributes.url_scheme() => request.scheme,
       URLAttributes.url_template() => extract_url_template(otel_config),
       UserAgentAttributes.user_agent_original() => extract_user_agent(request)
     }
     |> Map.take(opt_in_attrs)
-    |> then(&Map.merge(attrs, &1))
+    |> Map.merge(attrs)
   end
 
   defp add_opt_in_req_attrs(attrs, _request, _otel_config), do: attrs
@@ -229,10 +229,10 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_resp_attrs(attrs, response, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
     %{
-      HTTPAttributes.http_response_body_size() => extract_response_body_size(response)
+      HTTPAttributes.http_response_body_size() => extract_content_length(response.headers)
     }
     |> Map.take(opt_in_attrs)
-    |> then(&Map.merge(attrs, &1))
+    |> Map.merge(attrs)
   end
 
   defp add_opt_in_resp_attrs(attrs, _response, _otel_config), do: attrs
@@ -259,19 +259,6 @@ defmodule OpentelemetryFinch do
     )
   end
 
-  defp extract_request_body_size(request) do
-    case get_header(request.headers, "content-length") do
-      [] ->
-        0
-
-      [length_str | _] when is_binary(length_str) ->
-        case Integer.parse(length_str) do
-          {int, _} -> int
-          :error -> 0
-        end
-    end
-  end
-
   defp extract_url_template(otel_config) do
     Map.get(otel_config, :url_template, "")
   end
@@ -286,8 +273,8 @@ defmodule OpentelemetryFinch do
     end
   end
 
-  defp extract_response_body_size(response) do
-    case get_header(response.headers, "content-length") do
+  defp extract_content_length(headers) do
+    case get_header(headers, "content-length") do
       [] ->
         0
 
