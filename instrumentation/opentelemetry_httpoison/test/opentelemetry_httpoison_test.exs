@@ -25,11 +25,19 @@ defmodule OpentelemetryHTTPoisonTest do
       assert_receive {:span, span(attributes: attributes_record, name: "GET")}
       attributes = elem(attributes_record, 4)
 
-      assert ["http.method", "http.status_code", "http.url", "net.peer.name"] ==
-               attributes |> Map.keys() |> Enum.sort()
+      expected_keys = [
+        :"http.request.method",
+        :"http.response.status_code",
+        :"server.address",
+        :"server.port",
+        :"url.full"
+      ]
 
-      assert {"http.method", "GET"} in attributes
-      assert {"net.peer.name", "localhost"} in attributes
+      assert expected_keys == attributes |> Map.keys() |> Enum.sort()
+
+      assert {:"http.request.method", "GET"} in attributes
+      assert {:"server.address", "localhost"} in attributes
+      assert {:"server.port", 8000} in attributes
     end
 
     test "traceparent header is injected when no headers" do
@@ -60,11 +68,39 @@ defmodule OpentelemetryHTTPoisonTest do
       assert "atom" in Enum.map(headers, &elem(&1, 0))
     end
 
-    test "http.url doesn't contain credentials" do
+    test "url.full doesn't contain credentials" do
       OpentelemetryHTTPoison.get!("http://user:pass@localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
+      assert confirm_attributes(attributes, {:"url.full", "http://localhost:8000/user/edit/24"})
+    end
+
+    test "server.port is extracted from URL when explicitly specified" do
+      OpentelemetryHTTPoison.get!("http://localhost:8000")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {:"server.port", 8000})
+    end
+
+    test "server.port defaults to 80 for http without explicit port" do
+      OpentelemetryHTTPoison.get!("http://example.com/api")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {:"server.port", 80})
+    end
+
+    test "error.type is set for 4xx status codes" do
+      OpentelemetryHTTPoison.get!("http://localhost:8000/status/404")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {:"error.type", "404"})
+    end
+
+    test "error.type is set for 5xx status codes" do
+      OpentelemetryHTTPoison.get!("http://localhost:8000/status/500")
+
+      assert_receive {:span, span(attributes: attributes)}, 1000
+      assert confirm_attributes(attributes, {:"error.type", "500"})
     end
   end
 
@@ -80,7 +116,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {:"url.template", "/user/edit"})
     end
 
     test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a function" do
@@ -89,7 +125,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+      assert confirm_attributes(attributes, {:"url.template", "/user/edit/24"})
     end
 
     test "resource route inference can be explicitly ignored" do
@@ -123,7 +159,7 @@ defmodule OpentelemetryHTTPoisonTest do
       )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {:"url.template", "/user/edit"})
       assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
     end
   end
@@ -237,7 +273,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_http_route_attribute(attributes, "/user/:subpath")
+      assert confirm_url_template_attribute(attributes, "/user/:subpath")
     end
 
     test "resource route can be inferred by OpentelemetryHTTPoison invocation via a configured function" do
@@ -250,7 +286,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: :infer)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_http_route_attribute(attributes, "/user/edit/24")
+      assert confirm_url_template_attribute(attributes, "/user/edit/24")
     end
 
     test "implicit resource route inference can be overridden with a function passed to the OpentelemetryHTTPoison invocation" do
@@ -265,7 +301,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: invocation_infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_http_route_attribute(attributes, "test")
+      assert confirm_url_template_attribute(attributes, "test")
     end
 
     test "implicit resource route inference can be overridden with a string passed to the OpentelemetryHTTPoison invocation" do
@@ -278,7 +314,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "test")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_http_route_attribute(attributes, "test")
+      assert confirm_url_template_attribute(attributes, "test")
     end
   end
 
@@ -309,8 +345,12 @@ defmodule OpentelemetryHTTPoisonTest do
     end)
   end
 
+  defp confirm_url_template_attribute(attributes, value) do
+    confirm_attributes(attributes, {:"url.template", value})
+  end
+
   defp confirm_http_route_attribute(attributes, value) do
-    confirm_attributes(attributes, {"http.route", value})
+    confirm_attributes(attributes, {:"url.template", value})
   end
 
   defp confirm_http_route_attribute(attributes) do

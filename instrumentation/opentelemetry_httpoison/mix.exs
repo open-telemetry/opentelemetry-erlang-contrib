@@ -2,7 +2,7 @@ defmodule OpentelemetryHTTPoison.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_httpoison"
-  @version "1.3.0"
+  @version "2.0.0"
 
   def project do
     [
@@ -30,7 +30,7 @@ defmodule OpentelemetryHTTPoison.MixProject do
     [
       {:httpoison, "~> 1.6 or ~> 2.0"},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"}
+      {:opentelemetry_semantic_conventions, "~> 1.27"}
     ] ++ dev_deps()
   end
 

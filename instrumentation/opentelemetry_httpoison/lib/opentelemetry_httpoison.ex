@@ -9,7 +9,6 @@ defmodule OpentelemetryHTTPoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
   require OpenTelemetry.Span
   require OpenTelemetry.Tracer
   require Record
@@ -18,12 +17,10 @@ defmodule OpentelemetryHTTPoison do
   alias HTTPoison.Request
   alias OpenTelemetry.Tracer
   alias OpentelemetryHTTPoison.Configuration
-
-  @http_url Atom.to_string(Conventions.http_url())
-  @http_method Atom.to_string(Conventions.http_method())
-  @http_route Atom.to_string(Conventions.http_route())
-  @http_status_code Atom.to_string(Conventions.http_status_code())
-  @net_peer_name Atom.to_string(Conventions.net_peer_name())
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
   @doc ~S"""
   Configures OpentelemetryHTTPoison using the provided `opts` `Keyword list`.
@@ -153,7 +150,7 @@ defmodule OpentelemetryHTTPoison do
 
     span_name = Keyword.get_lazy(opts, :ot_span_name, fn -> default_span_name(request) end)
 
-    %URI{host: host} = request.url |> process_request_url() |> URI.parse()
+    uri = request.url |> process_request_url() |> URI.parse()
 
     resource_route_attribute =
       opts
@@ -161,16 +158,17 @@ defmodule OpentelemetryHTTPoison do
       |> get_resource_route(request)
       |> case do
         resource_route when is_binary(resource_route) ->
-          [{@http_route, resource_route}]
+          %{URLAttributes.url_template() => resource_route}
 
         nil ->
-          []
+          %{}
       end
 
     ot_attributes =
-      get_standard_ot_attributes(request, host) ++
-        get_ot_attributes(opts) ++
-        resource_route_attribute
+      get_standard_ot_attributes(request, uri)
+      |> Map.merge(get_ot_attributes(opts))
+      |> Map.merge(resource_route_attribute)
+      |> Enum.into([])
 
     request_ctx = Tracer.start_span(span_name, %{kind: :client, attributes: ot_attributes})
     Tracer.set_current_span(request_ctx)
@@ -181,6 +179,7 @@ defmodule OpentelemetryHTTPoison do
       case result do
         {:error, %{reason: reason}} ->
           Tracer.set_status(:error, inspect(reason))
+          Tracer.set_attribute(ErrorAttributes.error_type(), format_error(reason))
           end_span()
 
         _ ->
@@ -195,9 +194,10 @@ defmodule OpentelemetryHTTPoison do
     # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     if status_code >= 400 do
       Tracer.set_status(:error, "")
+      Tracer.set_attribute(ErrorAttributes.error_type(), Integer.to_string(status_code))
     end
 
-    Tracer.set_attribute(@http_status_code, status_code)
+    Tracer.set_attribute(HTTPAttributes.http_response_status_code(), status_code)
     end_span()
     status_code
   end
@@ -222,16 +222,31 @@ defmodule OpentelemetryHTTPoison do
     Tracer.set_current_span(ctx)
   end
 
-  defp get_standard_ot_attributes(request, host) do
-    [
-      {@http_method,
-       request.method
-       |> Atom.to_string()
-       |> String.upcase()},
-      {@http_url, strip_uri_credentials(request.url)},
-      {@net_peer_name, host}
-    ]
+  defp get_standard_ot_attributes(request, uri) do
+    %{
+      HTTPAttributes.http_request_method() => http_method(request.method),
+      ServerAttributes.server_address() => uri.host,
+      ServerAttributes.server_port() => extract_port(uri),
+      URLAttributes.url_full() => strip_uri_credentials(uri)
+    }
   end
+
+  defp http_method(method) do
+    method
+    |> Atom.to_string()
+    |> String.upcase()
+  end
+
+  defp extract_port(%URI{port: port}) when is_integer(port), do: port
+
+  defp extract_port(%URI{scheme: "https"}), do: 443
+
+  defp extract_port(%URI{scheme: "http"}), do: 80
+
+  defp extract_port(_), do: 80
+
+  defp format_error(reason) when is_atom(reason), do: Atom.to_string(reason)
+  defp format_error(reason), do: inspect(reason)
 
   defp get_ot_attributes(opts) do
     default_ot_attributes = Configuration.get(:ot_attributes)
@@ -239,7 +254,6 @@ defmodule OpentelemetryHTTPoison do
     default_ot_attributes
     |> Enum.concat(Keyword.get(opts, :ot_attributes, []))
     |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, value) end)
-    |> Enum.into([], fn {key, value} -> {key, value} end)
   end
 
   defp get_resource_route(option, request)
@@ -261,7 +275,11 @@ defmodule OpentelemetryHTTPoison do
         "The :ot_resource_route keyword option value must either be a binary, a function with an arity of 1 or the :infer or :ignore atom"
       )
 
-  defp strip_uri_credentials(uri) do
-    uri |> URI.parse() |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
+  defp strip_uri_credentials(%URI{} = uri) do
+    uri |> Map.put(:userinfo, nil) |> Map.put(:authority, nil) |> URI.to_string()
+  end
+
+  defp strip_uri_credentials(url) when is_binary(url) do
+    url |> URI.parse() |> strip_uri_credentials()
   end
 end
