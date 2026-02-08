@@ -5,16 +5,17 @@
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
 -include_lib("opentelemetry_api/include/opentelemetry.hrl").
 -include_lib("elli/include/elli.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/client_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/error_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/network_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/server_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/url_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/user_agent_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/incubating/attributes/http_attributes.hrl").
 
 start_span(Req) ->
     Method = elli_request:method(Req),
     RawPath = elli_request:raw_path(Req),
-
-    %% TODO: fix in elli. it currently always returns `undefined'
-    %% Scheme = elli_request:scheme(Req),
-
-    %% TODO: update elli to keep the whole url
-    %% Url = elli_request:url(Req),
 
     BinMethod = to_binary(Method),
     SpanName = <<"HTTP ", BinMethod/binary>>,
@@ -25,66 +26,108 @@ start_span(Req) ->
                H ->
                    H
            end,
-    %% TODO: attribute `http.route' should be an option to this function
     {PeerIp, PeerPort} = peer_ip_and_port(Req),
     {HostIp, HostPort} = host_ip_and_port(Req),
-    {ok, HostName} = inet:gethostname(),
 
     Flavor = flavor(Req),
 
+    ParsedMethod = parse_method(BinMethod),
+    Scheme = extract_scheme(Req),
+
+    Headers = elli_request:headers(Req),
+
+    ClientInfo = try
+        otel_http:extract_client_info(Headers, [<<"forwarded">>, <<"x-forwarded-for">>])
+    catch
+        _:_ ->
+            #{ip => PeerIp, port => undefined}
+    end,
+
+    ServerInfo = try
+        otel_http:extract_server_info(Headers, [<<"forwarded">>, <<"x-forwarded-host">>, <<"host">>])
+    catch
+        _:_ ->
+            #{address => undefined, port => undefined}
+    end,
+
+    Attrs1 = #{
+        ?CLIENT_ADDRESS => maps:get(ip, ClientInfo, PeerIp),
+        ?HTTP_REQUEST_METHOD => ParsedMethod,
+        ?NETWORK_PEER_ADDRESS => PeerIp,
+        ?NETWORK_PEER_PORT => PeerPort,
+        ?URL_PATH => RawPath,
+        ?URL_SCHEME => Scheme,
+        ?USER_AGENT_ORIGINAL => UserAgent
+    },
+
+    Attrs2 = set_network_protocol_attrs(Attrs1, Flavor),
+    Attrs3 = set_query_string_attr(Attrs2, RawPath),
+    Attrs4 = set_server_address_attrs(Attrs3, ServerInfo),
+
     SpanCtx = ?start_span(SpanName, #{kind => ?SPAN_KIND_SERVER,
-                                      attributes => [{<<"http.target">>, RawPath},
-                                                     {<<"http.host">>,  Host},
-                                                     %% {<<"http.url">>, Url},
-                                                     %% {<<"http.scheme">>,  Scheme},
-                                                     {<<"http.flavor">>, Flavor},
-                                                     {<<"http.user_agent">>, UserAgent},
-                                                     {<<"http.method">>, BinMethod},
-                                                     {<<"net.peer.ip">>, PeerIp},
-                                                     {<<"net.peer.port">>, PeerPort},
-                                                     {<<"net.peer.name">>, Host},
-                                                     {<<"net.transport">>, <<"IP.TCP">>},
-                                                     {<<"net.host.ip">>, HostIp},
-                                                     {<<"net.host.port">>, HostPort},
-                                                     {<<"net.host.name">>, HostName}
-                                                    | optional_attributes(Req)]}),
+                                      attributes => maps:to_list(Attrs4)}),
 
     ?set_current_span(SpanCtx),
     ok.
+
+parse_method(Method) when is_binary(Method) ->
+    case Method of
+        <<"CONNECT">> -> ?HTTP_REQUEST_METHOD_VALUES_CONNECT;
+        <<"DELETE">> -> ?HTTP_REQUEST_METHOD_VALUES_DELETE;
+        <<"GET">> -> ?HTTP_REQUEST_METHOD_VALUES_GET;
+        <<"HEAD">> -> ?HTTP_REQUEST_METHOD_VALUES_HEAD;
+        <<"OPTIONS">> -> ?HTTP_REQUEST_METHOD_VALUES_OPTIONS;
+        <<"PATCH">> -> ?HTTP_REQUEST_METHOD_VALUES_PATCH;
+        <<"POST">> -> ?HTTP_REQUEST_METHOD_VALUES_POST;
+        <<"PUT">> -> ?HTTP_REQUEST_METHOD_VALUES_PUT;
+        <<"TRACE">> -> ?HTTP_REQUEST_METHOD_VALUES_TRACE;
+        _ -> ?HTTP_REQUEST_METHOD_VALUES_OTHER
+    end.
 
 flavor(#req{version={1,1}}) ->
     <<"1.1">>;
 flavor(#req{version={1,0}}) ->
     <<"1.0">>;
 flavor(_) ->
-    <<>>.
+    <<"">>.
 
 to_binary(Method) when is_atom(Method) ->
     atom_to_binary(Method, utf8);
 to_binary(Method) ->
     Method.
 
-optional_attributes(Req) ->
-    lists:filtermap(fun({Attr, Fun}) ->
-                            case Fun(Req) of
-                                undefined ->
-                                    false;
-                                Value ->
-                                    {true, {Attr, Value}}
-                            end
-                    end, [{<<"http.client_ip">>, fun client_ip/1},
-                          {<<"http.server_name">>, fun server_name/1}]).
-
-client_ip(Req) ->
-    case elli_request:get_header(<<"X-Forwarded-For">>, Req, undefined) of
+extract_scheme(Req) ->
+    Headers = elli_request:headers(Req),
+    case otel_http:extract_scheme(Headers, [<<"forwarded">>, <<"x-forwarded-proto">>]) of
         undefined ->
-            undefined;
-        Ip ->
-            Ip
+            case Req#req.socket of
+                {ssl, _} -> https;
+                _ -> http
+            end;
+        Scheme -> Scheme
     end.
 
-server_name(_) ->
-    application:get_env(opentelemetry_elli, server_name, undefined).
+set_query_string_attr(Attrs, RawPath) ->
+    case binary:split(RawPath, <<"?">>) of
+        [_, QueryString] -> maps:put(?URL_QUERY, QueryString, Attrs);
+        [_] -> Attrs
+    end.
+
+set_network_protocol_attrs(Attrs, Flavor) ->
+    case Flavor of
+        <<"1.1">> -> maps:put(?NETWORK_PROTOCOL_VERSION, <<"1.1">>, Attrs);
+        <<"1.0">> -> maps:put(?NETWORK_PROTOCOL_VERSION, <<"1.0">>, Attrs);
+        _ -> Attrs
+    end.
+
+set_server_address_attrs(Attrs, ServerInfo) ->
+    case ServerInfo of
+        #{address := undefined} -> Attrs;
+        #{address := Address, port := undefined} ->
+            maps:put(?SERVER_ADDRESS, Address, Attrs);
+        #{address := Address, port := Port} ->
+            maps:merge(Attrs, #{?SERVER_ADDRESS => Address, ?SERVER_PORT => Port})
+    end.
 
 peername({plain, Socket}) ->
     inet:peername(Socket);
