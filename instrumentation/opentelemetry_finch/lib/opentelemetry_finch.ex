@@ -210,11 +210,11 @@ defmodule OpentelemetryFinch do
     %{
       HTTPAttributes.http_request_body_size() => extract_content_length(request.headers),
       NetworkAttributes.network_transport() => :tcp,
-      URLAttributes.url_scheme() => request.scheme,
-      URLAttributes.url_template() => extract_url_template(otel_config),
-      UserAgentAttributes.user_agent_original() => extract_user_agent(request)
+      URLAttributes.url_scheme() => request.scheme
     }
     |> Map.take(opt_in_attrs)
+    |> put_url_template(opt_in_attrs, otel_config)
+    |> put_user_agent(opt_in_attrs, request)
     |> Map.merge(attrs)
   end
 
@@ -274,17 +274,25 @@ defmodule OpentelemetryFinch do
     )
   end
 
-  defp extract_url_template(otel_config) do
-    Map.get(otel_config, :url_template, "")
+  defp put_url_template(attrs, opt_in_attrs, %{url_template: url_template})
+       when is_binary(url_template) do
+    if URLAttributes.url_template() in opt_in_attrs do
+      Map.put(attrs, URLAttributes.url_template(), url_template)
+    else
+      attrs
+    end
   end
 
-  defp extract_user_agent(request) do
-    case get_header(request.headers, "user-agent") do
-      [] ->
-        ""
+  defp put_url_template(attrs, _opt_in_attrs, _otel_config), do: attrs
 
-      [user_agent | _] ->
-        user_agent
+  defp put_user_agent(attrs, opt_in_attrs, request) do
+    if UserAgentAttributes.user_agent_original() in opt_in_attrs do
+      case get_header(request.headers, "user-agent") do
+        [user_agent | _] -> Map.put(attrs, UserAgentAttributes.user_agent_original(), user_agent)
+        [] -> attrs
+      end
+    else
+      attrs
     end
   end
 

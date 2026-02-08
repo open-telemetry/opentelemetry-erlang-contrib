@@ -131,13 +131,14 @@ defmodule OpentelemetryFinchTest do
       {HTTPAttributes.http_response_body_size(), 0},
       {NetworkAttributes.network_transport(), :tcp},
       {URLAttributes.url_scheme(), :http},
-      {URLAttributes.url_template(), "/users/:user_id"},
-      {UserAgentAttributes.user_agent_original(), ""}
+      {URLAttributes.url_template(), "/users/:user_id"}
     ]
 
     for {attr, val} <- expected_attrs do
       assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
     end
+
+    refute Map.has_key?(attrs, UserAgentAttributes.user_agent_original())
   end
 
   test "adds request and response headers to span when request_header_attrs and response_header_attrs are set",
