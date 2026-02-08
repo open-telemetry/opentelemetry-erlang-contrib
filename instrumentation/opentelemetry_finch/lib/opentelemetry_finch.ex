@@ -208,11 +208,11 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_req_attrs(attrs, request, %{opt_in_attrs: [_ | _] = opt_in_attrs} = otel_config) do
     %{
-      HTTPAttributes.http_request_body_size() => extract_content_length(request.headers),
       NetworkAttributes.network_transport() => :tcp,
       URLAttributes.url_scheme() => request.scheme
     }
     |> Map.take(opt_in_attrs)
+    |> put_body_size(opt_in_attrs, HTTPAttributes.http_request_body_size(), request.headers)
     |> put_url_template(opt_in_attrs, otel_config)
     |> put_user_agent(opt_in_attrs, request)
     |> Map.merge(attrs)
@@ -243,11 +243,7 @@ defmodule OpentelemetryFinch do
   defp resp_status_attrs(_status), do: %{}
 
   defp add_opt_in_resp_attrs(attrs, response, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
-    %{
-      HTTPAttributes.http_response_body_size() => extract_content_length(response.headers)
-    }
-    |> Map.take(opt_in_attrs)
-    |> Map.merge(attrs)
+    put_body_size(attrs, opt_in_attrs, HTTPAttributes.http_response_body_size(), response.headers)
   end
 
   defp add_opt_in_resp_attrs(attrs, _response, _otel_config), do: attrs
@@ -296,16 +292,27 @@ defmodule OpentelemetryFinch do
     end
   end
 
-  defp extract_content_length(headers) do
-    case get_header(headers, "content-length") do
-      [] ->
-        0
+  defp put_body_size(attrs, opt_in_attrs, attr_key, headers) do
+    if attr_key in opt_in_attrs do
+      case parse_content_length(headers) do
+        {:ok, size} -> Map.put(attrs, attr_key, size)
+        :error -> attrs
+      end
+    else
+      attrs
+    end
+  end
 
+  defp parse_content_length(headers) do
+    case get_header(headers, "content-length") do
       [length_str | _] when is_binary(length_str) ->
         case Integer.parse(length_str) do
-          {int, _} -> int
-          :error -> 0
+          {int, _} -> {:ok, int}
+          :error -> :error
         end
+
+      [] ->
+        :error
     end
   end
 

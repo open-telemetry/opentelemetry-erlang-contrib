@@ -127,7 +127,6 @@ defmodule OpentelemetryFinchTest do
       {HTTPAttributes.http_request_method(), "GET"},
       {URLAttributes.url_full(), endpoint_url(bypass.port)},
       {HTTPAttributes.http_response_status_code(), 200},
-      {HTTPAttributes.http_request_body_size(), 0},
       {HTTPAttributes.http_response_body_size(), 0},
       {NetworkAttributes.network_transport(), :tcp},
       {URLAttributes.url_scheme(), :http},
@@ -138,6 +137,7 @@ defmodule OpentelemetryFinchTest do
       assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
     end
 
+    refute Map.has_key?(attrs, HTTPAttributes.http_request_body_size())
     refute Map.has_key?(attrs, UserAgentAttributes.user_agent_original())
   end
 
@@ -386,16 +386,12 @@ defmodule OpentelemetryFinchTest do
     end
   end
 
-  test "handles malformed content-length header gracefully", %{bypass: bypass} do
-    Bypass.expect(bypass, fn conn ->
-      conn
-      |> Plug.Conn.put_resp_header("content-length", "invalid")
-      |> Plug.Conn.resp(200, "")
-    end)
+  test "omits body size attribute when content-length header is absent", %{bypass: bypass} do
+    Bypass.expect(bypass, fn conn -> Plug.Conn.resp(conn, 200, "") end)
 
     otel_config = %{
       opt_in_attrs: [
-        HTTPAttributes.http_response_body_size()
+        HTTPAttributes.http_request_body_size()
       ]
     }
 
@@ -413,7 +409,7 @@ defmodule OpentelemetryFinchTest do
 
     attrs = :otel_attributes.map(attributes)
 
-    assert Map.get(attrs, HTTPAttributes.http_response_body_size()) == 0
+    refute Map.has_key?(attrs, HTTPAttributes.http_request_body_size())
   end
 
   test "records body size when content-length header is present", %{bypass: bypass} do
