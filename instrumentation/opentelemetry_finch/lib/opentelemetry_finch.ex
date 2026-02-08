@@ -149,7 +149,7 @@ defmodule OpentelemetryFinch do
     status = extract_status(meta.result)
 
     s =
-      OpenTelemetry.Tracer.start_span(span_name, %{
+      Tracer.start_span(span_name, %{
         start_time: start_time,
         attributes: build_attrs(meta.request, meta.result, status, otel_config),
         kind: :client
