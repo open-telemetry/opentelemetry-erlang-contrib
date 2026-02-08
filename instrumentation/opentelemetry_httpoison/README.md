@@ -145,13 +145,26 @@ In the example above:
 
 Given the above, the `http.route` attribute will not be set to any value
 
+## Semantic Conventions
+
+OpentelemetryHTTPoison implements the [OpenTelemetry HTTP semantic conventions v1.27+](https://opentelemetry.io/docs/specs/semconv/http/http-spans/).
+
+The following attributes are automatically set on each span:
+
+- `http.request.method` - The HTTP method (GET, POST, etc.)
+- `http.response.status_code` - The HTTP response status code
+- `url.full` - The complete URL of the request
+- `server.address` - The server hostname
+- `server.port` - The server port (defaults to 80 for http, 443 for https)
+- `url.template` - The route template if `:ot_resource_route` is configured
+- `error.type` - Set to the status code (as string) for 4xx/5xx responses, or the error reason for connection errors
+
 ## How it works
 
 OpentelemetryHTTPoison, when executing an HTTP request to an external service, creates an OpenTelemetry span, injects
 the [trace context propagation headers](https://www.w3.org/TR/trace-context/) in the request headers, and
 ends the span once the response is received.
-It automatically sets some of the [HTTP span attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md) like `http.status` etc,
-based on the request and response data.
+It automatically sets [HTTP span attributes](https://opentelemetry.io/docs/specs/semconv/http/http-spans/) as documented in the Semantic Conventions section above.
 
 OpentelemetryHTTPoison by itself is not particularly useful: it becomes useful when used in conjunction with a "server-side"
 opentelemetry-instrumented library, e.g. [opentelemetry_plug](https://github.com/opentelemetry-beam/opentelemetry_plug).
