@@ -438,7 +438,12 @@ defmodule OpentelemetryFinchTest do
     request_body = "request body"
 
     {:ok, _} =
-      Finch.build(:post, endpoint_url(bypass.port), [{"content-length", "#{byte_size(request_body)}"}], request_body)
+      Finch.build(
+        :post,
+        endpoint_url(bypass.port),
+        [{"content-length", "#{byte_size(request_body)}"}],
+        request_body
+      )
       |> Finch.Request.put_private(:otel, otel_config)
       |> Finch.request(HttpFinch)
 
