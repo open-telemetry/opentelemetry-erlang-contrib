@@ -187,8 +187,6 @@ defmodule OpentelemetryFinchTest do
       Plug.Conn.send_resp(conn, 200, "OK")
     end)
 
-    OpentelemetryFinch.setup()
-
     _conn = start_supervised!({Finch, name: finch_name})
 
     acc = {nil, [], ""}
@@ -205,18 +203,18 @@ defmodule OpentelemetryFinchTest do
 
     assert_receive {:span,
                     span(
-                      name: "HTTP GET",
+                      name: "GET",
                       kind: :client,
                       attributes: attributes
                     )}
 
-    assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 200
-           } = :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{
+             ServerAttributes.server_address() => "localhost",
+             ServerAttributes.server_port() => bypass.port,
+             HTTPAttributes.http_request_method() => "GET",
+             URLAttributes.url_full() => endpoint_url(bypass.port),
+             HTTPAttributes.http_response_status_code() => 200
+           }
   end
 
   test "records span on streamed requests where the acc is a 2 elements tuple", %{
@@ -226,8 +224,6 @@ defmodule OpentelemetryFinchTest do
     Bypass.expect_once(bypass, "GET", "/", fn conn ->
       Plug.Conn.send_resp(conn, 200, "OK")
     end)
-
-    OpentelemetryFinch.setup()
 
     _conn = start_supervised!({Finch, name: finch_name})
 
@@ -269,18 +265,18 @@ defmodule OpentelemetryFinchTest do
 
     assert_receive {:span,
                     span(
-                      name: "HTTP GET",
+                      name: "GET",
                       kind: :client,
                       attributes: attributes
                     )}
 
-    assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 200
-           } = :otel_attributes.map(attributes)
+    assert :otel_attributes.map(attributes) == %{
+             ServerAttributes.server_address() => "localhost",
+             ServerAttributes.server_port() => bypass.port,
+             HTTPAttributes.http_request_method() => "GET",
+             URLAttributes.url_full() => endpoint_url(bypass.port),
+             HTTPAttributes.http_response_status_code() => 200
+           }
   end
 
   test "records span on requests failed", %{bypass: _} do

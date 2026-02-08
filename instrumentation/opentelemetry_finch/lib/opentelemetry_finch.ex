@@ -146,15 +146,16 @@ defmodule OpentelemetryFinch do
     start_time = end_time - duration
     otel_config = get_otel_config(meta.request.private)
     span_name = span_name(meta.request, otel_config)
+    status = extract_status(meta.result)
 
     s =
       OpenTelemetry.Tracer.start_span(span_name, %{
         start_time: start_time,
-        attributes: build_attrs(meta, otel_config),
+        attributes: build_attrs(meta.request, meta.result, status, otel_config),
         kind: :client
       })
 
-    set_span_status(s, meta.result)
+    set_span_status(s, meta.result, status)
 
     OpenTelemetry.Span.end_span(s)
   end
@@ -173,10 +174,15 @@ defmodule OpentelemetryFinch do
 
   defp span_name(request, _), do: "#{request.method}"
 
-  defp build_attrs(meta, otel_config) do
+  defp extract_status({:ok, %{status: status}}) when is_integer(status), do: status
+  defp extract_status({:ok, {status, _, _}}) when is_integer(status), do: status
+  defp extract_status({:ok, {_, %{status: status}}}) when is_integer(status), do: status
+  defp extract_status(_), do: nil
+
+  defp build_attrs(request, result, status, otel_config) do
     Map.merge(
-      build_req_attrs(meta.request, otel_config),
-      build_resp_attrs(meta.result, otel_config)
+      build_req_attrs(request, otel_config),
+      build_resp_attrs(result, status, otel_config)
     )
   end
 
@@ -214,18 +220,27 @@ defmodule OpentelemetryFinch do
 
   defp add_opt_in_req_attrs(attrs, _request, _otel_config), do: attrs
 
-  defp build_resp_attrs({:ok, response} = result, otel_config) do
-    %{
-      HTTPAttributes.http_response_status_code() => response.status
-    }
-    |> maybe_add_error_type(result)
+  # Finch.Response — full attribute extraction including headers
+  defp build_resp_attrs({:ok, %{status: _, headers: _} = response} = result, status, otel_config) do
+    status
+    |> resp_status_attrs()
+    |> maybe_add_error_type(status, result)
     |> add_resp_header_attrs(response, otel_config)
     |> add_opt_in_resp_attrs(response, otel_config)
   end
 
-  defp build_resp_attrs({:error, _} = result, _otel_config) do
-    maybe_add_error_type(%{}, result)
+  # Streaming accumulator or error — status only
+  defp build_resp_attrs(result, status, _otel_config) do
+    status
+    |> resp_status_attrs()
+    |> maybe_add_error_type(status, result)
   end
+
+  defp resp_status_attrs(status) when is_integer(status) do
+    %{HTTPAttributes.http_response_status_code() => status}
+  end
+
+  defp resp_status_attrs(_status), do: %{}
 
   defp add_opt_in_resp_attrs(attrs, response, %{opt_in_attrs: [_ | _] = opt_in_attrs}) do
     %{
@@ -286,25 +301,25 @@ defmodule OpentelemetryFinch do
     end
   end
 
-  defp maybe_add_error_type(attrs, {:ok, %{status: status}}) when status >= 400 do
+  defp maybe_add_error_type(attrs, status, _result) when is_integer(status) and status >= 400 do
     Map.put(attrs, ErrorAttributes.error_type(), to_string(status))
   end
 
-  defp maybe_add_error_type(attrs, {:error, reason}) do
+  defp maybe_add_error_type(attrs, _status, {:error, reason}) do
     Map.put(attrs, ErrorAttributes.error_type(), format_error(reason))
   end
 
-  defp maybe_add_error_type(attrs, _), do: attrs
+  defp maybe_add_error_type(attrs, _status, _result), do: attrs
 
-  defp set_span_status(span, {:ok, %{status: status}}) when status >= 400 do
+  defp set_span_status(span, _result, status) when is_integer(status) and status >= 400 do
     OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:error, to_string(status)))
   end
 
-  defp set_span_status(span, {:error, reason}) do
+  defp set_span_status(span, {:error, reason}, _status) do
     OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:error, format_error(reason)))
   end
 
-  defp set_span_status(span, _result) do
+  defp set_span_status(span, _result, _status) do
     OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:ok, ""))
   end
 
