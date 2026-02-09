@@ -32,6 +32,8 @@
     * `oban.scaler.last_scaled_to`
     * `oban.scaler.last_scaled_at`
 
+* Added measurements as attributes on span.
+
 ## 1.0.0
 
 ### Changed
