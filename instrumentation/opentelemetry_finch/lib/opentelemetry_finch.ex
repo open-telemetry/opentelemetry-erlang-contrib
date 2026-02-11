@@ -68,6 +68,7 @@ defmodule OpentelemetryFinch do
   alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.SemConv.UserAgentAttributes
 
+  require Logger
   require OpenTelemetry.Tracer, as: Tracer
 
   opt_ins = [
@@ -161,9 +162,20 @@ defmodule OpentelemetryFinch do
   end
 
   defp get_otel_config(request_private) do
-    request_private
-    |> Map.get(:otel, %{})
-    |> NimbleOptions.validate!(@options_schema)
+    raw = Map.get(request_private, :otel, %{})
+
+    case NimbleOptions.validate(raw, @options_schema) do
+      {:ok, config} ->
+        config
+
+      {:error, %NimbleOptions.ValidationError{} = error} ->
+        Logger.warning(
+          "OpentelemetryFinch: invalid :otel config ignored, using defaults. " <>
+            Exception.message(error)
+        )
+
+        NimbleOptions.validate!(%{}, @options_schema)
+    end
   end
 
   defp span_name(request, %{span_name: span_name}) when is_binary(span_name),

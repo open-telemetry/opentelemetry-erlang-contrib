@@ -335,7 +335,8 @@ defmodule OpentelemetryFinchTest do
     end
   end
 
-  test "logs error and doesn't record span if invalid otel option is passed", %{bypass: bypass} do
+  test "logs warning and records span with defaults when invalid otel option is passed",
+       %{bypass: bypass} do
     Bypass.expect(bypass, fn conn -> Plug.Conn.resp(conn, 200, "") end)
 
     log =
@@ -345,16 +346,29 @@ defmodule OpentelemetryFinchTest do
         |> Finch.request(HttpFinch)
       end)
 
-    assert log =~ """
-           Reason=%NimbleOptions.ValidationError{
-             message: \"unknown options [:invalid_option], valid options are: [:opt_in_attrs, :request_header_attrs, :response_header_attrs, :span_name, :url_template]\",
-             key: [:invalid_option],
-             value: nil,
-             keys_path: []
-           }\
-           """
+    assert log =~ "OpentelemetryFinch: invalid :otel config ignored, using defaults."
+    assert log =~ "unknown options [:invalid_option]"
 
-    refute_receive {:span, _}
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    expected_attrs = [
+      {ServerAttributes.server_address(), "localhost"},
+      {ServerAttributes.server_port(), bypass.port},
+      {HTTPAttributes.http_request_method(), "GET"},
+      {URLAttributes.url_full(), endpoint_url(bypass.port)},
+      {HTTPAttributes.http_response_status_code(), 200}
+    ]
+
+    for {attr, val} <- expected_attrs do
+      assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
+    end
   end
 
   test "records span on request response with 5xx status code", %{bypass: bypass} do
