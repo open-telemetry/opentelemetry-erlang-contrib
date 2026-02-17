@@ -18,9 +18,8 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
-  require Trace
   require OpenTelemetry.Tracer
 
   @doc """
@@ -53,9 +52,9 @@ defmodule OpentelemetryOban do
 
   def insert(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       case Oban.insert(name, changeset) do
@@ -75,9 +74,9 @@ defmodule OpentelemetryOban do
 
   def insert!(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do
@@ -104,7 +103,7 @@ defmodule OpentelemetryOban do
     # changesets in insert_all can include different workers and different
     # queues. This means we cannot provide much information here, but we can
     # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span :"Oban bulk insert", kind: :producer do
+    OpenTelemetry.Tracer.with_span "send", kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end
@@ -130,15 +129,19 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker)
 
     %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
+      MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "send",
+      MessagingAttributes.messaging_client_id() => worker,
+      MessagingAttributes.messaging_destination_name() => queue,
+      MessagingAttributes.messaging_operation_type() =>
+        MessagingAttributes.messaging_operation_type_values().create,
       :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
+      MessagingAttributes.messaging_message_id() => job.id,
       "oban.job.job_id": job.id,
       "oban.job.priority": job.priority,
       "oban.job.max_attempts": job.max_attempts

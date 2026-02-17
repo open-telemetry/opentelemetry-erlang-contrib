@@ -1,8 +1,6 @@
 defmodule OpentelemetryOban.JobHandler do
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
-
-  require Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   @tracer_id __MODULE__
 
@@ -60,10 +58,13 @@ defmodule OpentelemetryOban.JobHandler do
     OpenTelemetry.Tracer.set_current_span(:undefined)
 
     attributes = %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
-      Trace.messaging_operation() => :process,
+      MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "process",
+      MessagingAttributes.messaging_message_id() => id,
+      MessagingAttributes.messaging_client_id() => worker,
+      MessagingAttributes.messaging_destination_name() => queue,
+      MessagingAttributes.messaging_operation_type() =>
+        MessagingAttributes.messaging_operation_type_values().process,
       :"oban.job.job_id" => id,
       :"oban.job.worker" => worker,
       :"oban.job.priority" => priority,
@@ -73,7 +74,7 @@ defmodule OpentelemetryOban.JobHandler do
       :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
     }
 
-    span_name = "#{worker} process"
+    span_name = "process #{queue}"
 
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       kind: :consumer,
