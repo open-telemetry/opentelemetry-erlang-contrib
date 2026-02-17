@@ -22,22 +22,32 @@ defmodule OpentelemetryOban do
 
   require OpenTelemetry.Tracer
 
+  @options_schema NimbleOptions.new!(
+                    trace: [
+                      type: {:list, {:in, [:jobs, :plugins]}},
+                      default: [:jobs, :plugins],
+                      doc: "List of components to trace. Can include `:jobs` and/or `:plugins`."
+                    ]
+                  )
+
+  @type options() :: [unquote(NimbleOptions.option_typespec(@options_schema))]
+
   @doc """
   Initializes and configures telemetry handlers.
-
-  By default jobs and plugins are traced. If you wish to trace only jobs then
-  use:
-
-      OpentelemetryOban.setup(trace: [:jobs])
 
   Note that if you don't trace plugins, but inside the plugins, there are spans
   from other instrumentation libraries (e.g. ecto) then these will still be
   traced. This setting controls only the spans that are created by
   opentelemetry_oban.
+
+  ## Options
+
+  #{NimbleOptions.docs(@options_schema)}
   """
-  @spec setup() :: :ok
+  @spec setup(options()) :: :ok
   def setup(opts \\ []) do
-    trace = Keyword.get(opts, :trace, [:jobs, :plugins])
+    opts = NimbleOptions.validate!(opts, @options_schema)
+    trace = opts[:trace]
 
     if Enum.member?(trace, :jobs) do
       OpentelemetryOban.JobHandler.attach()
