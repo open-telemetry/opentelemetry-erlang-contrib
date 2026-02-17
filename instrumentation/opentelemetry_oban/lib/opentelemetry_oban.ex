@@ -103,7 +103,7 @@ defmodule OpentelemetryOban do
     # changesets in insert_all can include different workers and different
     # queues. This means we cannot provide much information here, but we can
     # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span :"Oban bulk insert", kind: :producer do
+    OpenTelemetry.Tracer.with_span "send", kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end

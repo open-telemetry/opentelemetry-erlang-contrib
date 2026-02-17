@@ -354,7 +354,7 @@ defmodule OpentelemetryObanTest do
 
     assert_receive {:span,
                     span(
-                      name: :"Oban bulk insert",
+                      name: "send",
                       attributes: _attributes,
                       trace_id: send_trace_id,
                       span_id: send_span_id,
