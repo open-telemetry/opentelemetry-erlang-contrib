@@ -74,10 +74,12 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     exception = %UndefinedFunctionError{
       arity: 0,
       function: :error,
-      message: nil,
+      message: "function Some.error/0 is undefined (module Some is not available)",
       module: Some,
       reason: nil
     }
+
+    stacktrace = [{Some, :error, [], []}]
 
     :telemetry.execute(
       [:oban, :plugin, :exception],
@@ -85,14 +87,13 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{
         plugin: Elixir.Oban.Plugins.Stager,
         kind: :error,
-        stacktrace: [
-          {Some, :error, [], []}
-        ],
+        stacktrace: stacktrace,
         reason: exception
       }
     )
 
-    expected_status = OpenTelemetry.status(:error, Exception.message(exception))
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, exception, stacktrace))
 
     assert_receive {:span,
                     span(
@@ -108,7 +109,52 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       )
     ] = :otel_events.list(events)
 
-    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+    # When using :otel_span.record_exception/5 with kind/reason/stacktrace,
+    # it doesn't extract the message field even from exception structs
+    assert [:"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "records span on plugin error with non-exception reason" do
+    :telemetry.execute(
+      [:oban, :plugin, :start],
+      %{system_time: System.system_time()},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    # Test with an atom error reason like :badarg
+    stacktrace = [{Some, :error, [], []}]
+
+    :telemetry.execute(
+      [:oban, :plugin, :exception],
+      %{duration: 444},
+      %{
+        plugin: Elixir.Oban.Plugins.Stager,
+        kind: :error,
+        stacktrace: stacktrace,
+        reason: :badarg
+      }
+    )
+
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, :badarg, stacktrace))
+
+    assert_receive {:span,
+                    span(
+                      name: "Elixir.Oban.Plugins.Stager process",
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    # Non-exception error reasons don't have exception.message
+    assert [:"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
