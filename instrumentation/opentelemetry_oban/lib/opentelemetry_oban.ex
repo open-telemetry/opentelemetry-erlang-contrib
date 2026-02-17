@@ -52,9 +52,9 @@ defmodule OpentelemetryOban do
 
   def insert(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       case Oban.insert(name, changeset) do
@@ -74,9 +74,9 @@ defmodule OpentelemetryOban do
 
   def insert!(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do
@@ -130,6 +130,7 @@ defmodule OpentelemetryOban do
 
     %{
       MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "send",
       MessagingAttributes.messaging_client_id() => worker,
       MessagingAttributes.messaging_destination_name() => queue,
       MessagingAttributes.messaging_operation_type() =>

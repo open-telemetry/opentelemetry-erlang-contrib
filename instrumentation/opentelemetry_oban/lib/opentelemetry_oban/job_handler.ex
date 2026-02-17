@@ -59,6 +59,7 @@ defmodule OpentelemetryOban.JobHandler do
 
     attributes = %{
       MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "process",
       MessagingAttributes.messaging_message_id() => id,
       MessagingAttributes.messaging_client_id() => worker,
       MessagingAttributes.messaging_destination_name() => queue,
@@ -73,7 +74,7 @@ defmodule OpentelemetryOban.JobHandler do
       :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
     }
 
-    span_name = "#{worker} process"
+    span_name = "process #{queue}"
 
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       kind: :consumer,
