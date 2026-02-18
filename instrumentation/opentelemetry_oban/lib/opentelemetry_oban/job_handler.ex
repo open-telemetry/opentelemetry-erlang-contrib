@@ -4,6 +4,7 @@ defmodule OpentelemetryOban.JobHandler do
   alias OpenTelemetry.Ctx
   alias OpenTelemetry.Span
   alias OpenTelemetry.Tracer
+  alias OpenTelemetry.SemConv.ErrorAttributes
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   @tracer_id __MODULE__
@@ -123,9 +124,15 @@ defmodule OpentelemetryOban.JobHandler do
 
     Span.record_exception(ctx, error, stacktrace)
     Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    set_error_type(error)
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
+
+  defp set_error_type(%struct_name{} = error) when is_exception(error),
+    do: Tracer.set_attribute(ErrorAttributes.error_type(), inspect(struct_name))
+
+  defp set_error_type(_error), do: :ok
 
   defp put_links(span_opts, []), do: span_opts
   defp put_links(span_opts, links), do: Map.put(span_opts, :links, links)
