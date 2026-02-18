@@ -20,17 +20,38 @@ defmodule OpentelemetryOban do
   alias OpenTelemetry.Span
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
+  require Logger
   require OpenTelemetry.Tracer
 
-  @options_schema NimbleOptions.new!(
-                    trace: [
-                      type: {:list, {:in, [:jobs, :plugins]}},
-                      default: [:jobs, :plugins],
-                      doc: "List of components to trace. Can include `:jobs` and/or `:plugins`."
-                    ]
-                  )
+  @type job_options() ::
+          [unquote(NimbleOptions.option_typespec(OpentelemetryOban.JobHandler.options_schema()))]
+          | :disabled
 
-  @type options() :: [unquote(NimbleOptions.option_typespec(@options_schema))]
+  @type plugin_options() :: [] | :disabled
+
+  @options_schema [
+    job: [
+      type:
+        {:or,
+         [
+           {:keyword_list, OpentelemetryOban.JobHandler.options_schema()},
+           {:in, [:disabled]}
+         ]},
+      type_spec: quote(do: job_options()),
+      default: [],
+      doc: """
+      Job handler configuration. Set to `:disabled` to skip job handler setup. \n\n#{NimbleOptions.docs(OpentelemetryOban.JobHandler.options_schema(), nest_level: 1)}
+      """
+    ],
+    plugin: [
+      type: {:in, [[], :disabled]},
+      type_spec: quote(do: plugin_options()),
+      default: [],
+      doc: "Plugin handler configuration. Set to `:disabled` to skip plugin handler setup."
+    ]
+  ]
+
+  @nimble_options_schema NimbleOptions.new!(@options_schema)
 
   @doc """
   Initializes and configures telemetry handlers.
@@ -42,18 +63,21 @@ defmodule OpentelemetryOban do
 
   ## Options
 
-  #{NimbleOptions.docs(@options_schema)}
+  #{NimbleOptions.docs(@nimble_options_schema)}
   """
-  @spec setup(options()) :: :ok
+  @spec setup(unquote(NimbleOptions.option_typespec(@options_schema))) :: :ok
   def setup(opts \\ []) do
-    opts = NimbleOptions.validate!(opts, @options_schema)
-    trace = opts[:trace]
+    opts =
+      opts
+      |> normalize_legacy_opts()
+      |> NimbleOptions.validate!(@nimble_options_schema)
+      |> Enum.into(%{})
 
-    if Enum.member?(trace, :jobs) do
-      OpentelemetryOban.JobHandler.attach()
+    if opts.job != :disabled do
+      OpentelemetryOban.JobHandler.attach(opts.job)
     end
 
-    if Enum.member?(trace, :plugins) do
+    if opts.plugin != :disabled do
       OpentelemetryOban.PluginHandler.attach()
     end
 
@@ -121,6 +145,30 @@ defmodule OpentelemetryOban do
 
   def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper) do
     Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
+  end
+
+  defp normalize_legacy_opts(opts) do
+    case Keyword.pop(opts, :trace) do
+      {nil, opts} ->
+        opts
+
+      {trace, opts} ->
+        Logger.warning(
+          "OpentelemetryOban.setup/1 :trace option is deprecated, use :job and :plugin options instead"
+        )
+
+        opts
+        |> disable_unless_traced(trace, :jobs, :job)
+        |> disable_unless_traced(trace, :plugins, :plugin)
+    end
+  end
+
+  defp disable_unless_traced(opts, trace, legacy_key, new_key) do
+    if legacy_key in trace do
+      opts
+    else
+      Keyword.put_new(opts, new_key, :disabled)
+    end
   end
 
   defp add_tracing_information_to_meta(changeset) do

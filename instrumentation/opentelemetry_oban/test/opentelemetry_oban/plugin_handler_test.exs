@@ -31,7 +31,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
 
   test "does not create spans when tracing plugins is disabled" do
     TestHelpers.remove_oban_handlers()
-    OpentelemetryOban.setup(trace: [:jobs])
+    OpentelemetryOban.setup(plugin: :disabled)
 
     :telemetry.execute(
       [:oban, :plugin, :start],

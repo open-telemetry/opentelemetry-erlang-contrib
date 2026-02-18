@@ -1,4 +1,6 @@
 defmodule OpentelemetryOban.PluginHandler do
+  @moduledoc false
+
   alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
 
