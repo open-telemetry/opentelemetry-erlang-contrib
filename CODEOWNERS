@@ -24,4 +24,5 @@
 /instrumentation/opentelemetry_xandra           @whatyouhide @open-telemetry/erlang-maintainers
 /utilities/opentelemetry_telemetry              @open-telemetry/erlang-maintainers
 /utilities/otel_http                            @open-telemetry/erlang-maintainers
+/utilities/opentelemetry_telemetry_metrics      @tsloughter @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-maintainers
