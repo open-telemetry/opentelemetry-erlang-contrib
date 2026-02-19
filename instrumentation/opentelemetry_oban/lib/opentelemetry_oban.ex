@@ -18,6 +18,7 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
+  alias OpenTelemetry.SemConv.ErrorAttributes
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
   require Logger
@@ -122,6 +123,7 @@ defmodule OpentelemetryOban do
           ctx = OpenTelemetry.Tracer.current_span_ctx()
           Span.record_exception(ctx, exception, __STACKTRACE__)
           Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+          Span.set_attribute(ctx, ErrorAttributes.error_type(), inspect(exception.__struct__))
           reraise exception, __STACKTRACE__
       end
     end
@@ -134,10 +136,15 @@ defmodule OpentelemetryOban do
   end
 
   def insert_all(name, changesets) when is_list(changesets) do
-    # changesets in insert_all can include different workers and different
-    # queues. This means we cannot provide much information here, but we can
-    # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span "send", kind: :producer do
+    attrs = %{
+      MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "send",
+      MessagingAttributes.messaging_operation_type() =>
+        MessagingAttributes.messaging_operation_type_values().create,
+      MessagingAttributes.messaging_batch_message_count() => length(changesets)
+    }
+
+    OpenTelemetry.Tracer.with_span "send", attributes: attrs, kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end

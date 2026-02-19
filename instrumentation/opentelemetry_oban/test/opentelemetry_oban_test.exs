@@ -179,6 +179,8 @@ defmodule OpentelemetryObanTest do
                       status: ^expected_status
                     )}
 
+    attrs = :otel_attributes.map(attributes)
+
     assert %{
              "oban.job.attempt": 1,
              "oban.job.inserted_at": _inserted_at,
@@ -192,8 +194,9 @@ defmodule OpentelemetryObanTest do
              "messaging.operation.type": :process,
              "messaging.system": :oban,
              "messaging.message.id": ^id,
-             "messaging.client.id": "TestJobThatReturnsError"
-           } = :otel_attributes.map(attributes)
+             "messaging.client.id": "TestJobThatReturnsError",
+             "error.type": "Oban.PerformError"
+           } = attrs
 
     [
       event(
@@ -259,6 +262,8 @@ defmodule OpentelemetryObanTest do
                       status: ^expected_status
                     )}
 
+    attrs = :otel_attributes.map(attributes)
+
     assert %{
              "messaging.destination.name": "events",
              "messaging.operation.name": "process",
@@ -272,8 +277,9 @@ defmodule OpentelemetryObanTest do
              "messaging.operation.type": :process,
              "messaging.message.id": ^id,
              "messaging.client.id": "TestJobThatThrowsException",
-             "messaging.system": :oban
-           } = :otel_attributes.map(attributes)
+             "messaging.system": :oban,
+             "error.type": "UndefinedFunctionError"
+           } = attrs
 
     [
       event(
@@ -327,9 +333,13 @@ defmodule OpentelemetryObanTest do
     assert_receive {:span,
                     span(
                       name: "send events",
+                      attributes: send_attributes,
                       events: events,
                       status: ^expected_status
                     )}
+
+    assert %{"error.type": "Ecto.InvalidChangesetError"} =
+             :otel_attributes.map(send_attributes)
 
     [
       event(
@@ -355,12 +365,21 @@ defmodule OpentelemetryObanTest do
     assert_receive {:span,
                     span(
                       name: "send",
-                      attributes: _attributes,
+                      attributes: send_attributes,
                       trace_id: send_trace_id,
                       span_id: send_span_id,
                       kind: :producer,
                       status: :undefined
                     )}
+
+    send_attrs = :otel_attributes.map(send_attributes)
+
+    assert %{
+             "messaging.system": :oban,
+             "messaging.operation.name": "send",
+             "messaging.operation.type": :create,
+             "messaging.batch.message_count": 2
+           } = send_attrs
 
     assert_receive {:span,
                     span(

@@ -3,6 +3,7 @@ defmodule OpentelemetryOban.PluginHandler do
 
   alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
+  alias OpenTelemetry.SemConv.ErrorAttributes
 
   @tracer_id __MODULE__
 
@@ -72,8 +73,15 @@ defmodule OpentelemetryOban.PluginHandler do
       OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
     )
 
+    set_error_type(reason)
+
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
+
+  defp set_error_type(%struct_name{} = error) when is_exception(error),
+    do: Tracer.set_attribute(ErrorAttributes.error_type(), inspect(struct_name))
+
+  defp set_error_type(_error), do: :ok
 
   defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Cron} = metadata) do
     %{"oban.plugins.cron.jobs_count": length(metadata[:jobs])}
