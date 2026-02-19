@@ -31,7 +31,8 @@ all() ->
         idle_timeout_request,
         chunk_timeout_request,
         bad_request,
-        binary_status_code_request
+        binary_status_code_request,
+        invalid_scheme_returns_undefined
     ].
 
 init_per_suite(Config) ->
@@ -506,4 +507,21 @@ binary_status_code_request(_Config) ->
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(binary_status_code_request)
+    end.
+
+invalid_scheme_returns_undefined(_Config) ->
+    Opts = #{
+        valid_schemes => #{<<"https">> => https}
+    },
+    opentelemetry_cowboy:setup(Opts),
+    Port = 62662,
+    {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
+        httpc:request(get, {"http://localhost:8080/success", []}, [], [{socket_opts, [{port, Port}]}]),
+    receive
+        {span, #span{name=Name,attributes=Attributes,kind=Kind}} ->
+            ?assertEqual('GET', Name),
+            ?assertEqual(?SPAN_KIND_SERVER, Kind),
+            ?assertEqual(undefined, maps:get(?URL_SCHEME, otel_attributes:map(Attributes)))
+    after
+        1000 -> ct:fail(invalid_scheme_returns_undefined)
     end.
