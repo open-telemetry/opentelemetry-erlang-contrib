@@ -27,19 +27,30 @@ defmodule OpentelemetryRedix do
 
   @doc """
   Initializes and configures the telemetry handlers.
+
+  You may also supply the following options:
+
+    * `db_statement` - `:enabled`, `:disabled` or a single arity function. If
+      `:enabled`, the DB statement is sanitized of sensitive values, such as
+      AUTH crendentials, but otherwise logged. If `:disabled`, the statement is
+      not logged. If you pass in a single arity function, the list of commands
+      will be passed through that function for your own processing. Defaults to
+      `:enabled`.
   """
   @spec setup(opts()) :: :ok
-  def setup(_opts \\ []) do
+  def setup(config \\ []) do
     :telemetry.attach(
       {__MODULE__, :pipeline_stop},
       [:redix, :pipeline, :stop],
       &__MODULE__.handle_pipeline_stop/4,
-      :no_config
+      config
     )
   end
 
   @doc false
-  def handle_pipeline_stop(_event, measurements, meta, _config) do
+  def handle_pipeline_stop(_event, measurements, meta, config) do
+    add_db_statement = Keyword.get(config, :db_statement, :enabled)
+
     duration = measurements.duration
     end_time = :opentelemetry.timestamp()
     start_time = end_time - duration
@@ -50,16 +61,14 @@ defmodule OpentelemetryRedix do
         _pipeline -> "pipeline"
       end
 
-    statement = Enum.map_join(meta.commands, "\n", &Command.sanitize/1)
-
     connection = ConnectionTracker.get_connection(meta.connection)
 
     attributes =
       %{
         Trace.db_system() => "redis",
-        Trace.db_operation() => operation,
-        Trace.db_statement() => statement
+        Trace.db_operation() => operation
       }
+      |> Map.merge(db_statement_attributes(meta, add_db_statement))
       |> Map.merge(net_attributes(connection))
       |> Map.merge(redix_attributes(meta))
 
@@ -107,6 +116,18 @@ defmodule OpentelemetryRedix do
   defp redix_attributes(%{connection_name: nil}), do: %{}
   defp redix_attributes(%{connection_name: name}), do: %{"db.redix.connection_name": name}
   defp redix_attributes(_), do: %{}
+
+  defp db_statement_attributes(meta, :enabled) do
+    db_statement = Enum.map_join(meta.commands, "\n", &Command.sanitize/1)
+    %{Trace.db_statement() => db_statement}
+  end
+
+  defp db_statement_attributes(_meta, :disabled), do: %{}
+
+  defp db_statement_attributes(meta, fun) when is_function(fun, 1) do
+    db_statement = fun.(meta.commands)
+    %{Trace.db_statement() => db_statement}
+  end
 
   defp format_error(%{__exception__: true} = exception), do: Exception.message(exception)
   defp format_error(reason), do: inspect(reason)
