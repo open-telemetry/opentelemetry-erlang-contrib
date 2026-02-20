@@ -47,11 +47,12 @@ defmodule OpentelemetryOban.MixProject do
       {:oban, "~> 2.0"},
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.1"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry, "~> 1.0", only: [:test]},
       {:opentelemetry_exporter, "~> 1.0", only: [:test]},
+      {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:ex_doc, "~> 0.36", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
       {:postgrex, ">= 0.0.0", only: [:dev, :test]}
     ]
   end

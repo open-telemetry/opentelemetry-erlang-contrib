@@ -29,7 +29,7 @@ defmodule OpentelemetryReq do
                       default: [],
                       type_spec: quote(do: opt_in_attrs()),
                       doc: """
-                      Opt-in and experimental attributes. Use semantic conventions library to ensure compatability, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`
+                      Opt-in and experimental attributes. Use semantic conventions library to ensure compatibility, e.g. `[{HTTPAttributes.http_request_body_size(), true}]`
 
                       #{Enum.map_join(opt_ins, "\n\n", &"  * `#{inspect(&1)}`")}
                       """
@@ -56,7 +56,7 @@ defmodule OpentelemetryReq do
                     ]
                   )
 
-  @typedoc "Use semantic conventions library to ensure compatability, e.g. `HTTPAttributes.http_request_body_size()`"
+  @typedoc "Use semantic conventions library to ensure compatibility, e.g. `HTTPAttributes.http_request_body_size()`"
   @type opt_in_attr() ::
           unquote(HTTPAttributes.http_request_body_size())
           | unquote(HTTPAttributes.http_response_body_size())
@@ -95,7 +95,7 @@ defmodule OpentelemetryReq do
   ### Opt-in Semantic Convention Attributes
 
   Otel SemConv requires users to explicitly opt in for any attribute with a
-  requirement level of `opt-in` or `experimental`. To ensure compatability, always use the
+  requirement level of `opt-in` or `experimental`. To ensure compatibility, always use the
   SemConv attribute.
 
   Example:

@@ -18,33 +18,66 @@ defmodule OpentelemetryOban do
 
   alias Ecto.Changeset
   alias OpenTelemetry.Span
-  alias OpenTelemetry.SemanticConventions.Trace
+  alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
 
-  require Trace
+  require Logger
   require OpenTelemetry.Tracer
+
+  @type job_options() ::
+          [unquote(NimbleOptions.option_typespec(OpentelemetryOban.JobHandler.options_schema()))]
+          | :disabled
+
+  @type plugin_options() :: [] | :disabled
+
+  @options_schema [
+    job: [
+      type:
+        {:or,
+         [
+           {:keyword_list, OpentelemetryOban.JobHandler.options_schema()},
+           {:in, [:disabled]}
+         ]},
+      type_spec: quote(do: job_options()),
+      default: [],
+      doc: """
+      Job handler configuration. Set to `:disabled` to skip job handler setup. \n\n#{NimbleOptions.docs(OpentelemetryOban.JobHandler.options_schema(), nest_level: 1)}
+      """
+    ],
+    plugin: [
+      type: {:in, [[], :disabled]},
+      type_spec: quote(do: plugin_options()),
+      default: [],
+      doc: "Plugin handler configuration. Set to `:disabled` to skip plugin handler setup."
+    ]
+  ]
+
+  @nimble_options_schema NimbleOptions.new!(@options_schema)
 
   @doc """
   Initializes and configures telemetry handlers.
-
-  By default jobs and plugins are traced. If you wish to trace only jobs then
-  use:
-
-      OpentelemetryOban.setup(trace: [:jobs])
 
   Note that if you don't trace plugins, but inside the plugins, there are spans
   from other instrumentation libraries (e.g. ecto) then these will still be
   traced. This setting controls only the spans that are created by
   opentelemetry_oban.
-  """
-  @spec setup() :: :ok
-  def setup(opts \\ []) do
-    trace = Keyword.get(opts, :trace, [:jobs, :plugins])
 
-    if Enum.member?(trace, :jobs) do
-      OpentelemetryOban.JobHandler.attach()
+  ## Options
+
+  #{NimbleOptions.docs(@nimble_options_schema)}
+  """
+  @spec setup(unquote(NimbleOptions.option_typespec(@options_schema))) :: :ok
+  def setup(opts \\ []) do
+    opts =
+      opts
+      |> normalize_legacy_opts()
+      |> NimbleOptions.validate!(@nimble_options_schema)
+      |> Enum.into(%{})
+
+    if opts.job != :disabled do
+      OpentelemetryOban.JobHandler.attach(opts.job)
     end
 
-    if Enum.member?(trace, :plugins) do
+    if opts.plugin != :disabled do
       OpentelemetryOban.PluginHandler.attach()
     end
 
@@ -53,9 +86,9 @@ defmodule OpentelemetryOban do
 
   def insert(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       case Oban.insert(name, changeset) do
@@ -75,9 +108,9 @@ defmodule OpentelemetryOban do
 
   def insert!(name \\ Oban, %Changeset{} = changeset) do
     attributes = attributes_before_insert(changeset)
-    worker = Changeset.get_field(changeset, :worker)
+    queue = Changeset.get_field(changeset, :queue)
 
-    OpenTelemetry.Tracer.with_span "#{worker} send", attributes: attributes, kind: :producer do
+    OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do
@@ -104,7 +137,7 @@ defmodule OpentelemetryOban do
     # changesets in insert_all can include different workers and different
     # queues. This means we cannot provide much information here, but we can
     # still record the insert and propagate the context information.
-    OpenTelemetry.Tracer.with_span :"Oban bulk insert", kind: :producer do
+    OpenTelemetry.Tracer.with_span "send", kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
       Oban.insert_all(name, changesets)
     end
@@ -112,6 +145,30 @@ defmodule OpentelemetryOban do
 
   def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper) do
     Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
+  end
+
+  defp normalize_legacy_opts(opts) do
+    case Keyword.pop(opts, :trace) do
+      {nil, opts} ->
+        opts
+
+      {trace, opts} ->
+        Logger.warning(
+          "OpentelemetryOban.setup/1 :trace option is deprecated, use :job and :plugin options instead"
+        )
+
+        opts
+        |> disable_unless_traced(trace, :jobs, :job)
+        |> disable_unless_traced(trace, :plugins, :plugin)
+    end
+  end
+
+  defp disable_unless_traced(opts, trace, legacy_key, new_key) do
+    if legacy_key in trace do
+      opts
+    else
+      Keyword.put_new(opts, new_key, :disabled)
+    end
   end
 
   defp add_tracing_information_to_meta(changeset) do
@@ -130,15 +187,19 @@ defmodule OpentelemetryOban do
     worker = Changeset.get_field(changeset, :worker)
 
     %{
-      Trace.messaging_system() => :oban,
-      Trace.messaging_destination() => queue,
-      Trace.messaging_destination_kind() => :queue,
+      MessagingAttributes.messaging_system() => :oban,
+      MessagingAttributes.messaging_operation_name() => "send",
+      MessagingAttributes.messaging_client_id() => worker,
+      MessagingAttributes.messaging_destination_name() => queue,
+      MessagingAttributes.messaging_operation_type() =>
+        MessagingAttributes.messaging_operation_type_values().create,
       :"oban.job.worker" => worker
     }
   end
 
   defp attributes_after_insert(job) do
     %{
+      MessagingAttributes.messaging_message_id() => job.id,
       "oban.job.job_id": job.id,
       "oban.job.priority": job.priority,
       "oban.job.max_attempts": job.max_attempts

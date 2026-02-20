@@ -71,6 +71,15 @@
     "language": "elixir",
     "authorizedUsers": ["bryannaegele", "tsloughter"]
   },
+  "grpc": {
+    "workingDirectory": "instrumentation/opentelemetry_grpc",
+    "name": "gRPC Instrumentation",
+    "packageName": "opentelemetry_grpc",
+    "tagPrefix": "opentelemetry-grpc-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele", "tsloughter"]
+  },
   "grpcbox": {
     "workingDirectory": "instrumentation/opentelemetry_grpcbox",
     "name": "GRPCBox Instrumentation",
@@ -178,5 +187,14 @@
     "buildTool": "mix",
     "language": "elixir",
     "authorizedUsers": ["whatyouhide"]
+  },
+  "commanded": {
+    "workingDirectory": "instrumentation/opentelemetry_commanded",
+    "name": "Commanded Instrumentation",
+    "packageName": "opentelemetry_commanded",
+    "tagPrefix": "opentelemetry-commanded-v",
+    "buildTool": "mix",
+    "language": "elixir",
+    "authorizedUsers": ["bryannaegele", "tsloughter"]
   }
 }
