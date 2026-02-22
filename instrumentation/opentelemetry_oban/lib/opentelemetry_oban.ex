@@ -84,14 +84,15 @@ defmodule OpentelemetryOban do
     :ok
   end
 
-  def insert(name \\ Oban, %Changeset{} = changeset) do
+  def insert(name \\ Oban, changeset, opts \\ [])
+  def insert(name, %Changeset{} = changeset, opts) do
     attributes = attributes_before_insert(changeset)
     queue = Changeset.get_field(changeset, :queue)
 
     OpenTelemetry.Tracer.with_span "send #{queue}", attributes: attributes, kind: :producer do
       changeset = add_tracing_information_to_meta(changeset)
 
-      case Oban.insert(name, changeset) do
+      case Oban.insert(name, changeset, opts) do
         {:ok, job} ->
           OpenTelemetry.Tracer.set_attributes(attributes_after_insert(job))
           {:ok, job}
@@ -102,11 +103,11 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert(name \\ Oban, multi, multi_name, changeset_or_fun) do
-    Oban.insert(name, multi, multi_name, changeset_or_fun)
+  def insert(name \\ Oban, multi, multi_name, changeset_or_fun, opts \\ []) do
+    Oban.insert(name, multi, multi_name, changeset_or_fun, opts)
   end
 
-  def insert!(name \\ Oban, %Changeset{} = changeset) do
+  def insert!(name \\ Oban, %Changeset{} = changeset, opts \\ []) do
     attributes = attributes_before_insert(changeset)
     queue = Changeset.get_field(changeset, :queue)
 
@@ -114,7 +115,7 @@ defmodule OpentelemetryOban do
       changeset = add_tracing_information_to_meta(changeset)
 
       try do
-        job = Oban.insert!(name, changeset)
+        job = Oban.insert!(name, changeset, opts)
         OpenTelemetry.Tracer.set_attributes(attributes_after_insert(job))
         job
       rescue
@@ -127,24 +128,24 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert_all(name \\ Oban, changesets_or_wrapper)
+  def insert_all(name \\ Oban, changesets_or_wrapper, opts \\ [])
 
-  def insert_all(name, %{changesets: changesets}) when is_list(changesets) do
-    insert_all(name, changesets)
+  def insert_all(name, %{changesets: changesets}, opts) when is_list(changesets) do
+    insert_all(name, changesets, opts)
   end
 
-  def insert_all(name, changesets) when is_list(changesets) do
+  def insert_all(name, changesets, opts) when is_list(changesets) do
     # changesets in insert_all can include different workers and different
     # queues. This means we cannot provide much information here, but we can
     # still record the insert and propagate the context information.
     OpenTelemetry.Tracer.with_span "send", kind: :producer do
       changesets = Enum.map(changesets, &add_tracing_information_to_meta/1)
-      Oban.insert_all(name, changesets)
+      Oban.insert_all(name, changesets, opts)
     end
   end
 
-  def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper) do
-    Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
+  def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper, opts \\ []) do
+    Oban.insert_all(name, multi, multi_name, changesets_or_wrapper, opts)
   end
 
   defp normalize_legacy_opts(opts) do
