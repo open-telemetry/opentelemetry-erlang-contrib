@@ -19,11 +19,11 @@ defmodule OpentelemetryHTTPoison do
   alias OpenTelemetry.Tracer
   alias OpentelemetryHTTPoison.Configuration
 
-  @http_url Atom.to_string(Conventions.http_url())
-  @http_method Atom.to_string(Conventions.http_method())
-  @http_route Atom.to_string(Conventions.http_route())
-  @http_status_code Atom.to_string(Conventions.http_status_code())
-  @net_peer_name Atom.to_string(Conventions.net_peer_name())
+  @http_url Conventions.http_url()
+  @http_method Conventions.http_method()
+  @http_route Conventions.http_route()
+  @http_status_code Conventions.http_status_code()
+  @net_peer_name Conventions.net_peer_name()
 
   @doc ~S"""
   Configures OpentelemetryHTTPoison using the provided `opts` `Keyword list`.
