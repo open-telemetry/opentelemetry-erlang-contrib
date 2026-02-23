@@ -22,6 +22,7 @@ defmodule OpentelemetryRedixTest do
 
     on_exit(fn ->
       OpenTelemetry.Tracer.end_span()
+      :telemetry.detach({OpentelemetryRedix, :pipeline_stop})
     end)
   end
 
@@ -75,5 +76,51 @@ defmodule OpentelemetryRedixTest do
              "net.peer.name": "localhost",
              "net.peer.port": "6379"
            } = :otel_attributes.map(attributes)
+  end
+
+  test "records span without db.statement if disabled" do
+    OpentelemetryRedix.setup(db_statement: :disabled)
+
+    conn = start_supervised!({Redix, []})
+
+    {:ok, [_]} =
+      Redix.pipeline(conn, [
+        ["GET", "counter"]
+      ])
+
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    refute Map.has_key?(:otel_attributes.map(attributes), :"db.statement")
+  end
+
+  test "records span with db.statement processing" do
+    fun = fn commands ->
+      case commands do
+        [["GET", _]] -> "FOO"
+      end
+    end
+
+    OpentelemetryRedix.setup(db_statement: fun)
+
+    conn = start_supervised!({Redix, []})
+
+    {:ok, [_]} =
+      Redix.pipeline(conn, [
+        ["GET", "counter"]
+      ])
+
+    assert_receive {:span,
+                    span(
+                      name: "GET",
+                      kind: :client,
+                      attributes: attributes
+                    )}
+
+    assert Map.fetch!(:otel_attributes.map(attributes), :"db.statement") == "FOO"
   end
 end
