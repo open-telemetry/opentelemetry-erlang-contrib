@@ -60,6 +60,7 @@ defmodule OpentelemetryNebulex.MixProject do
       {:opentelemetry, "~> 1.5", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:telemetry, "~> 1.0"}
     ]
