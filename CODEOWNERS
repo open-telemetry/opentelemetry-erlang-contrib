@@ -14,9 +14,11 @@
 
 @open-telemetry/erlang-approvers
 
+/instrumentation/opentelemetry_absinthe         @cpiemontese @tsloughter
 /instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_ecto             @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_http             @cpiemontese @tsloughter
 /instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-maintainers
 /instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-maintainers
