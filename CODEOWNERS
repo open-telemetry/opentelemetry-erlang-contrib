@@ -12,7 +12,7 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-@open-telemetry/erlang-contrib-approvers
+* @open-telemetry/erlang-contrib-approvers
 
 /instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-contrib-approvers
 /instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-contrib-approvers
