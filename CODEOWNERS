@@ -12,17 +12,16 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-@open-telemetry/erlang-approvers
+* @open-telemetry/erlang-contrib-approvers
 
-/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_ecto             @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_redix            @andrewhr @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_xandra           @whatyouhide @open-telemetry/erlang-maintainers
-/utilities/opentelemetry_telemetry              @open-telemetry/erlang-maintainers
-/utilities/otel_http                            @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-maintainers
-/instrumentation/opentelemetry_commanded        @open-telemetry/erlang-maintainers
+/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_ecto             @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_redix            @andrewhr @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_xandra           @whatyouhide @open-telemetry/erlang-contrib-approvers
+/utilities/opentelemetry_telemetry              @open-telemetry/erlang-contrib-approvers
+/utilities/otel_http                            @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-contrib-approvers
