@@ -10,10 +10,6 @@ This policy has been enacted to be respectful of the maintainers' time and to en
 and regular updates. We want as many libraries to be under the official umbrella but need your commmitment to
 make that happen.
 
-### Instrumenting a library
-
-When instrumenting a library, it is important to follow the [Trace Semantic Conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md)
-
 ### CI
 
 Given the number of projects in this repo and the wide matrix of OTP/Elixir versions we must
@@ -28,3 +24,21 @@ Updating the file:
 1. Update the beautified json file (this is the form you'll commit)
 2. Uglify and escape the json object
 3. Copy this final value to the `test-matrix` job output
+
+## Checklist
+
+Use the following checklists as templates when opening a pull request.
+
+### General
+
+- [ ] All tests pass (`mix test`)
+- [ ] Code compiles without warnings (`mix compile --warnings-as-errors`)
+- [ ] Dialyzer passes (`mix dialyzer`)
+- [ ] Includes a `CHANGELOG.md` entry describing the change
+
+### Instrumentation Packages
+
+- [ ] Follows the [Trace Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/general/trace/)
+- [ ] Follows the [Configuration Options](./docs/reference/configuration-options.md) reference for standard option naming and behavior
+- [ ] Uses `opentelemetry_semantic_conventions` for attribute keys
+- [ ] Options are validated with [NimbleOptions](https://hexdocs.pm/nimble_options)
