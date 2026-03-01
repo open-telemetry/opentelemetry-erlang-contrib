@@ -27,4 +27,14 @@ defmodule Phoenix.Integration.EndpointHelper do
     :gen_tcp.close(socket)
     port_number
   end
+
+  def endpoint_name(adapter, variant) do
+    Module.concat(["#{atom_to_module_part(adapter)}#{atom_to_module_part(variant)}Endpoint"])
+  end
+
+  defp atom_to_module_part(atom) do
+    atom
+    |> to_string()
+    |> String.capitalize()
+  end
 end
