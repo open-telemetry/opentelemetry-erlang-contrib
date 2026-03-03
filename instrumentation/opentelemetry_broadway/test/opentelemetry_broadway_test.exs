@@ -107,8 +107,7 @@ defmodule OpentelemetryBroadwayTest do
       data: "test message",
       metadata: %{
         headers: [
-          {"traceparent", :longstr,
-           "00-#{hex_trace_id}-#{hex_span_id}-01"},
+          {"traceparent", :longstr, "00-#{hex_trace_id}-#{hex_span_id}-01"},
           {"x-custom-header", :longstr, "custom-value"}
         ],
         routing_key: "test.queue",
