@@ -113,7 +113,7 @@ defmodule OpentelemetryCommanded.EventHandlerTest do
 
       [
         event(
-          name: "exception",
+          name: :exception,
           attributes: event_attributes
         )
       ] = :otel_events.list(events)
@@ -122,14 +122,14 @@ defmodule OpentelemetryCommanded.EventHandlerTest do
 
       assert match?(
                %{
-                 "exception.message" => "some error",
-                 "exception.stacktrace" => _,
-                 "exception.type" => "Elixir.RuntimeError"
+                 "exception.message": "some error",
+                 "exception.stacktrace": _,
+                 "exception.type": "Elixir.RuntimeError"
                },
                event_attributes
              )
 
-      stack_trace = event_attributes["exception.stacktrace"]
+      stack_trace = event_attributes[:"exception.stacktrace"]
       assert stack_trace =~ "OpentelemetryCommanded.DummyApp.EventHandler.handle/2"
     end
   end
