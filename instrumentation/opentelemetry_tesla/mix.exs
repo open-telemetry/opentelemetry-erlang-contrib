@@ -6,22 +6,26 @@ defmodule OpentelemetryTesla.MixProject do
   def project do
     [
       app: :opentelemetry_tesla,
+      description: description(),
       version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
-      description: description(),
-      docs: docs()
+      name: "Opentelemetry Tesla",
+      docs: docs(),
+      elixirc_paths: elixirc_paths(Mix.env()),
+      source_url:
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_tesla"
     ]
   end
 
   defp docs() do
     [
-      main: "readme",
-      extras: ["README.md"],
       source_url_pattern:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_tesla/%{path}#L%{line}"
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_tesla/%{path}#L%{line}",
+      main: "Tesla.Middleware.OpenTelemetry",
+      extras: ["README.md"]
     ]
   end
 
@@ -32,10 +36,12 @@ defmodule OpentelemetryTesla.MixProject do
   defp package do
     [
       name: "opentelemetry_tesla",
+      description: "OpenTelemetry tracing for Tesla HTTP client",
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" =>
-          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_tesla",
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_tesla",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
         "OpenTelemetry Erlang Contrib" =>
           "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
@@ -51,9 +57,13 @@ defmodule OpentelemetryTesla.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:nimble_options, "~> 1.1"},
       {:opentelemetry, "~> 1.0", only: :test},
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.1"},
@@ -62,7 +72,8 @@ defmodule OpentelemetryTesla.MixProject do
       {:otel_http, "~> 0.2"},
       {:ex_doc, "~> 0.38", only: :dev, runtime: false},
       {:bypass, "~> 2.1", only: :test},
-      {:jason, "~> 1.3", only: :test}
+      {:jason, "~> 1.3", only: :test},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
 end
