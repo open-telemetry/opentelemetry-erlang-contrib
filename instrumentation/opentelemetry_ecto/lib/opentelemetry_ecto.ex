@@ -34,7 +34,7 @@ defmodule OpentelemetryEcto do
                       By default, instrumentation libraries implement all `Recommended` attributes in addition
                       to `Required` attributes.
 
-                      Use semantic conventions library to ensure compatability, e.g. `[DBAttributes.db_query_text()]`
+                      Use semantic conventions library to ensure compatibility, e.g. `[DBAttributes.db_query_text()]`
 
                       Recommended Attributes:
                       #{Enum.map_join(opt_outs, "\n\n", &"  * `#{inspect(&1)}`")}
@@ -124,7 +124,7 @@ defmodule OpentelemetryEcto do
 
   Note that attributes can only be additive. Existing attributes will not be overridden. In
   several cases, semantic attributes cannot be reliably set. Where these are not set by
-  this instrumentation, you may still set those attribtutes.
+  this instrumentation, you may still set those attributes.
 
   ```
   Repo.all(User,
@@ -171,7 +171,7 @@ defmodule OpentelemetryEcto do
 
   """
 
-  @typedoc "Use semantic conventions library to ensure compatability, e.g. `DBAttributes.db_query_text()`"
+  @typedoc "Use semantic conventions library to ensure compatibility, e.g. `DBAttributes.db_query_text()`"
   @type opt_out_attr() ::
           unquote(DBAttributes.db_query_text())
 
