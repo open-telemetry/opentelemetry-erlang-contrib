@@ -7,7 +7,7 @@ defmodule OpentelemetryOban.MixProject do
     [
       app: :opentelemetry_oban,
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [
@@ -52,6 +52,7 @@ defmodule OpentelemetryOban.MixProject do
       {:opentelemetry_exporter, "~> 1.0", only: [:test]},
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
+      {:jason, "~> 1.1"},
       {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
       {:postgrex, ">= 0.0.0", only: [:dev, :test]}
     ]

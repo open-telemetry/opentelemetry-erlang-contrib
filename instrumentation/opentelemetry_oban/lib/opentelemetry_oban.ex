@@ -208,7 +208,7 @@ defmodule OpentelemetryOban do
     %{
       MessagingAttributes.messaging_message_id() => job.id,
       "oban.job.job_id": job.id,
-      "oban.job.priority": job.priority,
+      "oban.job.priority": job.priority || 0,
       "oban.job.max_attempts": job.max_attempts
     }
   end

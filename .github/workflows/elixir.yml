@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      matrix-oban: ${{ steps.set-matrix.outputs.matrix-oban }}
     steps:
       - uses: actions/checkout@v4
       - name: Read file
@@ -29,6 +30,8 @@ jobs:
         run: |
           matrixStringifiedObject="$(jq -c . .github/elixir-test-matrix.json)"
           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+          matrixObanStringifiedObject="$(jq -c '.exclude += [{"elixir_version": "1.15.8"}]' .github/elixir-test-matrix.json)"
+          echo "matrix-oban=$matrixObanStringifiedObject" >> $GITHUB_OUTPUT
 
   opentelemetry-bandit:
     needs: [test-matrix]
@@ -361,7 +364,7 @@ jobs:
     name: Opentelemetry Oban test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix-oban) }}
     services:
       postgres:
         image: circleci/postgres:13.5-ram
