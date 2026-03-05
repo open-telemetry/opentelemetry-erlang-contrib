@@ -43,11 +43,11 @@ defmodule OpentelemetryFinchTest do
                     )}
 
     assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 200
+             "server.address": "localhost",
+             "http.request.method": "GET",
+             "url.path": "/",
+             "url.scheme": :http,
+             "http.response.status_code": 200
            } = :otel_attributes.map(attributes)
   end
 
@@ -83,11 +83,11 @@ defmodule OpentelemetryFinchTest do
                     )}
 
     assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 200
+             "server.address": "localhost",
+             "http.request.method": "GET",
+             "url.path": "/",
+             "url.scheme": :http,
+             "http.response.status_code": 200
            } = :otel_attributes.map(attributes)
   end
 
@@ -147,11 +147,11 @@ defmodule OpentelemetryFinchTest do
                     )}
 
     assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 200
+             "server.address": "localhost",
+             "http.request.method": "GET",
+             "url.path": "/",
+             "url.scheme": :http,
+             "http.response.status_code": 200
            } = :otel_attributes.map(attributes)
   end
 
@@ -171,11 +171,11 @@ defmodule OpentelemetryFinchTest do
                     )}
 
     assert %{
-             "net.peer.name": "localhost",
-             "http.method": "GET",
-             "http.target": "/",
-             "http.scheme": :http,
-             "http.status_code": 0
+             "server.address": "localhost",
+             "http.request.method": "GET",
+             "url.path": "/",
+             "url.scheme": :http,
+             "http.response.status_code": 0
            } = :otel_attributes.map(attributes)
   end
 
