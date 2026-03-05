@@ -115,6 +115,8 @@ defmodule OpentelemetryReqTest do
     expected_attrs = [
       {HTTPAttributes.http_request_method(), :POST},
       {HTTPAttributes.http_response_status_code(), 200},
+      # 222 bytes since req 0.5.11 fixed a leading newline in multipart encoding:
+      # https://github.com/wojtekmach/req/pull/475
       {HTTPAttributes.http_request_body_size(), 222},
       {HTTPAttributes.http_response_body_size(), 13},
       {NetworkAttributes.network_transport(), :tcp},
