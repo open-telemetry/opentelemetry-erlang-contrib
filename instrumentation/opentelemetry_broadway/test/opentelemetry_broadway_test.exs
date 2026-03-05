@@ -94,7 +94,9 @@ defmodule OpentelemetryBroadwayTest do
 
     trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
     trace_id = elem(trace_ctx, 1)
-    span_id = elem(trace_ctx, 2)
+    hex_trace_id = elem(trace_ctx, 2)
+    span_id = elem(trace_ctx, 3)
+    hex_span_id = elem(trace_ctx, 4)
 
     OpenTelemetry.Tracer.end_span()
     OpenTelemetry.Ctx.clear()
@@ -105,8 +107,7 @@ defmodule OpentelemetryBroadwayTest do
       data: "test message",
       metadata: %{
         headers: [
-          {"traceparent", :longstr,
-           "00-#{:io_lib.format("~32.16.0b", [trace_id])}-#{:io_lib.format("~16.16.0b", [span_id])}-01"},
+          {"traceparent", :longstr, "00-#{hex_trace_id}-#{hex_span_id}-01"},
           {"x-custom-header", :longstr, "custom-value"}
         ],
         routing_key: "test.queue",
@@ -163,11 +164,12 @@ defmodule OpentelemetryBroadwayTest do
     OpenTelemetry.Tracer.set_current_span(parent_span)
     parent_ctx = OpenTelemetry.Tracer.current_span_ctx()
     parent_trace_id = elem(parent_ctx, 1)
-    parent_span_id = elem(parent_ctx, 2)
+    hex_parent_trace_id = elem(parent_ctx, 2)
+    parent_span_id = elem(parent_ctx, 3)
+    hex_parent_span_id = elem(parent_ctx, 4)
 
     # Create traceparent header from parent context
-    traceparent =
-      "00-#{:io_lib.format("~32.16.0b", [parent_trace_id])}-#{:io_lib.format("~16.16.0b", [parent_span_id])}-01"
+    traceparent = "00-#{hex_parent_trace_id}-#{hex_parent_span_id}-01"
 
     OpenTelemetry.Tracer.end_span()
     OpenTelemetry.Ctx.clear()
@@ -382,15 +384,16 @@ defmodule OpentelemetryBroadwayTest do
 
     trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
     trace_id = elem(trace_ctx, 1)
-    span_id = elem(trace_ctx, 2)
+    hex_trace_id = elem(trace_ctx, 2)
+    span_id = elem(trace_ctx, 3)
+    hex_span_id = elem(trace_ctx, 4)
 
     OpenTelemetry.Tracer.end_span()
     OpenTelemetry.Ctx.clear()
 
     assert_receive {:span, span(name: "sqs-producer")}
 
-    traceparent =
-      "00-#{:io_lib.format("~32.16.0b", [trace_id])}-#{:io_lib.format("~16.16.0b", [span_id])}-01"
+    traceparent = "00-#{hex_trace_id}-#{hex_span_id}-01"
 
     # Real SQS metadata structure from ExAws.SQS with all message attribute types:
     # - String: regular string values
@@ -518,15 +521,10 @@ defmodule OpentelemetryBroadwayTest do
   end
 
   defp create_rabbitmq_headers_with_trace_context do
-    # Get current span context
     trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
-    trace_id = elem(trace_ctx, 1)
-    span_id = elem(trace_ctx, 2)
+    hex_trace_id = elem(trace_ctx, 2)
+    hex_span_id = elem(trace_ctx, 4)
 
-    # Format traceparent header manually in RabbitMQ format
-    [
-      {"traceparent", :longstr,
-       "00-#{:io_lib.format("~32.16.0b", [trace_id])}-#{:io_lib.format("~16.16.0b", [span_id])}-01"}
-    ]
+    [{"traceparent", :longstr, "00-#{hex_trace_id}-#{hex_span_id}-01"}]
   end
 end
