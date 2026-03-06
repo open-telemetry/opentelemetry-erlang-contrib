@@ -477,11 +477,18 @@ defmodule OpentelemetryBandit do
   defp maybe_update_span_name(conn) do
     case conn.private do
       %{plug_route: {route, _fun}} ->
-        Tracer.update_name("#{conn.method} #{route}")
+        method = sanitize_method(conn.method)
+        Tracer.update_name("#{method} #{route}")
 
       _ ->
         :ok
     end
+  end
+
+  defp sanitize_method(method) do
+    if parse_method(method) == HTTPAttributes.http_request_method_values().other,
+      do: "HTTP",
+      else: method
   end
 
   @doc false
