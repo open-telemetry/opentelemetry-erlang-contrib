@@ -239,8 +239,8 @@ defmodule OpentelemetryBandit do
 
     name =
       if request_method == HTTPAttributes.http_request_method_values().other,
-        do: :HTTP,
-        else: request_method
+        do: "HTTP",
+        else: conn.method
 
     if public_endpoint?(conn, config) do
       propagated_ctx =
@@ -264,7 +264,7 @@ defmodule OpentelemetryBandit do
 
   # error with no conn
   def handle_request_start(_meta, _config) do
-    Tracer.start_span(:HTTP, %{kind: :server})
+    Tracer.start_span("HTTP", %{kind: :server})
     |> Tracer.set_current_span()
   end
 
@@ -468,8 +468,20 @@ defmodule OpentelemetryBandit do
       |> Tracer.set_attributes()
     end
 
+    maybe_update_span_name(conn)
+
     Tracer.end_span()
     Ctx.clear()
+  end
+
+  defp maybe_update_span_name(conn) do
+    case conn.private do
+      %{plug_route: {route, _fun}} ->
+        Tracer.update_name("#{conn.method} #{route}")
+
+      _ ->
+        :ok
+    end
   end
 
   @doc false

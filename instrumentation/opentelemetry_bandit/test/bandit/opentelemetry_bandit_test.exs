@@ -73,7 +73,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         attributes: span_attrs,
                         parent_span_id: 13_235_353_014_750_950_193
@@ -112,14 +112,14 @@ defmodule OpentelemetryBanditTest do
 
       refute_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         links: links,
                         parent_span_id: :undefined
@@ -147,14 +147,14 @@ defmodule OpentelemetryBanditTest do
 
       refute_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         links: links,
                         parent_span_id: :undefined
@@ -173,14 +173,14 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       refute_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         parent_span_id: :undefined
                       )}
@@ -210,7 +210,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         attributes: span_attrs
                       )}
 
@@ -334,7 +334,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         attributes: span_attrs
                       )}
@@ -385,7 +385,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         attributes: span_attrs,
                         events: events,
                         status: ^expected_status
@@ -434,7 +434,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         attributes: span_attributes,
                         events: events,
                         status: ^expected_status
@@ -467,7 +467,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         attributes: span_attributes,
                         events: events,
                         status: ^expected_status
@@ -488,6 +488,19 @@ defmodule OpentelemetryBanditTest do
       assert [] = :otel_events.list(events)
     end
 
+    test "updates span name with route from conn.private[:plug_route]" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      Req.get("http://localhost:#{port}/with_route")
+
+      assert_receive {:span,
+                      span(
+                        name: "GET /items/:id",
+                        kind: :server
+                      )}
+    end
+
     test "with halted request" do
       OpentelemetryBandit.setup()
       port = start_server()
@@ -498,7 +511,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: :GET,
+                        name: "GET",
                         kind: :server,
                         attributes: span_attrs,
                         status: ^expected_status
@@ -520,6 +533,12 @@ defmodule OpentelemetryBanditTest do
 
   def hello(conn) do
     conn |> send_resp(200, "OK")
+  end
+
+  def with_route(conn) do
+    conn
+    |> put_private(:plug_route, {"/items/:id", fn -> nil end})
+    |> send_resp(200, "OK")
   end
 
   def with_body(conn) do
