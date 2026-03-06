@@ -479,6 +479,7 @@ defmodule OpentelemetryBandit do
       %{plug_route: {route, _fun}} ->
         method = sanitize_method(conn.method)
         Tracer.update_name("#{method} #{route}")
+        Tracer.set_attribute(HTTPAttributes.http_route(), route)
 
       _ ->
         :ok
