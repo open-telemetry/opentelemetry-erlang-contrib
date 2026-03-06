@@ -209,7 +209,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   def handle_liveview_event(
-        [:phoenix, :live_view, :render, :start],
+        [:phoenix, _live, :render, :start],
         _measurements,
         %{socket: %{view: live_view}} = meta,
         _handler_configuration
@@ -223,7 +223,7 @@ defmodule OpentelemetryPhoenix do
   end
 
   def handle_liveview_event(
-        [:phoenix, :live_component, :update, :start],
+        [:phoenix, _live, :update, :start],
         _measurements,
         %{socket: %{view: live_view}, component: component} = meta,
         _handler_configuration

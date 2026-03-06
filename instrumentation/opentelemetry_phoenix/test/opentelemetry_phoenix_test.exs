@@ -323,4 +323,34 @@ defmodule OpentelemetryPhoenixTest do
              ExceptionAttributes.exception_type()
            ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
+
+  test "does not record LiveView spans when liveview: false" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2, liveview: false)
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.mount_stop()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.render_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.render_stop()
+    )
+
+    refute_receive {:span, _}
+  end
 end
