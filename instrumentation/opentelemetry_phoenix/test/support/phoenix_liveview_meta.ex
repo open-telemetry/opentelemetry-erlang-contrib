@@ -1492,4 +1492,120 @@ defmodule PhoenixLiveViewMeta do
       component: NnnnnWeb.MyTestLive.MyLiveComponent
     }
   end
+
+  def render_start() do
+    %{
+      socket: %{
+        id: "phx-F5LbkYMazc6nbROF",
+        private: %{
+          __temp__: %{},
+          lifecycle: %{
+            handle_info: [],
+            handle_event: [],
+            __struct__: Phoenix.LiveView.Lifecycle,
+            handle_params: [],
+            mount: [],
+            after_render: []
+          },
+          root_view: NnnnnWeb.MyTestLive
+        },
+        __struct__: Phoenix.LiveView.Socket,
+        parent_pid: nil,
+        assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
+        endpoint: NnnnnWeb.Endpoint,
+        view: NnnnnWeb.MyTestLive,
+        transport_pid: IEx.Helpers.pid(0, 540, 0),
+        root_pid: IEx.Helpers.pid(0, 548, 0),
+        router: NnnnnWeb.Router,
+        fingerprints: {nil, %{}},
+        redirected: nil,
+        host_uri: %{
+          port: 4000,
+          scheme: "http",
+          path: nil,
+          host: "localhost",
+          __struct__: URI,
+          userinfo: nil,
+          fragment: nil,
+          query: nil,
+          authority: nil
+        }
+      },
+      force?: false,
+      changed?: true
+    }
+  end
+
+  def render_stop() do
+    render_start()
+  end
+
+  def render_exception() do
+    Map.merge(render_start(), %{
+      kind: :error,
+      reason: %{message: "render error", __struct__: RuntimeError, __exception__: true},
+      stacktrace: [
+        {NnnnnWeb.MyTestLive, :render, 1,
+         [file: ~c"lib/nnnnn_web/live/my_test_live.ex", line: 10]}
+      ]
+    })
+  end
+
+  def component_update_start() do
+    %{
+      socket: %{
+        id: "phx-F5LbkYMazc6nbROF",
+        private: %{
+          __temp__: %{},
+          lifecycle: %{
+            handle_info: [],
+            handle_event: [],
+            __struct__: Phoenix.LiveView.Lifecycle,
+            handle_params: [],
+            mount: [],
+            after_render: []
+          },
+          root_view: NnnnnWeb.MyTestLive
+        },
+        __struct__: Phoenix.LiveView.Socket,
+        parent_pid: nil,
+        assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
+        endpoint: NnnnnWeb.Endpoint,
+        view: NnnnnWeb.MyTestLive,
+        transport_pid: IEx.Helpers.pid(0, 540, 0),
+        root_pid: IEx.Helpers.pid(0, 548, 0),
+        router: NnnnnWeb.Router,
+        fingerprints: {nil, %{}},
+        redirected: nil,
+        host_uri: %{
+          port: 4000,
+          scheme: "http",
+          path: nil,
+          host: "localhost",
+          __struct__: URI,
+          userinfo: nil,
+          fragment: nil,
+          query: nil,
+          authority: nil
+        }
+      },
+      component: NnnnnWeb.MyTestLive.MyLiveComponent,
+      assigns_sockets: [{%{id: 1}, %{}}]
+    }
+  end
+
+  def component_update_stop() do
+    component_update_start()
+  end
+
+  def component_update_exception() do
+    Map.merge(component_update_start(), %{
+      kind: :error,
+      reason: %{message: "update error", __struct__: RuntimeError, __exception__: true},
+      stacktrace: [
+        {NnnnnWeb.MyTestLive.MyLiveComponent, :update, 2,
+         [file: ~c"lib/nnnnn_web/live/my_live_component.ex", line: 15]}
+      ]
+    })
+  end
 end
