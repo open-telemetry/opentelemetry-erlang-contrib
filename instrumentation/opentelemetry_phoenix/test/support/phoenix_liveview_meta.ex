@@ -1545,8 +1545,7 @@ defmodule PhoenixLiveViewMeta do
       kind: :error,
       reason: %{message: "render error", __struct__: RuntimeError, __exception__: true},
       stacktrace: [
-        {NnnnnWeb.MyTestLive, :render, 1,
-         [file: ~c"lib/nnnnn_web/live/my_test_live.ex", line: 10]}
+        {NnnnnWeb.MyTestLive, :render, 1, [file: ~c"lib/nnnnn_web/live/my_test_live.ex", line: 10]}
       ]
     })
   end
@@ -1603,8 +1602,7 @@ defmodule PhoenixLiveViewMeta do
       kind: :error,
       reason: %{message: "update error", __struct__: RuntimeError, __exception__: true},
       stacktrace: [
-        {NnnnnWeb.MyTestLive.MyLiveComponent, :update, 2,
-         [file: ~c"lib/nnnnn_web/live/my_live_component.ex", line: 15]}
+        {NnnnnWeb.MyTestLive.MyLiveComponent, :update, 2, [file: ~c"lib/nnnnn_web/live/my_live_component.ex", line: 15]}
       ]
     })
   end
