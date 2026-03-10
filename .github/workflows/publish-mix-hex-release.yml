@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Read file
         id: set-config
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
           package: ${{ inputs.package }}
         with:
@@ -126,7 +126,7 @@ jobs:
       - run: npm install semver
       - name: "Update Files"
         id: update-files
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -239,7 +239,7 @@ jobs:
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}
