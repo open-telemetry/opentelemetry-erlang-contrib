@@ -73,7 +73,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         attributes: span_attrs,
                         parent_span_id: 13_235_353_014_750_950_193
@@ -112,14 +112,14 @@ defmodule OpentelemetryBanditTest do
 
       refute_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         links: links,
                         parent_span_id: :undefined
@@ -147,14 +147,14 @@ defmodule OpentelemetryBanditTest do
 
       refute_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         links: links,
                         parent_span_id: :undefined
@@ -173,14 +173,14 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         parent_span_id: 13_235_353_014_750_950_193
                       )}
 
       refute_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         parent_span_id: :undefined
                       )}
@@ -210,7 +210,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         attributes: span_attrs
                       )}
 
@@ -334,7 +334,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         attributes: span_attrs
                       )}
@@ -385,7 +385,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         attributes: span_attrs,
                         events: events,
                         status: ^expected_status
@@ -434,7 +434,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         attributes: span_attributes,
                         events: events,
                         status: ^expected_status
@@ -467,7 +467,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         attributes: span_attributes,
                         events: events,
                         status: ^expected_status
@@ -555,7 +555,7 @@ defmodule OpentelemetryBanditTest do
 
       assert_receive {:span,
                       span(
-                        name: "GET",
+                        name: :GET,
                         kind: :server,
                         attributes: span_attrs,
                         status: ^expected_status
