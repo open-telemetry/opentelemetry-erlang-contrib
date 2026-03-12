@@ -52,9 +52,9 @@ defmodule OpentelemetryOban.MixProject do
       {:opentelemetry_exporter, "~> 1.0", only: [:test]},
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:jason, "~> 1.1"},
+      {:jason, "~> 1.1", only: [:dev, :test]},
       {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
-      {:postgrex, ">= 0.0.0", only: [:dev, :test]}
+      {:postgrex, ">= 0.0.0", only: [:test]}
     ]
   end
 
