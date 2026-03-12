@@ -54,7 +54,7 @@ defmodule OpentelemetryOban.MixProject do
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jason, "~> 1.1", only: [:dev, :test]},
       {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
-      {:postgrex, ">= 0.0.0", only: [:test]}
+      {:postgrex, ">= 0.0.0", only: [:dev, :test]}
     ]
   end
 
