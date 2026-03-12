@@ -192,7 +192,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       mysql:
-        image: mysql:9.3
+        image: mysql:9.6
         env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
