@@ -78,7 +78,7 @@ defmodule OpentelemetryEcto.MixProject do
       {:ecto_sqlite3, "~> 0.22", only: [:dev, :test]},
       {:ecto_sql, "~> 3.12", only: [:dev, :test]},
       {:postgrex, "~> 0.20", only: [:dev, :test]},
-      {:myxql, "~> 0.7", only: [:dev, :test]},
+      {:myxql, "~> 0.8", only: [:dev, :test]},
       {:tds, "~> 2.3", only: [:dev, :test]},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
