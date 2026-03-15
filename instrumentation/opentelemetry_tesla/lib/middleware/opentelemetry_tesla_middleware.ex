@@ -20,6 +20,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
     - `:opt_in_attrs` - list of opt-in and experimental attributes to be added. Use semantic conventions library to ensure compatibility, e.g. `[HTTPAttributes.http_request_body_size()]`
     - `:request_header_attrs` - list of request headers to be added as attributes, e.g. `["content-type"]`
     - `:response_header_attrs` - list of response headers to be added as attributes, e.g. `["content-length"]`
+    - `:trace_attrs` - trace attributes to be added to the span.
   """
 
   alias OpenTelemetry.SemConv.ErrorAttributes
@@ -33,7 +34,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
 
   @behaviour Tesla.Middleware
 
-  @otel_opts ~w[span_name propagator mark_status_ok opt_in_attrs request_header_attrs response_header_attrs]a
+  @otel_opts ~w[span_name propagator mark_status_ok opt_in_attrs request_header_attrs response_header_attrs trace_attrs]a
 
   def call(env, next, opts) do
     opts = opts |> Keyword.take(@otel_opts) |> Enum.into(%{})
@@ -153,6 +154,7 @@ defmodule Tesla.Middleware.OpenTelemetry do
     }
     |> add_opt_in_resp_attrs(env, opts)
     |> add_resp_headers(headers, opts)
+    |> add_trace_attrs(opts)
     |> OpenTelemetry.Tracer.set_attributes()
 
     {:ok, env}
@@ -221,6 +223,12 @@ defmodule Tesla.Middleware.OpenTelemetry do
   end
 
   defp add_resp_headers(attrs, _resp_headers, _opts), do: attrs
+
+  defp add_trace_attrs(attrs, %{trace_attrs: trace_attrs}) when is_map(trace_attrs) do
+    Map.merge(attrs, trace_attrs)
+  end
+
+  defp add_trace_attrs(attrs, _opts), do: attrs
 
   defp get_url_template(env) do
     case env.opts[:path_params] do
