@@ -1,30 +1,5 @@
 ExUnit.start(capture_log: true)
 
-TestRepo.start_link(
-  database: "opentelemetry_oban_test",
-  hostname: "localhost",
-  username: "postgres",
-  password: "postgres",
-  pool: Ecto.Adapters.SQL.Sandbox
-)
-
-Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
-
-defmodule PrepareOban do
-  use Ecto.Migration
-  def up, do: Oban.Migrations.up()
-end
-
-Ecto.Migrator.run(TestRepo, [{0, PrepareOban}], :up, all: true)
-TestRepo.query("TRUNCATE oban_jobs", [])
-
-Oban.start_link(
-  repo: TestRepo,
-  plugins: [Oban.Plugins.Pruner],
-  notifier: Oban.Notifiers.PG,
-  testing: :manual
-)
-
 defmodule TestJob do
   use Oban.Worker, queue: :events, max_attempts: 1
 

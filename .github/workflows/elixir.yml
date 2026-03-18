@@ -362,15 +362,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
-    services:
-      postgres:
-        image: circleci/postgres:13.5-ram
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: opentelemetry_oban_test
     steps:
       - uses: actions/checkout@v6
       - uses: erlef/setup-beam@v1

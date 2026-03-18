@@ -20,12 +20,26 @@ defmodule DataCase do
     end
   end
 
-  setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TestRepo)
+  setup _tags do
+    start_link_supervised!({
+      TestRepo,
+      database: "tmp/test-#{:rand.uniform(10_000)}.db", journal_mode: :memory
+    })
 
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
-    end
+    Ecto.Migrator.run(TestRepo, [{0, PrepareOban}], :up, all: true)
+    TestRepo.query("TRUNCATE oban_jobs", [])
+
+    start_link_supervised!({
+      Oban,
+      repo: TestRepo,
+      plugins: [Oban.Plugins.Pruner],
+      notifier: Oban.Notifiers.PG,
+      engine: Oban.Engines.Lite,
+      testing: :manual
+    })
+
+    Path.wildcard("tmp/test-*.db")
+    |> Enum.each(&File.rm!/1)
 
     :ok
   end
