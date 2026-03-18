@@ -1,113 +1,169 @@
 elixir:
-  - .github/elixir-test-matrix.json
-  - instrumentation/**/*.ex
-  - instrumentation/**/*.exs
-  - instrumentation/**/mix.lock
-  - propagators/**/*.ex
-  - propagators/**/*.exs
-  - propagators/**/mix.lock
-  - exporters/**/*.ex
-  - exporters/**/*.exs
-  - exporters/**/mix.lock
-  - examples/**/*.ex
-  - examples/**/*.exs
-  - examples/**/mix.lock
-  - utilities/**/*.ex
-  - utilities/**/*.exs
-  - utilities/**/mix.lock
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/elixir-test-matrix.json
+          - instrumentation/**/*.ex
+          - instrumentation/**/*.exs
+          - instrumentation/**/mix.lock
+          - propagators/**/*.ex
+          - propagators/**/*.exs
+          - propagators/**/mix.lock
+          - exporters/**/*.ex
+          - exporters/**/*.exs
+          - exporters/**/mix.lock
+          - examples/**/*.ex
+          - examples/**/*.exs
+          - examples/**/mix.lock
+          - utilities/**/*.ex
+          - utilities/**/*.exs
+          - utilities/**/mix.lock
 
 erlang:
-  - .github/erlang-test-matrix.json
-  - instrumentation/**/*.erl
-  - instrumentation/**/*.hrl
-  - instrumentation/**/rebar.*
-  - propagators/**/*.erl
-  - propagators/**/*.hrl
-  - propagators/**/rebar.*
-  - exporters/**/*.erl
-  - exporters/**/*.hrl
-  - exporters/**/rebar.*
-  - examples/**/*.erl
-  - examples/**/*.hrl
-  - examples/**/rebar.*
-  - utilities/**/*.erl
-  - utilities/**/*.hrl
-  - utilities/**/rebar.*
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/erlang-test-matrix.json
+          - instrumentation/**/*.erl
+          - instrumentation/**/*.hrl
+          - instrumentation/**/rebar.*
+          - propagators/**/*.erl
+          - propagators/**/*.hrl
+          - propagators/**/rebar.*
+          - exporters/**/*.erl
+          - exporters/**/*.hrl
+          - exporters/**/rebar.*
+          - examples/**/*.erl
+          - examples/**/*.hrl
+          - examples/**/rebar.*
+          - utilities/**/*.erl
+          - utilities/**/*.hrl
+          - utilities/**/rebar.*
 
 instrumentation:
-  - instrumentation/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/**/*
 
 propagators:
-  - propagators/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - propagators/**/*
 
 examples:
-  - examples/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - examples/**/*
 
 utilities:
-  - utilities/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - utilities/**/*
 
 scope-ci:
-  - .github/workflows/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
 
 opentelemetry_aws_xray:
-  - utilities/opentelemetry_aws_xray/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - utilities/opentelemetry_aws_xray/**/*
 
 opentelemetry_broadway:
-  - instrumentation/opentelemetry_broadway/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_broadway/**/*
 
 opentelemetry_cowboy:
-  - instrumentation/opentelemetry_cowboy/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_cowboy/**/*
 
 opentelemetry_dataloader:
-  - instrumentation/opentelemetry_dataloader/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_dataloader/**/*
 
 opentelemetry_ecto:
-  - instrumentation/opentelemetry_ecto/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_ecto/**/*
 
 opentelemetry_elli:
-  - instrumentation/opentelemetry_elli/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_elli/**/*
 
 opentelemetry_finch:
-  - instrumentation/opentelemetry_finch/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_finch/**/*
 
 opentelemetry_grpcbox:
-  - instrumentation/opentelemetry_grpcbox/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_grpcbox/**/*
 
 opentelemetry_httpoison:
-  - instrumentation/opentelemetry_httpoison/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_httpoison/**/*
 
 opentelemetry_nebulex:
-  - instrumentation/opentelemetry_nebulex/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_nebulex/**/*
 
 opentelemetry_oban:
-  - instrumentation/opentelemetry_oban/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_oban/**/*
 
 opentelemetry_phoenix:
-  - instrumentation/opentelemetry_phoenix/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_phoenix/**/*
 
 opentelemetry_bandit:
-  - instrumentation/opentelemetry_bandit/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_bandit/**/*
 
 opentelemetry_process_propagator:
-  - propagators/opentelemetry_process_propagator/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - propagators/opentelemetry_process_propagator/**/*
 
 opentelemetry_redix:
-  - instrumentation/opentelemetry_redix/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_redix/**/*
 
 opentelemetry_req:
-  - instrumentation/opentelemetry_req/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_req/**/*
 
 opentelemetry_telemetry:
-  - utilities/opentelemetry_telemetry/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - utilities/opentelemetry_telemetry/**/*
 
 opentelemetry_tesla:
-  - instrumentation/opentelemetry_tesla/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_tesla/**/*
 
 opentelemetry_xandra:
-  - instrumentation/opentelemetry_xandra/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_xandra/**/*
 
 opentelemetry_commanded:
-  - instrumentation/opentelemetry_commanded/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_commanded/**/*
 
 otel_http:
-  - utilities/otel_http/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - utilities/otel_http/**/*
