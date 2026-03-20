@@ -29,15 +29,15 @@ defmodule OpentelemetryHTTPoison.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6 or ~> 2.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"}
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"}
     ] ++ dev_deps()
   end
 
   def dev_deps,
     do: [
-      {:opentelemetry, "~> 1.0", only: :test},
-      {:opentelemetry_exporter, "~> 1.0", only: :test},
+      {:opentelemetry, "~> 1.5", only: :test},
+      {:opentelemetry_exporter, "~> 1.8", only: :test},
       {:plug, "~> 1.12", only: :test},
       {:plug_cowboy, "~> 2.2", only: :test},
       {:credo, "~> 1.6", only: [:dev, :test]},
