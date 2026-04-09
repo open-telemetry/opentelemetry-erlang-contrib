@@ -322,6 +322,11 @@ defmodule OpentelemetryBroadway do
     |> Enum.concat(message_attributes)
   end
 
+  # PubSub: headers are in attributes as a map
+  defp get_message_headers(%Broadway.Message{metadata: %{attributes: attributes}}) when is_map(attributes) do
+    Enum.to_list(attributes)
+  end
+
   defp get_message_headers(_message), do: []
 
   # ExAws.SQS returns:
