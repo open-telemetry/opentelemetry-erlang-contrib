@@ -482,6 +482,123 @@ defmodule OpentelemetryBroadwayTest do
     assert elem(link, 2) == span_id
   end
 
+  test "handles PubSub metadata with nil attributes" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(propagation: true)
+
+    # PubSub sets attributes to nil when no attributes are present on the message
+    message = %Broadway.Message{
+      data: "pubsub message",
+      metadata: %{
+        attributes: nil,
+        message_id: "1234567890",
+        ordering_key: "",
+        publish_time: ~U[2024-01-01 00:00:00Z]
+      },
+      acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+    }
+
+    start_metadata = %{
+      processor_key: :default,
+      topology_name: :pubsub_topology,
+      name: :"pubsub_topology.Broadway.Consumer_0",
+      message: message
+    }
+
+    :telemetry.execute(
+      [:broadway, :processor, :message, :start],
+      %{},
+      start_metadata
+    )
+
+    completed_message = %{message | status: :ok}
+
+    :telemetry.execute(
+      [:broadway, :processor, :message, :stop],
+      %{},
+      %{message: completed_message}
+    )
+
+    assert_receive {:span, span(name: span_name, attributes: attributes, links: links)}
+
+    assert span_name == ":pubsub_topology/default process"
+
+    attrs_map = :otel_attributes.map(attributes)
+    assert attrs_map[:"messaging.system"] == :broadway
+
+    links_list = elem(links, 5)
+    assert length(links_list) == 0
+  end
+
+  test "extracts trace context from PubSub attributes" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(propagation: true)
+
+    _parent_span_ctx =
+      OpenTelemetry.Tracer.start_span("pubsub-producer")
+      |> OpenTelemetry.Tracer.set_current_span()
+
+    trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
+    trace_id = elem(trace_ctx, 1)
+    hex_trace_id = elem(trace_ctx, 2)
+    span_id = elem(trace_ctx, 3)
+    hex_span_id = elem(trace_ctx, 4)
+
+    OpenTelemetry.Tracer.end_span()
+    OpenTelemetry.Ctx.clear()
+
+    assert_receive {:span, span(name: "pubsub-producer")}
+
+    traceparent = "00-#{hex_trace_id}-#{hex_span_id}-01"
+
+    # Real PubSub metadata structure from broadway_cloud_pub_sub:
+    # - attributes is a plain string-to-string map
+    message = %Broadway.Message{
+      data: "pubsub message with trace",
+      metadata: %{
+        attributes: %{
+          "traceparent" => traceparent,
+          "custom-header" => "custom-value"
+        },
+        message_id: "9876543210",
+        ordering_key: "",
+        publish_time: ~U[2024-01-01 00:00:00Z]
+      },
+      acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+    }
+
+    start_metadata = %{
+      processor_key: :default,
+      topology_name: :pubsub_topology,
+      name: :"pubsub_topology.Broadway.Consumer_0",
+      message: message
+    }
+
+    :telemetry.execute(
+      [:broadway, :processor, :message, :start],
+      %{},
+      start_metadata
+    )
+
+    completed_message = %{message | status: :ok}
+
+    :telemetry.execute(
+      [:broadway, :processor, :message, :stop],
+      %{},
+      %{message: completed_message}
+    )
+
+    assert_receive {:span, span(name: span_name, links: links)}
+
+    assert span_name == ":pubsub_topology/default process"
+
+    links_list = elem(links, 5)
+    assert length(links_list) == 1
+    [link] = links_list
+    assert elem(link, 1) == trace_id
+    assert elem(link, 2) == span_id
+  end
+
   # Backwards compatibility tests for deprecated `propagation` option
   describe "backwards compatibility" do
     test "propagation: false disables context propagation" do
