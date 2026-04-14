@@ -236,12 +236,7 @@ extract_scheme(Req, Config) ->
     SchemeHeaders1 = extract_headers(Headers, SchemeHeaders),
     case otel_http_extract_scheme(SchemeHeaders1, SortFn) of
         undefined ->
-            case ReqScheme of
-                <<"http">> ->
-                    http;
-                <<"https">> ->
-                    https
-            end;
+            ReqScheme;
         ParsedScheme ->
             ParsedScheme
     end.
