@@ -12,16 +12,16 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-@open-telemetry/erlang-approvers
+* @open-telemetry/erlang-contrib-approvers
 
-/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor
-/instrumentation/opentelemetry_cowboy           @bryannaegele @tsloughter
-/instrumentation/opentelemetry_ecto             @bryannaegele @tsloughter
-/instrumentation/opentelemetry_nebulex          @andrewhr
-/instrumentation/opentelemetry_oban             @indrekj
-/instrumentation/opentelemetry_phoenix          @bryannaegele @tsloughter
-/instrumentation/opentelemetry_redix            @andrewhr
-/instrumentation/opentelemetry_xandra           @whatyouhide
-/utilities/opentelemetry_telemetry              @bryannaegele @tsloughter
-/utilities/otel_http                            @bryannaegele @tsloughter
-/instrumentation/opentelemetry_tesla            @ricardoccpaiva
+/instrumentation/opentelemetry_broadway         @whatyouhide @tomtaylor @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_cowboy           @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_ecto             @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_nebulex          @andrewhr @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_oban             @indrekj @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_phoenix          @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_redix            @andrewhr @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_xandra           @whatyouhide @open-telemetry/erlang-contrib-approvers
+/utilities/opentelemetry_telemetry              @open-telemetry/erlang-contrib-approvers
+/utilities/otel_http                            @open-telemetry/erlang-contrib-approvers
+/instrumentation/opentelemetry_tesla            @ricardoccpaiva @open-telemetry/erlang-contrib-approvers

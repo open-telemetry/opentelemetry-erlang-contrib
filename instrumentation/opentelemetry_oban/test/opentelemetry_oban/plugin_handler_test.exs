@@ -31,7 +31,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
 
   test "does not create spans when tracing plugins is disabled" do
     TestHelpers.remove_oban_handlers()
-    OpentelemetryOban.setup(trace: [:jobs])
+    OpentelemetryOban.setup(plugin: :disabled)
 
     :telemetry.execute(
       [:oban, :plugin, :start],
@@ -98,9 +98,13 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     assert_receive {:span,
                     span(
                       name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
                       events: events,
                       status: ^expected_status
                     )}
+
+    assert %{"error.type": "UndefinedFunctionError"} =
+             :otel_attributes.map(span_attributes)
 
     [
       event(
@@ -109,8 +113,6 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       )
     ] = :otel_events.list(events)
 
-    # When using :otel_span.record_exception/5 with kind/reason/stacktrace,
-    # it doesn't extract the message field even from exception structs
     assert [:"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
@@ -142,9 +144,12 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     assert_receive {:span,
                     span(
                       name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
                       events: events,
                       status: ^expected_status
                     )}
+
+    refute Map.has_key?(:otel_attributes.map(span_attributes), :"error.type")
 
     [
       event(
@@ -153,7 +158,6 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       )
     ] = :otel_events.list(events)
 
-    # Non-exception error reasons don't have exception.message
     assert [:"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end

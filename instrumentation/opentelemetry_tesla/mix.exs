@@ -1,44 +1,49 @@
 defmodule OpentelemetryTesla.MixProject do
   use Mix.Project
 
-  @version "2.4.0"
+  @app :opentelemetry_tesla
+  @version "3.0.0"
+  @source_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib"
+  @tag "opentelemetry-tesla-v#{@version}"
 
   def project do
     [
-      app: :opentelemetry_tesla,
+      app: @app,
+      description: description(),
       version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
-      description: description(),
-      docs: docs()
+      name: "Opentelemetry Tesla",
+      docs: docs(),
+      elixirc_paths: elixirc_paths(Mix.env()),
+      source_url: "#{@source_url}/tree/#{@tag}/instrumentation/#{@app}"
     ]
   end
 
-  defp docs() do
+  defp docs do
     [
+      source_url_pattern: "#{@source_url}/blob/#{@tag}/instrumentation/#{@app}/%{path}#L%{line}",
       main: "readme",
-      extras: ["README.md"],
-      source_url_pattern:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_tesla/%{path}#L%{line}"
+      extras: ["README.md"]
     ]
   end
 
-  defp description() do
+  defp description do
     "Tesla middleware that creates OpenTelemetry spans and injects tracing headers into HTTP requests for Tesla clients."
   end
 
   defp package do
     [
-      name: "opentelemetry_tesla",
+      name: "#{@app}",
+      description: "OpenTelemetry tracing for Tesla HTTP client",
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{
-        "GitHub" =>
-          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/instrumentation/opentelemetry_tesla",
+        "GitHub" => "#{@source_url}/tree/#{@tag}/instrumentation/#{@app}",
         "OpenTelemetry Erlang" => "https://github.com/open-telemetry/opentelemetry-erlang",
-        "OpenTelemetry Erlang Contrib" =>
-          "https://github.com/open-telemetry/opentelemetry-erlang-contrib",
+        "OpenTelemetry Erlang Contrib" => @source_url,
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
@@ -51,18 +56,23 @@ defmodule OpentelemetryTesla.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:nimble_options, "~> 1.1"},
       {:opentelemetry, "~> 1.0", only: :test},
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:tesla, "~> 1.4"},
       {:otel_http, "~> 0.2"},
-      {:ex_doc, "~> 0.38", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
       {:bypass, "~> 2.1", only: :test},
-      {:jason, "~> 1.3", only: :test}
+      {:jason, "~> 1.3", only: :test},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
     ]
   end
 end

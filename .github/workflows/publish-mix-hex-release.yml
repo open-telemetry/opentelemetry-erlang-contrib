@@ -15,6 +15,7 @@ on:
           - "ecto"
           - "elli"
           - "finch"
+          - "grpc"
           - "grpcbox"
           - "http"
           - "httpoison"
@@ -50,7 +51,8 @@ on:
           - publish
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   config:
@@ -64,10 +66,10 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Read file
         id: set-config
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           package: ${{ inputs.package }}
         with:
@@ -120,11 +122,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: npm install semver
       - name: "Update Files"
         id: update-files
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -209,7 +211,7 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@e6d7c94229049569db56a7ad5a540c051a010af9 # v1.20.4
+      - uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
         with:
           version-type: strict
           otp-version: ${{ inputs.otp-version }}
@@ -237,7 +239,7 @@ jobs:
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}
