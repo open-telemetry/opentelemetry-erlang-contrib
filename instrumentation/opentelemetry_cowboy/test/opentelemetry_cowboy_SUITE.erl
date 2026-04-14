@@ -31,8 +31,7 @@ all() ->
         idle_timeout_request,
         chunk_timeout_request,
         bad_request,
-        binary_status_code_request,
-        invalid_scheme_returns_undefined
+        binary_status_code_request
     ].
 
 init_per_suite(Config) ->
@@ -324,7 +323,7 @@ chunked_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/chunked">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
@@ -352,7 +351,7 @@ failed_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/failure">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 500,
                              ?ERROR_TYPE => failure},
@@ -386,7 +385,7 @@ client_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
@@ -418,7 +417,7 @@ idle_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
@@ -442,7 +441,7 @@ chunk_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/chunked_slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
@@ -500,28 +499,11 @@ binary_status_code_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/binary_status_code">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200
                             },
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
         1000 -> ct:fail(binary_status_code_request)
-    end.
-
-invalid_scheme_returns_undefined(_Config) ->
-    Opts = #{
-        valid_schemes => #{<<"https">> => https}
-    },
-    opentelemetry_cowboy:setup(Opts),
-    Port = 62662,
-    {ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}} =
-        httpc:request(get, {"http://localhost:8080/success", []}, [], [{socket_opts, [{port, Port}]}]),
-    receive
-        {span, #span{name=Name,attributes=Attributes,kind=Kind}} ->
-            ?assertEqual('GET', Name),
-            ?assertEqual(?SPAN_KIND_SERVER, Kind),
-            ?assertEqual(undefined, maps:get(?URL_SCHEME, otel_attributes:map(Attributes)))
-    after
-        1000 -> ct:fail(invalid_scheme_returns_undefined)
     end.

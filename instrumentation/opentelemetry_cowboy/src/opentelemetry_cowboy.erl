@@ -95,8 +95,7 @@ default_opts() ->
         scheme_headers => [<<"forwarded">>, <<"x-forwarded-proto">>],
         scheme_headers_sort_fn => undefined,
         server_address_headers => [<<"forwarded">>, <<"x-forwarded-host">>, <<"host">>],
-        server_address_headers_sort_fn => undefined,
-        valid_schemes => #{<<"http">> => http, <<"https">> => https}
+        server_address_headers_sort_fn => undefined
     }.
 
 ?DOC("""
@@ -115,7 +114,6 @@ Supported options:
 * `scheme_headers_sort_fn` - Custom scheme header sort fn. See `otel_http` for more info. Default: `undefined`
 * `server_address_headers` - Headers to use for extracting original server address info. Default: `[<<"forwarded">>, <<"x-forwarded-host">>, <<"host">>]`
 * `server_address_headers_sort_fn` - Custom server header sort fn. See `otel_http` for more info. Default: `undefined`
-* `valid_schemes` - Map of valid scheme binaries to atoms. Unknown schemes return `undefined`. Default: `#{<<"http">> => http, <<"https">> => https}`
 """).
 -spec setup() -> ok.
 setup() ->
@@ -229,8 +227,7 @@ otel_http_extract_scheme(Headers, SortFn) ->
 extract_scheme(Req, Config) ->
     #{
         scheme_headers := SchemeHeaders,
-        scheme_headers_sort_fn := SortFn,
-        valid_schemes := ValidSchemes
+        scheme_headers_sort_fn := SortFn
     } = Config,
     #{
         headers := Headers,
@@ -239,7 +236,7 @@ extract_scheme(Req, Config) ->
     SchemeHeaders1 = extract_headers(Headers, SchemeHeaders),
     case otel_http_extract_scheme(SchemeHeaders1, SortFn) of
         undefined ->
-            maps:get(ReqScheme, ValidSchemes, undefined);
+            ReqScheme;
         ParsedScheme ->
             ParsedScheme
     end.
