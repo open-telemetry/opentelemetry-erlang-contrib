@@ -362,7 +362,7 @@ defmodule OpentelemetryBroadway do
   defp collect_batch_links(messages, _relationship) do
     messages
     |> Enum.flat_map(&link_from_propagated_ctx/1)
-    |> Enum.uniq_by(fn link -> {link.trace_id, link.span_id} end)
+    |> Enum.uniq_by(&{&1.trace_id, &1.span_id})
   end
 
   defp extract_and_attach(message) do
