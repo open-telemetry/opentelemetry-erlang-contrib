@@ -12,10 +12,10 @@ defmodule OpentelemetryBroadway.BroadwayAttributes do
 
   Value must be of type `non_neg_integer()`.
   """
-  @spec broadway_messaging_batch_successful_count() ::
-          :"broadway.messaging.batch.successful_count"
-  def broadway_messaging_batch_successful_count do
-    :"broadway.messaging.batch.successful_count"
+  @spec messaging_broadway_batch_successful_count() ::
+          :"messaging.broadway.batch.successful_count"
+  def messaging_broadway_batch_successful_count do
+    :"messaging.broadway.batch.successful_count"
   end
 
   @doc """
@@ -25,8 +25,8 @@ defmodule OpentelemetryBroadway.BroadwayAttributes do
 
   Value must be of type `non_neg_integer()`.
   """
-  @spec broadway_messaging_batch_failed_count() :: :"broadway.messaging.batch.failed_count"
-  def broadway_messaging_batch_failed_count do
-    :"broadway.messaging.batch.failed_count"
+  @spec messaging_broadway_batch_failed_count() :: :"messaging.broadway.batch.failed_count"
+  def messaging_broadway_batch_failed_count do
+    :"messaging.broadway.batch.failed_count"
   end
 end

@@ -36,8 +36,8 @@ Message spans may include:
 Batch spans include:
 
 - `messaging.batch.message_count`
-- `broadway.messaging.batch.successful_count`
-- `broadway.messaging.batch.failed_count`
+- `messaging.broadway.batch.successful_count`
+- `messaging.broadway.batch.failed_count`
 
 ### With Trace Propagation
 

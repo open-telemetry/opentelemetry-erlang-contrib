@@ -93,8 +93,8 @@ defmodule OpentelemetryBroadwayTest do
     assert attrs_map[:"messaging.system"] == :broadway
     assert attrs_map[:"messaging.operation.type"] == :process
     assert attrs_map[:"messaging.batch.message_count"] == 2
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_successful_count()] == 2
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_failed_count()] == 0
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 0
   end
 
   test "records batch span for a real Broadway batch" do
@@ -111,8 +111,8 @@ defmodule OpentelemetryBroadwayTest do
     assert attrs_map[:"messaging.system"] == :broadway
     assert attrs_map[:"messaging.operation.type"] == :process
     assert attrs_map[:"messaging.batch.message_count"] == 2
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_successful_count()] == 2
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_failed_count()] == 0
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 0
   end
 
   test "marks batch processor span as errored when failed messages are present" do
@@ -149,8 +149,8 @@ defmodule OpentelemetryBroadwayTest do
                     )}
 
     attrs_map = :otel_attributes.map(attributes)
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_successful_count()] == 1
-    assert attrs_map[BroadwayAttributes.broadway_messaging_batch_failed_count()] == 1
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 1
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 1
   end
 
   test "collects unique propagated links for batch processor spans" do

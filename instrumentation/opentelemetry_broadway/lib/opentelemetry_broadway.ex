@@ -263,8 +263,8 @@ defmodule OpentelemetryBroadway do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
     Span.set_attributes(ctx, [
-      {BroadwayAttributes.broadway_messaging_batch_successful_count(), length(successful_messages)},
-      {BroadwayAttributes.broadway_messaging_batch_failed_count(), length(failed_messages)}
+      {BroadwayAttributes.messaging_broadway_batch_successful_count(), length(successful_messages)},
+      {BroadwayAttributes.messaging_broadway_batch_failed_count(), length(failed_messages)}
     ])
 
     Span.set_status(ctx, batch_status(successful_messages, failed_messages))
@@ -368,7 +368,6 @@ defmodule OpentelemetryBroadway do
     case get_propagated_ctx(message) do
       {_links, parent_ctx} when parent_ctx != :undefined ->
         Ctx.attach(parent_ctx)
-
         # When we attach the context, we don't need links - parent-child relationship is established
         []
 
