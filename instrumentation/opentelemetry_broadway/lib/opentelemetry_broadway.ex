@@ -66,10 +66,9 @@ defmodule OpentelemetryBroadway do
   alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
+  alias OpentelemetryBroadway.BroadwayAttributes
 
   @tracer_id __MODULE__
-  @broadway_messaging_batch_successful_count :"broadway.messaging.batch.successful_count"
-  @broadway_messaging_batch_failed_count :"broadway.messaging.batch.failed_count"
 
   @options_schema [
     span_relationship: [
@@ -264,8 +263,8 @@ defmodule OpentelemetryBroadway do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
     Span.set_attributes(ctx, [
-      {@broadway_messaging_batch_successful_count, length(successful_messages)},
-      {@broadway_messaging_batch_failed_count, length(failed_messages)}
+      {BroadwayAttributes.broadway_messaging_batch_successful_count(), length(successful_messages)},
+      {BroadwayAttributes.broadway_messaging_batch_failed_count(), length(failed_messages)}
     ])
 
     Span.set_status(ctx, batch_status(successful_messages, failed_messages))
