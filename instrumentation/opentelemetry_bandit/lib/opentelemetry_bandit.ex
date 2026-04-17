@@ -476,7 +476,7 @@ defmodule OpentelemetryBandit do
   def handle_request_exception(meta, config) do
     Tracer.set_status(OpenTelemetry.status(:error, ""))
 
-    Tracer.record_exception(meta.exception, meta.stacktrace)
+    record_exception(meta)
 
     # bandit does not set this on the meta but extracts this after the exception
     # telemetry is emitted
@@ -491,6 +491,15 @@ defmodule OpentelemetryBandit do
 
     Tracer.end_span()
     OpenTelemetry.Ctx.clear()
+  end
+
+  defp record_exception(%{exception: exception, stacktrace: stacktrace})
+       when is_exception(exception) do
+    Tracer.record_exception(exception, stacktrace)
+  end
+
+  defp record_exception(%{kind: kind, exception: reason, stacktrace: stacktrace}) do
+    :otel_span.record_exception(:otel_tracer.current_span_ctx(), kind, reason, stacktrace, [])
   end
 
   defp error_type(%struct_name{} = reason) when is_exception(reason) do
