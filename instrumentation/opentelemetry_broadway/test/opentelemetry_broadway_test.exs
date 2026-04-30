@@ -6,6 +6,8 @@ defmodule OpentelemetryBroadwayTest do
   require OpenTelemetry.Span
   require Record
 
+  alias OpentelemetryBroadway.BroadwayAttributes
+
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
     Record.defrecord(name, spec)
   end
@@ -50,6 +52,264 @@ defmodule OpentelemetryBroadwayTest do
     attrs_map = :otel_attributes.map(attributes)
     assert attrs_map[:"messaging.system"] == :broadway
     assert attrs_map[:"messaging.operation.type"] == :process
+    assert attrs_map[:"messaging.message.body.size"] == 7
+  end
+
+  test "records span on successful batch processor event" do
+    messages = [
+      %Broadway.Message{data: "first", metadata: %{}, acknowledger: {Broadway.NoopAcknowledger, nil, nil}},
+      %Broadway.Message{data: "second", metadata: %{}, acknowledger: {Broadway.NoopAcknowledger, nil, nil}}
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: messages, failed_messages: []}
+    )
+
+    expected_status = OpenTelemetry.status(:ok)
+
+    assert_receive {:span,
+                    span(
+                      name: ":test_topology/default batch",
+                      attributes: attributes,
+                      parent_span_id: :undefined,
+                      kind: :consumer,
+                      status: ^expected_status
+                    )}
+
+    attrs_map = :otel_attributes.map(attributes)
+    assert attrs_map[:"messaging.system"] == :broadway
+    assert attrs_map[:"messaging.operation.type"] == :process
+    assert attrs_map[:"messaging.batch.message_count"] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 0
+  end
+
+  test "records batch span for a real Broadway batch" do
+    ref = Broadway.test_batch(TestBroadway, ["success", "success"], batch_mode: :bulk)
+
+    assert_receive {:ack, ^ref, successful, []}, 1_000
+    assert length(successful) == 2
+
+    span = assert_receive_span_named("TestBroadway/default batch")
+    attrs_map = :otel_attributes.map(span(span, :attributes))
+
+    assert span(span, :kind) == :consumer
+    assert span(span, :status) == OpenTelemetry.status(:ok)
+    assert attrs_map[:"messaging.system"] == :broadway
+    assert attrs_map[:"messaging.operation.type"] == :process
+    assert attrs_map[:"messaging.batch.message_count"] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 2
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 0
+  end
+
+  test "marks batch processor span as errored when failed messages are present" do
+    messages = [
+      %Broadway.Message{data: "first", metadata: %{}, acknowledger: {Broadway.NoopAcknowledger, nil, nil}},
+      %Broadway.Message{data: "second", metadata: %{}, acknowledger: {Broadway.NoopAcknowledger, nil, nil}}
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: [hd(messages)], failed_messages: [List.last(messages)]}
+    )
+
+    expected_status = OpenTelemetry.status(:error, "1 messages failed")
+
+    assert_receive {:span,
+                    span(
+                      name: ":test_topology/default batch",
+                      attributes: attributes,
+                      kind: :consumer,
+                      status: ^expected_status
+                    )}
+
+    attrs_map = :otel_attributes.map(attributes)
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_successful_count()] == 1
+    assert attrs_map[BroadwayAttributes.messaging_broadway_batch_failed_count()] == 1
+  end
+
+  test "collects unique propagated links for batch processor spans" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(propagation: true)
+
+    _parent_span_ctx =
+      OpenTelemetry.Tracer.start_span("batch-upstream-service")
+      |> OpenTelemetry.Tracer.set_current_span()
+
+    trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
+    trace_id = elem(trace_ctx, 1)
+    hex_trace_id = elem(trace_ctx, 2)
+    span_id = elem(trace_ctx, 3)
+    hex_span_id = elem(trace_ctx, 4)
+
+    OpenTelemetry.Tracer.end_span()
+    OpenTelemetry.Ctx.clear()
+
+    assert_receive {:span, span(name: "batch-upstream-service")}
+
+    traceparent = "00-#{hex_trace_id}-#{hex_span_id}-01"
+
+    messages = [
+      %Broadway.Message{
+        data: "first",
+        metadata: %{headers: [{"traceparent", :longstr, traceparent}]},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      },
+      %Broadway.Message{
+        data: "second",
+        metadata: %{headers: [{"traceparent", :longstr, traceparent}]},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      }
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: messages, failed_messages: []}
+    )
+
+    assert_receive {:span, span(name: ":test_topology/default batch", links: links)}
+
+    links_list = elem(links, 5)
+    assert length(links_list) == 1
+    [link] = links_list
+    assert elem(link, 1) == trace_id
+    assert elem(link, 2) == span_id
+  end
+
+  test "batch processor span has no links when propagation is disabled" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(propagation: false)
+
+    _parent_span_ctx =
+      OpenTelemetry.Tracer.start_span("batch-upstream-disabled")
+      |> OpenTelemetry.Tracer.set_current_span()
+
+    traceparent = create_rabbitmq_traceparent()
+
+    OpenTelemetry.Tracer.end_span()
+    OpenTelemetry.Ctx.clear()
+
+    assert_receive {:span, span(name: "batch-upstream-disabled")}
+
+    messages = [
+      %Broadway.Message{
+        data: "success",
+        metadata: %{headers: [{"traceparent", :longstr, traceparent}]},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      }
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: messages, failed_messages: []}
+    )
+
+    assert_receive {:span, span(name: ":test_topology/default batch", links: links)}
+
+    links_list = elem(links, 5)
+    assert length(links_list) == 0
+  end
+
+  test "batch processor spans use links when span_relationship is child and messages have multiple parents" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(span_relationship: :child)
+
+    {first_trace_id, first_span_id, first_traceparent} = create_parent_traceparent("batch-parent-one")
+    {second_trace_id, second_span_id, second_traceparent} = create_parent_traceparent("batch-parent-two")
+
+    messages = [
+      %Broadway.Message{
+        data: "first",
+        metadata: %{headers: [{"traceparent", :longstr, first_traceparent}]},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      },
+      %Broadway.Message{
+        data: "second",
+        metadata: %{headers: [{"traceparent", :longstr, second_traceparent}]},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      }
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: messages, failed_messages: []}
+    )
+
+    assert_receive {:span, span(name: ":test_topology/default batch", trace_id: batch_trace_id, links: links)}
+
+    links_list = elem(links, 5)
+    assert length(links_list) == 2
+
+    link_pairs =
+      links_list
+      |> Enum.map(fn link -> {elem(link, 1), elem(link, 2)} end)
+      |> MapSet.new()
+
+    assert MapSet.member?(link_pairs, {first_trace_id, first_span_id})
+    assert MapSet.member?(link_pairs, {second_trace_id, second_span_id})
+    refute batch_trace_id == first_trace_id
+    refute batch_trace_id == second_trace_id
   end
 
   test "records span on message which fails" do
@@ -147,6 +407,8 @@ defmodule OpentelemetryBroadwayTest do
     attrs_map = :otel_attributes.map(attributes)
     assert attrs_map[:"messaging.system"] == :broadway
     assert attrs_map[:"messaging.operation.type"] == :process
+    assert attrs_map[:"messaging.message.body.size"] == byte_size("test message")
+    assert attrs_map[:"messaging.message.id"] == "123"
 
     links_list = elem(links, 5)
     assert length(links_list) == 1
@@ -369,6 +631,7 @@ defmodule OpentelemetryBroadwayTest do
 
     attrs_map = :otel_attributes.map(attributes)
     assert attrs_map[:"messaging.system"] == :broadway
+    assert attrs_map[:"messaging.message.id"] == "a59662d4-76c5-43f7-8a80-5f9749038741"
 
     links_list = elem(links, 5)
     assert length(links_list) == 0
@@ -638,10 +901,53 @@ defmodule OpentelemetryBroadwayTest do
   end
 
   defp create_rabbitmq_headers_with_trace_context do
+    [{"traceparent", :longstr, create_rabbitmq_traceparent()}]
+  end
+
+  defp create_rabbitmq_traceparent do
     trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
     hex_trace_id = elem(trace_ctx, 2)
     hex_span_id = elem(trace_ctx, 4)
 
-    [{"traceparent", :longstr, "00-#{hex_trace_id}-#{hex_span_id}-01"}]
+    "00-#{hex_trace_id}-#{hex_span_id}-01"
+  end
+
+  defp create_parent_traceparent(name) do
+    _parent_span_ctx =
+      OpenTelemetry.Tracer.start_span(name)
+      |> OpenTelemetry.Tracer.set_current_span()
+
+    trace_ctx = OpenTelemetry.Tracer.current_span_ctx()
+    trace_id = elem(trace_ctx, 1)
+    hex_trace_id = elem(trace_ctx, 2)
+    span_id = elem(trace_ctx, 3)
+    hex_span_id = elem(trace_ctx, 4)
+
+    OpenTelemetry.Tracer.end_span()
+    OpenTelemetry.Ctx.clear()
+
+    assert_receive {:span, span(name: ^name)}
+
+    {trace_id, span_id, "00-#{hex_trace_id}-#{hex_span_id}-01"}
+  end
+
+  defp assert_receive_span_named(name, timeout \\ 1_000) do
+    deadline = System.monotonic_time(:millisecond) + timeout
+    do_assert_receive_span_named(name, deadline)
+  end
+
+  defp do_assert_receive_span_named(name, deadline) do
+    remaining = max(deadline - System.monotonic_time(:millisecond), 0)
+
+    receive do
+      {:span, span(name: ^name) = span} ->
+        span
+
+      {:span, _other_span} ->
+        do_assert_receive_span_named(name, deadline)
+    after
+      remaining ->
+        flunk("expected span named #{inspect(name)}")
+    end
   end
 end
