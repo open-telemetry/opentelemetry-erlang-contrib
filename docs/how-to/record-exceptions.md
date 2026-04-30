@@ -3,6 +3,21 @@
 This guide covers recording failures on spans in instrumentation packages.
 For the API specifications, see [Recording Exceptions](../reference/recording-exceptions.md).
 
+## `record_exception` and `set_status` are complementary
+
+Both calls are required when recording a failure. They serve different purposes:
+
+- **`record_exception`** adds an **event** to the span with structured fields
+  (`exception.type`, `exception.message`, `exception.stacktrace`). Trace
+  backends use this for detailed error inspection.
+- **`set_status(:error, description)`** marks the **span status** as errored
+  with a human-readable description. Dashboards and trace UIs use this to
+  quickly identify failed spans.
+
+One does not replace the other — `record_exception` without `set_status` leaves
+the span looking successful, and `set_status` without `record_exception` loses
+the structured exception detail.
+
 ## Handling a `:telemetry` `[:*, :exception]` event
 
 You have `%{kind: kind, reason: reason, stacktrace: stacktrace}`.
@@ -10,9 +25,14 @@ You have `%{kind: kind, reason: reason, stacktrace: stacktrace}`.
 **When `reason` is likely an Elixir exception struct:**
 
 ```elixir
+ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+
 exception = Exception.normalize(kind, reason, stacktrace)
+
 OpenTelemetry.Span.record_exception(ctx, exception, stacktrace, [])
 OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace)))
+
+OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
 ```
 
 When the exception event already carries sufficient detail, an empty status
@@ -25,12 +45,13 @@ OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
 **When `reason` may be any term:**
 
 ```elixir
+ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, meta)
+
 :otel_span.record_exception(ctx, kind, reason, stacktrace, [])
 OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace)))
-```
 
-Always end the span in the usual way for your bridge
-(`OpentelemetryTelemetry.end_telemetry_span/2`, etc.).
+OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
+```
 
 ## Handling a non-Telemetry failure
 
