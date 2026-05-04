@@ -383,18 +383,20 @@ defmodule OpentelemetryBroadway do
   end
 
   defp get_propagated_ctx(message) do
-    message
-    |> get_message_headers()
-    |> Enum.map(&normalize_header/1)
-    |> Enum.reject(&is_nil/1)
-    |> extract_to_ctx()
+    headers =
+      message
+      |> get_message_headers()
+      |> Enum.map(&normalize_header/1)
+      |> Enum.reject(&is_nil/1)
+
+    extract_to_ctx(headers, message)
   end
 
-  defp extract_to_ctx([]) do
+  defp extract_to_ctx([], _message) do
     {[], :undefined}
   end
 
-  defp extract_to_ctx(headers) do
+  defp extract_to_ctx(headers, message) do
     ctx =
       Ctx.new()
       |> :otel_propagator_text_map.extract_to(headers)
@@ -409,8 +411,12 @@ defmodule OpentelemetryBroadway do
 
       span_ctx ->
         # Return links first, then context (for parent-child relationships)
-        {[OpenTelemetry.link(span_ctx)], ctx}
+        {[OpenTelemetry.link(span_ctx, build_link_attributes(message))], ctx}
     end
+  end
+
+  defp build_link_attributes(%Broadway.Message{} = message) do
+    maybe_put_message_id(%{}, message.metadata)
   end
 
   # RabbitMQ: headers are in metadata.headers as a list

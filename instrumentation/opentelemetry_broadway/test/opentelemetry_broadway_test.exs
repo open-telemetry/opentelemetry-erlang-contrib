@@ -213,6 +213,62 @@ defmodule OpentelemetryBroadwayTest do
     assert elem(link, 2) == span_id
   end
 
+  test "attaches per-message identifying attributes to batch processor span links" do
+    TestHelpers.remove_handlers()
+    :ok = OpentelemetryBroadway.setup(span_relationship: :child)
+
+    {first_trace_id, first_span_id, first_traceparent} = create_parent_traceparent("batch-parent-one")
+    {second_trace_id, second_span_id, second_traceparent} = create_parent_traceparent("batch-parent-two")
+
+    messages = [
+      %Broadway.Message{
+        data: "first",
+        metadata: %{
+          headers: [{"traceparent", :longstr, first_traceparent}],
+          delivery_tag: 1
+        },
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      },
+      %Broadway.Message{
+        data: "second",
+        metadata: %{
+          headers: [{"traceparent", :longstr, second_traceparent}],
+          message_id: "msg-2"
+        },
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      }
+    ]
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :start],
+      %{},
+      %{
+        topology_name: :test_topology,
+        name: :"test_topology.Broadway.BatchProcessor_0",
+        messages: messages,
+        batch_info: %{batcher: :default}
+      }
+    )
+
+    :telemetry.execute(
+      [:broadway, :batch_processor, :stop],
+      %{},
+      %{successful_messages: messages, failed_messages: []}
+    )
+
+    assert_receive {:span, span(name: ":test_topology/default batch", links: links)}
+
+    assert [first_link, second_link] =
+             elem(links, 5)
+             |> Enum.sort_by(fn link -> :otel_attributes.map(elem(link, 3))[:"messaging.message.id"] end)
+
+    assert link(trace_id: ^first_trace_id, span_id: ^first_span_id, attributes: first_attrs) = first_link
+    assert link(trace_id: ^second_trace_id, span_id: ^second_span_id, attributes: second_attrs) = second_link
+
+    assert :otel_attributes.map(first_attrs) == %{"messaging.message.id": "1"}
+    assert :otel_attributes.map(second_attrs) == %{"messaging.message.id": "msg-2"}
+  end
+
   test "batch processor span has no links when propagation is disabled" do
     TestHelpers.remove_handlers()
     :ok = OpentelemetryBroadway.setup(propagation: false)
@@ -410,11 +466,9 @@ defmodule OpentelemetryBroadwayTest do
     assert attrs_map[:"messaging.message.body.size"] == byte_size("test message")
     assert attrs_map[:"messaging.message.id"] == "123"
 
-    links_list = elem(links, 5)
-    assert length(links_list) == 1
-    [link] = links_list
-    assert elem(link, 1) == trace_id
-    assert elem(link, 2) == span_id
+    assert [propagated_link] = elem(links, 5)
+    assert link(trace_id: ^trace_id, span_id: ^span_id, attributes: link_attrs) = propagated_link
+    assert :otel_attributes.map(link_attrs) == %{"messaging.message.id": "123"}
   end
 
   test "creates proper trace relationship when propagation enabled" do
