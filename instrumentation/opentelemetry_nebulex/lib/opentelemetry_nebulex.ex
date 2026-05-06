@@ -4,6 +4,9 @@ defmodule OpentelemetryNebulex do
   from Nebulex command events.
   """
 
+  alias OpenTelemetry.SemConv.Incubating.DBAttributes
+  alias OpentelemetryNebulex.NebulexAttributes
+
   @tracer_id __MODULE__
 
   @doc """
@@ -66,11 +69,13 @@ defmodule OpentelemetryNebulex do
 
     attributes =
       %{
-        "nebulex.cache": metadata.adapter_meta.cache
+        NebulexAttributes.nebulex_cache() => metadata.adapter_meta.cache,
+        DBAttributes.db_system() => metadata.adapter_meta[:backend],
+        DBAttributes.db_operation_name() => db_operation(metadata),
+        DBAttributes.db_query_text() => db_statement(metadata)
       }
-      |> maybe_put(:"nebulex.backend", metadata.adapter_meta[:backend])
-      |> maybe_put(:"nebulex.keyslot", metadata.adapter_meta[:keyslot])
-      |> maybe_put(:"nebulex.model", metadata.adapter_meta[:model])
+      |> maybe_put(NebulexAttributes.nebulex_keyslot(), metadata.adapter_meta[:keyslot])
+      |> maybe_put(NebulexAttributes.nebulex_model(), metadata.adapter_meta[:model])
 
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, %{
       attributes: attributes
@@ -82,7 +87,7 @@ defmodule OpentelemetryNebulex do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
     if action = extract_action(metadata) do
-      OpenTelemetry.Span.set_attribute(ctx, :"nebulex.action", action)
+      OpenTelemetry.Span.set_attribute(ctx, NebulexAttributes.nebulex_action(), action)
     end
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
@@ -108,4 +113,11 @@ defmodule OpentelemetryNebulex do
 
   defp format_error(exception) when is_exception(exception), do: Exception.message(exception)
   defp format_error(error), do: inspect(error)
+
+  defp db_operation(%{function_name: operation}), do: operation
+  defp db_operation(_), do: nil
+
+  defp db_statement(%{function_name: :get, args: [key]}), do: "GET #{inspect(key)}"
+  defp db_statement(%{function_name: :put, args: [key | _tail]}), do: "PUT #{inspect(key)}"
+  defp db_statement(_), do: nil
 end

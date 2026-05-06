@@ -1,5 +1,8 @@
 defmodule OpentelemetryHTTPoisonTest do
   alias OpentelemetryHTTPoison
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.Tracer
   use OpentelemetryHTTPoison.Case, async: false
 
@@ -25,11 +28,16 @@ defmodule OpentelemetryHTTPoisonTest do
       assert_receive {:span, span(attributes: attributes_record, name: "GET")}
       attributes = elem(attributes_record, 4)
 
-      assert ["http.method", "http.status_code", "http.url", "net.peer.name"] ==
+      assert [
+               HTTPAttributes.http_request_method(),
+               HTTPAttributes.http_response_status_code(),
+               ServerAttributes.server_address(),
+               URLAttributes.url_full()
+             ] ==
                attributes |> Map.keys() |> Enum.sort()
 
-      assert {"http.method", "GET"} in attributes
-      assert {"net.peer.name", "localhost"} in attributes
+      assert {HTTPAttributes.http_request_method(), :GET} in attributes
+      assert {ServerAttributes.server_address(), "localhost"} in attributes
     end
 
     test "traceparent header is injected when no headers" do
@@ -60,11 +68,15 @@ defmodule OpentelemetryHTTPoisonTest do
       assert "atom" in Enum.map(headers, &elem(&1, 0))
     end
 
-    test "http.url doesn't contain credentials" do
+    test "url.full doesn't contain credentials" do
       OpentelemetryHTTPoison.get!("http://user:pass@localhost:8000/user/edit/24")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.url", "http://localhost:8000/user/edit/24"})
+
+      assert confirm_attributes(
+               attributes,
+               {URLAttributes.url_full(), "http://localhost:8000/user/edit/24"}
+             )
     end
   end
 
@@ -80,7 +92,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: "/user/edit")
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {HTTPAttributes.http_route(), "/user/edit"})
     end
 
     test "resource route can be explicitly passed to OpentelemetryHTTPoison invocation as a function" do
@@ -89,7 +101,7 @@ defmodule OpentelemetryHTTPoisonTest do
       OpentelemetryHTTPoison.get!("http://localhost:8000/user/edit/24", [], ot_resource_route: infer_fn)
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit/24"})
+      assert confirm_attributes(attributes, {HTTPAttributes.http_route(), "/user/edit/24"})
     end
 
     test "resource route inference can be explicitly ignored" do
@@ -123,7 +135,7 @@ defmodule OpentelemetryHTTPoisonTest do
       )
 
       assert_receive {:span, span(attributes: attributes)}, 1000
-      assert confirm_attributes(attributes, {"http.route", "/user/edit"})
+      assert confirm_attributes(attributes, {HTTPAttributes.http_route(), "/user/edit"})
       assert confirm_attributes(attributes, {"app.callname", "mariorossi"})
     end
   end
@@ -310,7 +322,7 @@ defmodule OpentelemetryHTTPoisonTest do
   end
 
   defp confirm_http_route_attribute(attributes, value) do
-    confirm_attributes(attributes, {"http.route", value})
+    confirm_attributes(attributes, {HTTPAttributes.http_route(), value})
   end
 
   defp confirm_http_route_attribute(attributes) do

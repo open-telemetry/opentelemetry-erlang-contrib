@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+### Fixed
+
+* Fixes broken handling and recording of Oban Plugin exceptions
+
 ## 1.1.0
 
 ### Changed

@@ -22,39 +22,46 @@ defmodule OpentelemetryTelemetry do
 
   ### Example Telemetry Event Handlers
 
-  ```
-    def handle_event(_event,
-              %{system_time: start_time},
-              metadata,
-              %{type: :start, tracer_id: tracer_id, span_name: name}) do
+  ```elixir
+    def handle_event(
+          _event,
+          %{system_time: start_time},
+          metadata,
+          %{type: :start, tracer_id: tracer_id, span_name: name}
+        ) do
       start_opts = %{start_time: start_time}
       OpentelemetryTelemetry.start_telemetry_span(tracer_id, name, metadata, start_opts)
       :ok
     end
 
-    def handle_event(_event,
-                %{duration: duration},
-                metadata,
-                %{type: :stop, tracer_id: tracer_id}) do
-        OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
-        OpenTelemetry.Tracer.set_attribute(:duration, duration)
-        OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
-        :ok
+    def handle_event(
+          _event,
+          %{duration: duration},
+          metadata,
+          %{type: :stop, tracer_id: tracer_id}
+        ) do
+      OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
+      OpenTelemetry.Tracer.set_attribute(:duration, duration)
+      OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
+      :ok
     end
 
-    def handle_event(_event,
-                %{duration: duration},
-                %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
-                %{type: :exception, tracer_id: tracer_id}) do
-        ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata),
-        status = Opentelemetry.status(:error, to_string(reason, :utf8))
-        OpenTelemetry.Span.record_exception(ctx, kind, reason, stacktrace, [duration: duration])
-        OpenTelemetry.Tracer.set_status(status)
-        OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
-        :ok
-      end
-    def handle_event(_event, _measurements, _metadata, _config), do: :ok
+    def handle_event(
+          _event,
+          _measurements,
+          %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
+          %{type: :exception, tracer_id: tracer_id}
+        ) do
+      ctx = OpentelemetryTelemetry.set_current_telemetry_span(tracer_id, metadata)
+      OpenTelemetry.Span.record_exception(ctx, reason, stacktrace)
 
+      OpenTelemetry.Tracer.set_status(OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace)))
+
+      OpentelemetryTelemetry.end_telemetry_span(tracer_id, metadata)
+      :ok
+    end
+
+    def handle_event(_event, _measurements, _metadata, _config), do: :ok
   ```
 
   ### Limitations

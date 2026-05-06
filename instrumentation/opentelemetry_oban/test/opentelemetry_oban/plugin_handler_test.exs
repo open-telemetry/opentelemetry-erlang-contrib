@@ -31,7 +31,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
 
   test "does not create spans when tracing plugins is disabled" do
     TestHelpers.remove_oban_handlers()
-    OpentelemetryOban.setup(trace: [:jobs])
+    OpentelemetryOban.setup(plugin: :disabled)
 
     :telemetry.execute(
       [:oban, :plugin, :start],
@@ -74,10 +74,12 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     exception = %UndefinedFunctionError{
       arity: 0,
       function: :error,
-      message: nil,
+      message: "function Some.error/0 is undefined (module Some is not available)",
       module: Some,
       reason: nil
     }
+
+    stacktrace = [{Some, :error, [], []}]
 
     :telemetry.execute(
       [:oban, :plugin, :exception],
@@ -85,30 +87,78 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{
         plugin: Elixir.Oban.Plugins.Stager,
         kind: :error,
-        stacktrace: [
-          {Some, :error, [], []}
-        ],
+        stacktrace: stacktrace,
         reason: exception
       }
     )
 
-    expected_status = OpenTelemetry.status(:error, Exception.message(exception))
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, exception, stacktrace))
 
     assert_receive {:span,
                     span(
                       name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
                       events: events,
                       status: ^expected_status
                     )}
 
+    assert %{"error.type": "UndefinedFunctionError"} =
+             :otel_attributes.map(span_attributes)
+
     [
       event(
-        name: "exception",
+        name: :exception,
         attributes: event_attributes
       )
     ] = :otel_events.list(events)
 
-    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+    assert [:"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "records span on plugin error with non-exception reason" do
+    :telemetry.execute(
+      [:oban, :plugin, :start],
+      %{system_time: System.system_time()},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    # Test with an atom error reason like :badarg
+    stacktrace = [{Some, :error, [], []}]
+
+    :telemetry.execute(
+      [:oban, :plugin, :exception],
+      %{duration: 444},
+      %{
+        plugin: Elixir.Oban.Plugins.Stager,
+        kind: :error,
+        stacktrace: stacktrace,
+        reason: :badarg
+      }
+    )
+
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, :badarg, stacktrace))
+
+    assert_receive {:span,
+                    span(
+                      name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    refute Map.has_key?(:otel_attributes.map(span_attributes), :"error.type")
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 

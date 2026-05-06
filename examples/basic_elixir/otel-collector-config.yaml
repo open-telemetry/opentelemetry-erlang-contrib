@@ -6,16 +6,11 @@ receivers:
       http:
         endpoint: "0.0.0.0:55681"
 processors:
-  batch:
-    send_batch_size: 1024
-    timeout: 5s
 exporters:
   zipkin:
     endpoint: "http://zipkin:9411/api/v2/spans"
-  jaeger:
-    endpoint: jaeger-all-in-one:14250
-    tls:
-      insecure: true
+    sending_queue:
+      batch:
 extensions:
   zpages: {}
 service:
@@ -23,6 +18,6 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [zipkin, jaeger]
+      processors: []
+      exporters: [zipkin]
 

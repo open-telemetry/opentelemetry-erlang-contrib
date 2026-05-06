@@ -6,203 +6,270 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   opentelemetry-aws-xray-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-aws-xray-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-aws-xray.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-broadway-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-broadway-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-broadway.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-cowboy-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-cowboy-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-cowboy.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-dataloader-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-dataloader-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-dataloader.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-ecto-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-ecto-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-ecto.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-elli-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-elli-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-elli.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-finch-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-finch-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-finch.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  opentelemetry-grpc-release:
+    permissions:
+      contents: write # required for creating draft releases
+    name: '[opentelemetry-grpc-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter-templates/opentelemetry-grpc.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   opentelemetry-grpcbox-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-grpcbox-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-grpcbox.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-httpoison-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-httpoison-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-httpoison.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-nebulex-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-nebulex-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-nebulex.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-oban-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-oban-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-oban.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-phoenix-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-phoenix-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-phoenix.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-bandit-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-bandit-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-bandit.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-process-propagator-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-process-propagator-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-process-propagator.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-redix-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-redix-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-redix.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-req-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-req-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-req.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-telemetry-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-telemetry-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-telemetry.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-tesla-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-tesla-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-tesla.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   opentelemetry-xandra-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[opentelemetry-xandra-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/opentelemetry-xandra.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
   otel-http-release:
+    permissions:
+      contents: write # required for creating draft releases
     name: '[otel-http-release] Draft release'
     runs-on: ubuntu-24.04
     steps:
-      - uses: release-drafter/release-drafter@v6
+      - uses: release-drafter/release-drafter@v7
         with:
           config-name: release-drafter-templates/otel-http.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  opentelemetry-commanded-release:
+    permissions:
+      contents: write # required for creating draft releases
+    name: '[opentelemetry-commanded-release] Draft release'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter-templates/opentelemetry-commanded.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,6 +7,13 @@
 -include_lib("opentelemetry_api/include/otel_tracer.hrl").
 -include_lib("opentelemetry/include/otel_span.hrl").
 -include_lib("elli/include/elli.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/client_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/error_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/network_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/server_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/url_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/attributes/user_agent_attributes.hrl").
+-include_lib("opentelemetry_semantic_conventions/include/incubating/attributes/http_attributes.hrl").
 
 all() ->
     [{group, w3c}, {group, b3multi}, {group, b3}].
@@ -24,7 +31,6 @@ init_per_suite(Config) ->
     ok = application:load(opentelemetry),
 
     application:set_env(opentelemetry_elli, excluded_paths, ["/hello/exclude"]),
-    application:set_env(opentelemetry_elli, server_name, <<"my-test-elli-server">>),
     application:set_env(opentelemetry, processors, [{otel_simple_processor, #{}}]),
 
     Config.
@@ -127,17 +133,15 @@ successful_request(_Config) ->
                      parent_span_id=Parent,
                      attributes=Attributes,
                      events=_TimeEvents}} when Parent =/= undefined ->
-            ?assertMatch(#{<<"http.server_name">> := <<"my-test-elli-server">>,
-                           <<"http.target">> := <<"/hello/otel?a=b">>,
-                           <<"http.host">> := <<"localhost:3000">>,
-                           %% removed until updates to elli allow it
-                           %% <<"http.url">> := <<"http://localhost:3000/hello/otel?a=b">>,
-                           %% scheme is removed until fixed in elli
-                           %% <<"http.scheme">> := <<"http">>,
-                           <<"http.status">> := 200,
-                           %% <<"http.user_agent">> := <<>>,
-                           <<"http.method">> := <<"GET">>,
-                           <<"net.host.port">> := 3000}, otel_attributes:map(Attributes)),
+            ?assertMatch(#{?URL_PATH := <<"/hello/otel">>,
+                           ?URL_QUERY := <<"a=b">>,
+                           ?URL_SCHEME := http,
+                           ?SERVER_ADDRESS := <<"localhost">>,
+                           ?SERVER_PORT := 3000,
+                           ?HTTP_RESPONSE_STATUS_CODE := 200,
+                           ?HTTP_REQUEST_METHOD := 'GET',
+                           ?NETWORK_PEER_PORT := _,
+                           ?NETWORK_PEER_ADDRESS := _}, otel_attributes:map(Attributes)),
 
             %% then receive the remote parent
             receive
@@ -166,15 +170,16 @@ successful_request_no_parent(_Config) ->
                      attributes=Attributes,
                      events=_TimeEvents}} ->
             ?assertEqual(undefined, Parent),
-            ?assertMatch(#{<<"http.server_name">> := <<"my-test-elli-server">>,
-                           <<"http.target">> := <<"/hello/otel?a=b">>,
-                           <<"http.host">> := <<"localhost:3000">>,
-                           %% scheme is removed until fixed in elli
-                           %% <<"http.scheme">> := <<"http">>,
-                           <<"http.status">> := 200,
-                           <<"http.user_agent">> := <<>>,
-                           <<"http.method">> := <<"GET">>,
-                           <<"net.host.port">> := 3000}, otel_attributes:map(Attributes))
+            ?assertMatch(#{?URL_PATH := <<"/hello/otel">>,
+                           ?URL_QUERY := <<"a=b">>,
+                           ?URL_SCHEME := http,
+                           ?SERVER_ADDRESS := <<"localhost">>,
+                           ?SERVER_PORT := 3000,
+                           ?HTTP_RESPONSE_STATUS_CODE := 200,
+                           ?USER_AGENT_ORIGINAL := <<>>,
+                           ?HTTP_REQUEST_METHOD := 'GET',
+                           ?NETWORK_PEER_PORT := _,
+                           ?NETWORK_PEER_ADDRESS := _}, otel_attributes:map(Attributes))
     after
         5000 ->
             ct:fail(timeout)
@@ -190,13 +195,14 @@ error_response(_Config) ->
                      attributes=Attributes}} ->
             ?assertEqual(undefined, Parent),
             ?assertEqual(<<"HTTP GET">>, Name),
-            ?assertMatch(#{<<"http.server_name">> := <<"my-test-elli-server">>,
-                           <<"http.target">> := <<"/error?a=b">>,
-                           <<"http.host">> := <<"localhost:3000">>,
-                           <<"http.status">> := 500,
-                           <<"http.user_agent">> := <<>>,
-                           <<"error.message">> := <<"all_hell">>,
-                           <<"http.method">> := <<"GET">>}, otel_attributes:map(Attributes))
+            ?assertMatch(#{?URL_PATH := <<"/error">>,
+                           ?URL_QUERY := <<"a=b">>,
+                           ?SERVER_ADDRESS := <<"localhost">>,
+                           ?SERVER_PORT := 3000,
+                           ?HTTP_RESPONSE_STATUS_CODE := 500,
+                           ?USER_AGENT_ORIGINAL := <<>>,
+                           ?ERROR_TYPE := _,
+                           ?HTTP_REQUEST_METHOD := 'GET'}, otel_attributes:map(Attributes))
     after
         5000 ->
             ct:fail(timeout)
