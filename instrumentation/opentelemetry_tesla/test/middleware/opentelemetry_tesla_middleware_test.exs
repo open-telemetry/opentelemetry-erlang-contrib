@@ -764,6 +764,277 @@ defmodule Tesla.Middleware.OpenTelemetryTest do
     end
   end
 
+  describe "Tesla OpenAPI (1.18) integration" do
+    test "uses path template as span name and url.template, fully resolves url.full", ctx do
+      Bypass.expect_once(ctx.bypass, "GET", "/items/42;coords=blue;coords=black", fn conn ->
+        Plug.Conn.resp(conn, 200, "ok")
+      end)
+
+      client =
+        MyApi.new(
+          base_url: ctx.base_url,
+          opentelemetry: [opt_in_attrs: [URLAttributes.url_template()]]
+        )
+
+      {:ok, _env} =
+        MyApi.get_item(client,
+          path_params: %{"id" => 42, "coords" => ["blue", "black"]}
+        )
+
+      assert_receive {:span, span(name: "GET /items/{id}{coords}", attributes: attributes)}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[HTTPAttributes.http_request_method()] == :GET
+      assert mapped_attributes[HTTPAttributes.http_response_status_code()] == 200
+      assert mapped_attributes[URLAttributes.url_template()] == "/items/{id}{coords}"
+
+      assert mapped_attributes[URLAttributes.url_full()] ==
+               "http://localhost:#{ctx.bypass.port}/items/42;coords=blue;coords=black"
+    end
+
+    test "modern query params serialize into url.full alongside path template", ctx do
+      Bypass.expect_once(
+        ctx.bypass,
+        "GET",
+        "/items/42;coords=blue;coords=black",
+        fn conn ->
+          assert conn.query_string ==
+                   "color=blue%7Cblack&filter%5Brole%5D=admin"
+
+          Plug.Conn.resp(conn, 200, "ok")
+        end
+      )
+
+      client = MyApi.new(base_url: ctx.base_url)
+
+      {:ok, _env} =
+        MyApi.get_item(client,
+          path_params: %{"id" => 42, "coords" => ["blue", "black"]},
+          query: %{
+            "color" => ["blue", "black"],
+            "filter" => [role: "admin"]
+          }
+        )
+
+      assert_receive {:span, span(name: "GET /items/{id}{coords}", attributes: attributes)}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[URLAttributes.url_full()] ==
+               "http://localhost:#{ctx.bypass.port}" <>
+                 "/items/42;coords=blue;coords=black" <>
+                 "?color=blue%7Cblack&filter%5Brole%5D=admin"
+    end
+
+    test "OpenAPI header and cookie params reach the server and span is recorded", ctx do
+      Bypass.expect_once(ctx.bypass, "GET", "/items/42;coords=red", fn conn ->
+        assert Plug.Conn.get_req_header(conn, "x-request-id") == ["req-123"]
+        assert Plug.Conn.get_req_header(conn, "cookie") == ["session_id=abc123"]
+        Plug.Conn.resp(conn, 200, "ok")
+      end)
+
+      client = MyApi.new(base_url: ctx.base_url)
+
+      {:ok, _env} =
+        MyApi.get_item(client,
+          path_params: %{"id" => 42, "coords" => ["red"]},
+          headers: %{"X-Request-ID" => "req-123"},
+          cookies: %{"session_id" => "abc123"}
+        )
+
+      assert_receive {:span, span(name: "GET /items/{id}{coords}", attributes: attributes)}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+      assert mapped_attributes[HTTPAttributes.http_response_status_code()] == 200
+    end
+
+    test "captures request and response headers when configured", ctx do
+      Bypass.expect_once(ctx.bypass, "GET", "/items/42;coords=red", fn conn ->
+        Plug.Conn.resp(conn, 200, "ok")
+      end)
+
+      client =
+        MyApi.new(
+          base_url: ctx.base_url,
+          opentelemetry: [request_header_attrs: ["x-request-id"]]
+        )
+
+      {:ok, _env} =
+        MyApi.get_item(client,
+          path_params: %{"id" => 42, "coords" => ["red"]},
+          headers: %{"X-Request-ID" => "req-123"}
+        )
+
+      assert_receive {:span, span(name: "GET /items/{id}{coords}", attributes: attributes)}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[
+               String.to_atom("#{HTTPAttributes.http_request_header()}.x-request-id")
+             ] == ["req-123"]
+    end
+
+    test "records error span when adapter cannot reach the server", ctx do
+      Bypass.down(ctx.bypass)
+
+      client = MyApi.new(base_url: ctx.base_url)
+
+      {:error, _reason} =
+        MyApi.get_item(client, path_params: %{"id" => 42, "coords" => ["blue"]})
+
+      assert_receive {:span,
+                      span(
+                        name: "GET /items/{id}{coords}",
+                        status: {:status, :error, _},
+                        attributes: attributes
+                      )}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+      assert mapped_attributes[ErrorAttributes.error_type()] == :econnrefused
+    end
+
+    test "GET routes path, query, header, and cookie params end-to-end with span attrs",
+         ctx do
+      Bypass.expect_once(
+        ctx.bypass,
+        "GET",
+        "/items/42;coords=blue;coords=black",
+        fn conn ->
+          assert conn.query_string ==
+                   "color=red%7Cblue&filter%5Brole%5D=admin&tags=alpha%20beta&page=3"
+
+          assert Plug.Conn.get_req_header(conn, "x-request-id") == ["req-123"]
+          assert Plug.Conn.get_req_header(conn, "x-trace-tag") == ["trace-abc"]
+          assert Plug.Conn.get_req_header(conn, "cookie") == ["session_id=abc123; theme=dark"]
+
+          Plug.Conn.resp(conn, 200, "ok")
+        end
+      )
+
+      client =
+        MyApi.new(
+          base_url: ctx.base_url,
+          opentelemetry: [
+            opt_in_attrs: [URLAttributes.url_template()],
+            request_header_attrs: ["x-request-id", "x-trace-tag"]
+          ]
+        )
+
+      {:ok, _env} =
+        MyApi.get_item(client,
+          path_params: %{"id" => 42, "coords" => ["blue", "black"]},
+          query: %{
+            "color" => ["red", "blue"],
+            "filter" => [role: "admin"],
+            "tags" => ["alpha", "beta"],
+            "page" => 3
+          },
+          headers: %{"X-Request-ID" => "req-123", "X-Trace-Tag" => "trace-abc"},
+          cookies: %{"session_id" => "abc123", "theme" => "dark"}
+        )
+
+      assert_receive {:span,
+                      span(
+                        name: "GET /items/{id}{coords}",
+                        kind: :client,
+                        attributes: attributes
+                      )}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[HTTPAttributes.http_request_method()] == :GET
+      assert mapped_attributes[HTTPAttributes.http_response_status_code()] == 200
+      assert mapped_attributes[URLAttributes.url_template()] == "/items/{id}{coords}"
+
+      assert mapped_attributes[URLAttributes.url_full()] ==
+               "http://localhost:#{ctx.bypass.port}" <>
+                 "/items/42;coords=blue;coords=black" <>
+                 "?color=red%7Cblue&filter%5Brole%5D=admin&tags=alpha%20beta&page=3"
+
+      assert mapped_attributes[
+               String.to_atom("#{HTTPAttributes.http_request_header()}.x-request-id")
+             ] == ["req-123"]
+
+      assert mapped_attributes[
+               String.to_atom("#{HTTPAttributes.http_request_header()}.x-trace-tag")
+             ] == ["trace-abc"]
+    end
+
+    test "POST routes path, query, header, cookie params, body, and span attrs", ctx do
+      response_body = ~s({"id":1})
+
+      Bypass.expect_once(
+        ctx.bypass,
+        "POST",
+        "/tenants/acme/items",
+        fn conn ->
+          assert conn.query_string == "dry_run=true&expand=owner,tags"
+
+          assert Plug.Conn.get_req_header(conn, "x-request-id") == ["req-456"]
+          assert Plug.Conn.get_req_header(conn, "idempotency-key") == ["idem-789"]
+          assert Plug.Conn.get_req_header(conn, "cookie") == ["session_id=cookie-abc"]
+
+          {:ok, raw_body, conn} = Plug.Conn.read_body(conn)
+          assert raw_body == ~s({"name":"widget"})
+
+          Plug.Conn.resp(conn, 201, response_body)
+        end
+      )
+
+      client =
+        MyApi.new(
+          base_url: ctx.base_url,
+          opentelemetry: [
+            opt_in_attrs: [
+              URLAttributes.url_template(),
+              HTTPAttributes.http_response_body_size()
+            ],
+            request_header_attrs: ["idempotency-key"]
+          ]
+        )
+
+      {:ok, _env} =
+        MyApi.create_item(client, ~s({"name":"widget"}),
+          path_params: %{"tenant_id" => "acme"},
+          query: %{
+            "dry_run" => true,
+            "expand" => ["owner", "tags"]
+          },
+          headers: %{
+            "X-Request-ID" => "req-456",
+            "Idempotency-Key" => "idem-789"
+          },
+          cookies: %{"session_id" => "cookie-abc"}
+        )
+
+      assert_receive {:span,
+                      span(
+                        name: "POST /tenants/{tenant_id}/items",
+                        kind: :client,
+                        attributes: attributes
+                      )}
+
+      mapped_attributes = :otel_attributes.map(attributes)
+
+      assert mapped_attributes[HTTPAttributes.http_request_method()] == :POST
+      assert mapped_attributes[HTTPAttributes.http_response_status_code()] == 201
+
+      assert mapped_attributes[URLAttributes.url_template()] ==
+               "/tenants/{tenant_id}/items"
+
+      assert mapped_attributes[URLAttributes.url_full()] ==
+               "http://localhost:#{ctx.bypass.port}/tenants/acme/items?dry_run=true&expand=owner,tags"
+
+      assert mapped_attributes[HTTPAttributes.http_response_body_size()] ==
+               byte_size(response_body)
+
+      assert mapped_attributes[
+               String.to_atom("#{HTTPAttributes.http_request_header()}.idempotency-key")
+             ] == ["idem-789"]
+    end
+  end
+
   defp client(opts \\ []) do
     [{Tesla.Middleware.OpenTelemetry, opts}]
     |> Tesla.client(fn env -> {:ok, env} end)
