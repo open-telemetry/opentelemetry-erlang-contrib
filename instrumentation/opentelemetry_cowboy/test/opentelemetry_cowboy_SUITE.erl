@@ -323,7 +323,7 @@ chunked_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/chunked">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
@@ -351,7 +351,7 @@ failed_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/failure">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 500,
                              ?ERROR_TYPE => failure},
@@ -385,7 +385,7 @@ client_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
@@ -417,7 +417,7 @@ idle_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
     after
@@ -441,7 +441,7 @@ chunk_timeout_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/chunked_slow">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<>>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200},
             ?assertMatch(ExpectedAttrs, otel_attributes:map(Attributes))
@@ -499,7 +499,7 @@ binary_status_code_request(_Config) ->
                              ?SERVER_ADDRESS => <<"localhost">>,
                              ?SERVER_PORT => 8080,
                              ?URL_PATH => <<"/binary_status_code">>,
-                             ?URL_SCHEME => http,
+                             ?URL_SCHEME => <<"http">>,
                              ?USER_AGENT_ORIGINAL => <<"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0">>,
                              ?HTTP_RESPONSE_STATUS_CODE => 200
                             },
