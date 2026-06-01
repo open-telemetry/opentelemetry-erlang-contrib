@@ -65,6 +65,13 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 - For help or feedback on this project, join us in [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions), `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slack.community/)
 - Erlang SIG [community page](https://github.com/open-telemetry/community#special-interest-groups)
 
+### Emeritus
+
+- [Greg Mefford](https://github.com/GregMefford), Approver
+
+For more information about the emeritus role, see the
+[community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
+
 ## License
 
 Apache 2.0 - See [LICENSE](LICENSE) for more information.
