@@ -74,11 +74,30 @@ defmodule OpentelemetryDataloader do
       OpenTelemetry.Ctx.attach(parent_ctx)
     end
 
-    {batch_name, _batch_args} = metadata.batch
+    attributes =
+      case metadata.batch do
+        # Ecto source
+        {batch_name, _batch_args} ->
+          %{
+            "dataloader.batch_key" => inspect(batch_name)
+          }
 
-    attributes = %{
-      "dataloader.batch_key" => inspect(batch_name)
-    }
+        # KV source with atom key
+        batch_name when is_atom(batch_name) ->
+          %{
+            "dataloader.batch_key" => to_string(batch_name)
+          }
+
+        # KV source with binary key
+        batch_name when is_binary(batch_name) ->
+          %{
+            "dataloader.batch_key" => batch_name
+          }
+
+        # Unknown source type
+        _ ->
+          %{}
+      end
 
     OpentelemetryTelemetry.start_telemetry_span(
       config.tracer_id,
