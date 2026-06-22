@@ -268,7 +268,10 @@ defmodule OpentelemetryGrpc.Server do
     end
   end
 
-  defp get_grpc_headers(%GRPC.Server.Stream{http_request_headers: headers}) when is_map(headers),
+  # matches on the map shape rather than the GRPC.Server.Stream struct: the
+  # struct lives in grpc_server on grpc 1.0, which client-only consumers
+  # will not have installed
+  defp get_grpc_headers(%{http_request_headers: headers}) when is_map(headers),
     do: Map.to_list(headers)
 
   defp get_grpc_headers(_stream), do: []

@@ -67,14 +67,29 @@ defmodule OpentelemetryGrpc.MixProject do
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:telemetry, "~> 1.0"},
-      {:grpc, "~> 0.11"},
-      {:protobuf, "~> 0.17"},
+      {:protobuf, "~> 0.15 or ~> 0.17"},
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
       {:excoveralls, "== 0.18.5", only: :test},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
-    ]
+    ] ++ grpc_deps()
+  end
+
+  # GRPC_VERSION selects which grpc major the dev/test suite runs against;
+  # the requirement published to Hex stays wide so consumers can use either major
+  defp grpc_deps do
+    case System.get_env("GRPC_VERSION", "1") do
+      "0" ->
+        [{:grpc, "== 0.11.5"}]
+
+      "1" ->
+        [
+          {:grpc, "~> 0.11 or ~> 1.0"},
+          {:grpc_server, "== 1.0.0", only: [:dev, :test]},
+          {:gun, "== 2.2.0", only: [:dev, :test]}
+        ]
+    end
   end
 
   defp aliases do
