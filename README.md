@@ -58,19 +58,19 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 [good first issue][good-first-issues] to get started with the project. Follow
 [CONTRIBUTING](CONTRIBUTING.md) guide to report issues or submit a proposal.
 
-## Useful links
-
-- For more information on OpenTelemetry, see [opentelemetry.io](https://opentelemetry.io).
-- For conventions used in OpenTelemetry traces, see the following [readme](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
-- For help or feedback on this project, join us in [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions), `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slack.community/)
-- Erlang SIG [community page](https://github.com/open-telemetry/community#special-interest-groups)
-
 ### Emeritus
 
 - [Greg Mefford](https://github.com/GregMefford), Approver
 
 For more information about the emeritus role, see the
 [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
+
+## Useful links
+
+- For more information on OpenTelemetry, see [opentelemetry.io](https://opentelemetry.io).
+- For conventions used in OpenTelemetry traces, see the following [readme](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
+- For help or feedback on this project, join us in [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-erlang-contrib/discussions), `#otel-erlang-elixir` channel in the [CNCF slack](https://slack.cncf.io/), and `#opentelemetry` channel in the [Elixir Lang slack](https://elixir-slack.community/)
+- Erlang SIG [community page](https://github.com/open-telemetry/community#special-interest-groups)
 
 ## License
 
