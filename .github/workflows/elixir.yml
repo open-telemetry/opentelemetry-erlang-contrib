@@ -45,14 +45,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -86,14 +86,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -125,7 +125,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: circleci/postgres:13.5-ram
+        image: circleci/postgres:13.5-ram@sha256:e66508c97d327b2837a523d9644c45cda2a2689641ec8361c8beaa7cbf975ff5
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
@@ -135,14 +135,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -174,7 +174,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: postgres:18.4
+        image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -183,7 +183,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       postgres-r1:
-        image: postgres:18.4
+        image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
         ports:
           - 5433:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -192,7 +192,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       mysql:
-        image: mysql:9.7
+        image: mysql:9.7@sha256:ad88e1c86cbf12ef52d0a0360cd4b774d22956c5ee9c565645fb019d7aacb6c3
         env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
@@ -200,7 +200,7 @@ jobs:
         ports:
           - 3306:3306
       mssql:
-        image: mcr.microsoft.com/azure-sql-edge
+        image: mcr.microsoft.com/azure-sql-edge@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
         env:
           ACCEPT_EULA: Y
           MSSQL_SA_PASSWORD: MSSQLpass1!
@@ -208,14 +208,14 @@ jobs:
           - 1433:1433
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -247,14 +247,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -286,14 +286,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -325,14 +325,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -364,7 +364,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: circleci/postgres:13.5-ram
+        image: circleci/postgres:13.5-ram@sha256:e66508c97d327b2837a523d9644c45cda2a2689641ec8361c8beaa7cbf975ff5
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
@@ -373,14 +373,14 @@ jobs:
           POSTGRES_DB: opentelemetry_oban_test
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -412,14 +412,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -451,18 +451,18 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       redis:
-        image: redis:alpine
+        image: redis:alpine@sha256:9d317178eceac8454a2284a9e6df2466b93c745529947f0cd42a0fa9609d7005
         ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -494,14 +494,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -533,14 +533,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -572,14 +572,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -611,14 +611,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -650,20 +650,20 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       cassandra:
-        image: cassandra
+        image: cassandra@sha256:b89056c366c4b807380cd9a4ac865ad558c0b4d5aac342f69087d0169ca1ddcd
         ports:
           - 9042:9042
         options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps
@@ -695,14 +695,14 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/deps

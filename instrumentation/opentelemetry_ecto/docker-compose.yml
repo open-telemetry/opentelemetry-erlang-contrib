@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   postgres:
-    image: postgres:18.4
+    image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -10,7 +10,7 @@ services:
       - 5432:5432
 
   postgres-r1:
-    image: postgres:18.4
+    image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -18,7 +18,7 @@ services:
       - 5433:5432
 
   mysql:
-    image: mysql:9.7
+    image: mysql:9.7@sha256:ad88e1c86cbf12ef52d0a0360cd4b774d22956c5ee9c565645fb019d7aacb6c3
     environment:
       - MYSQL_USER=mysql
       - MYSQL_PASSWORD=mysql
@@ -27,7 +27,7 @@ services:
       - 3306:3306
 
   mssql:
-    image: mcr.microsoft.com/azure-sql-edge
+    image: mcr.microsoft.com/azure-sql-edge@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=MSSQLpass1!

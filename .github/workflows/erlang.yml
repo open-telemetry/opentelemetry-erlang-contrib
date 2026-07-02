@@ -45,13 +45,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
@@ -77,13 +77,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
@@ -109,13 +109,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
@@ -141,13 +141,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
@@ -173,13 +173,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
@@ -205,13 +205,13 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             ~/_build
