@@ -64,12 +64,12 @@ defmodule OpentelemetryReq.MixProject do
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:otel_http, "~> 0.2"},
       {:req, ">= 0.3.5"},
-      {:ex_doc, "~> 0.40", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.8", only: [:test]},
-      {:opentelemetry, "~> 1.5", only: :test},
-      {:bypass, "~> 2.1", only: :test},
-      {:plug, ">= 1.15.0", only: [:test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:ex_doc, "== 0.40.1", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:test]},
+      {:opentelemetry, "== 1.7.0", only: :test},
+      {:bypass, "== 2.1.0", only: :test},
+      {:plug, "== 1.19.1", only: [:test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end
