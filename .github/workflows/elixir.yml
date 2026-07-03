@@ -45,7 +45,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -86,7 +86,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -135,7 +135,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -208,7 +208,7 @@ jobs:
           - 1433:1433
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -247,7 +247,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -286,7 +286,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -325,7 +325,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -373,7 +373,7 @@ jobs:
           POSTGRES_DB: opentelemetry_oban_test
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -412,7 +412,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -455,7 +455,7 @@ jobs:
         ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -494,7 +494,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -533,7 +533,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -572,7 +572,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -611,7 +611,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -656,7 +656,7 @@ jobs:
         options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
@@ -695,7 +695,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
