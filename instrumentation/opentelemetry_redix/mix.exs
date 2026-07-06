@@ -63,7 +63,7 @@ defmodule OpentelemetryRedix.MixProject do
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
-      {:redix, "~> 1.5", only: [:dev, :test]},
+      {:redix, "~> 1.6", only: [:dev, :test]},
       {:telemetry, "~> 1.0"}
     ]
   end
