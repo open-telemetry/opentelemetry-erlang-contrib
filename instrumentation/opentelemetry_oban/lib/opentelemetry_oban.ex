@@ -17,6 +17,7 @@ defmodule OpentelemetryOban do
   """
 
   alias Ecto.Changeset
+  alias Ecto.Multi
   alias OpenTelemetry.Span
   alias OpenTelemetry.SemConv.ErrorAttributes
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
@@ -86,6 +87,7 @@ defmodule OpentelemetryOban do
   end
 
   def insert(name \\ Oban, changeset, opts \\ [])
+
   def insert(name, %Changeset{} = changeset, opts) do
     attributes = attributes_before_insert(changeset)
     queue = Changeset.get_field(changeset, :queue)
@@ -104,7 +106,15 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert(name \\ Oban, multi, multi_name, changeset_or_fun, opts \\ []) do
+  def insert(%Multi{} = multi, multi_name, changeset_or_fun) do
+    Oban.insert(multi, multi_name, changeset_or_fun)
+  end
+
+  def insert(name, multi, multi_name, changeset_or_fun) do
+    Oban.insert(name, multi, multi_name, changeset_or_fun)
+  end
+
+  def insert(name, multi, multi_name, changeset_or_fun, opts) do
     Oban.insert(name, multi, multi_name, changeset_or_fun, opts)
   end
 
@@ -151,7 +161,15 @@ defmodule OpentelemetryOban do
     end
   end
 
-  def insert_all(name \\ Oban, multi, multi_name, changesets_or_wrapper, opts \\ []) do
+  def insert_all(%Multi{} = multi, multi_name, changesets_or_wrapper) do
+    Oban.insert_all(multi, multi_name, changesets_or_wrapper)
+  end
+
+  def insert_all(name, multi, multi_name, changesets_or_wrapper) do
+    Oban.insert_all(name, multi, multi_name, changesets_or_wrapper)
+  end
+
+  def insert_all(name, multi, multi_name, changesets_or_wrapper, opts) do
     Oban.insert_all(name, multi, multi_name, changesets_or_wrapper, opts)
   end
 
