@@ -48,9 +48,9 @@ defmodule OpentelemetryBroadway.MixProject do
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:telemetry, "~> 1.0"},
-      {:opentelemetry, "~> 1.5", only: [:test]},
-      {:opentelemetry_exporter, "~> 1.8", only: [:test]},
-      {:ex_doc, "~> 0.40", only: [:dev], runtime: false}
+      {:opentelemetry, "== 1.7.0", only: [:test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:test]},
+      {:ex_doc, "== 0.40.1", only: [:dev], runtime: false}
     ]
   end
 

@@ -55,15 +55,15 @@ defmodule OpentelemetryRedix.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
-      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "== 0.40.1", only: [:dev], runtime: false},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:nimble_options, "~> 1.0"},
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
-      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
-      {:redix, "~> 1.6", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:redix, "== 1.6.0", only: [:dev, :test]},
       {:telemetry, "~> 1.0"}
     ]
   end
