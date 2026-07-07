@@ -205,6 +205,7 @@ defmodule OpentelemetryBanditTest do
       port = start_server()
 
       Req.get!("http://localhost:#{port}/with_body",
+        compressed: true,
         headers: %{"test-header" => "request header"}
       )
 
