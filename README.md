@@ -68,7 +68,6 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 ### Emeritus
 
 - [Andrea Leopardi](https://github.com/whatyouhide), Approver
-- [Bryan Naegele](https://github.com/bryannaegele), Maintainer
 - [Greg Mefford](https://github.com/GregMefford), Approver
 
 For more information about the emeritus role, see the
