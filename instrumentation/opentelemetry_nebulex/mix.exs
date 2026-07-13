@@ -56,7 +56,7 @@ defmodule OpentelemetryNebulex.MixProject do
     [
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
-      {:nebulex, "== 2.6.6", only: [:dev, :test]},
+      {:nebulex, "== 3.0.4", only: [:dev, :test]},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
