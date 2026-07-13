@@ -45,7 +45,7 @@ defmodule OpentelemetryXandra.MixProject do
   defp deps do
     [
       # Dev and test dependencies
-      {:decimal, "== 2.4.1", only: [:dev, :test]},
+      {:decimal, "== 3.1.1", only: [:dev, :test]},
       {:ex_doc, "== 0.40.3", only: :dev},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
