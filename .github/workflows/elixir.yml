@@ -174,7 +174,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
+        image: postgres:18.4@sha256:22c89fe0d0f507606260237fd55e51f6137f58b2d5bcf6152242b96d9fe8f9a4
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -183,7 +183,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       postgres-r1:
-        image: postgres:18.4@sha256:4aabea78cf39b90e834caf3af7d602a18565f6fe2508705c8d01aa63245c2e20
+        image: postgres:18.4@sha256:22c89fe0d0f507606260237fd55e51f6137f58b2d5bcf6152242b96d9fe8f9a4
         ports:
           - 5433:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -192,7 +192,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       mysql:
-        image: mysql:9.7@sha256:ad88e1c86cbf12ef52d0a0360cd4b774d22956c5ee9c565645fb019d7aacb6c3
+        image: mysql:9.7@sha256:ae269281abffe401d65f04cb54d45a069a495b8174b9c0a815e502fed7fa0370
         env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
