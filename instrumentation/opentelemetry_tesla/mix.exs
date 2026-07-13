@@ -69,7 +69,7 @@ defmodule OpentelemetryTesla.MixProject do
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:tesla, "~> 1.4"},
       {:otel_http, "~> 0.2"},
-      {:ex_doc, "== 0.40.1", only: :dev, runtime: false},
+      {:ex_doc, "== 0.40.3", only: :dev, runtime: false},
       {:bypass, "== 2.1.0", only: :test},
       {:jason, "== 1.4.5", only: :test},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}

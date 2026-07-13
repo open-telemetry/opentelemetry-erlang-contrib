@@ -53,8 +53,8 @@ defmodule OpentelemetryOban.MixProject do
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:jason, "== 1.4.5", only: [:dev, :test]},
-      {:ex_doc, "== 0.40.1", only: [:dev], runtime: false},
-      {:postgrex, "== 0.22.2", only: [:dev, :test]}
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:postgrex, "== 0.22.3", only: [:dev, :test]}
     ]
   end
 
