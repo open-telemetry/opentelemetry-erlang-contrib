@@ -61,7 +61,7 @@ defmodule OpentelemetryFinch.MixProject do
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
       {:otel_http, "~> 0.2"},
       {:nimble_options, "~> 1.1"},
-      {:ex_doc, "== 0.40.1", only: [:dev], runtime: false},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
       {:finch, "== 0.23.0", only: [:dev, :test]},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
       {:bypass, "== 2.1.0", only: :test}

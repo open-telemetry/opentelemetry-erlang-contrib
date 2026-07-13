@@ -50,7 +50,7 @@ defmodule OpentelemetryCommanded.MixProject do
 
       # Testing
       {:jason, "== 1.4.5", only: :test},
-      {:ecto, "== 3.14.0", only: :test},
+      {:ecto, "== 3.14.1", only: :test},
       {:ex_doc, "== 0.40.3", only: [:dev], runtime: false}
     ]
   end
