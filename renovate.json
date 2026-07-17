@@ -4,6 +4,7 @@
     "config:best-practices",
     "helpers:pinGitHubActionDigestsToSemver"
   ],
+  "ignorePaths":[],
   "labels": ["renovate"],
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 10,
