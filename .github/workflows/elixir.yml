@@ -315,14 +315,21 @@ jobs:
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_nebulex'))
     env:
       app: "opentelemetry_nebulex"
+      NEBULEX_VERSION: ${{ matrix.nebulex_version }}
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
     runs-on: ubuntu-24.04
-    name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }}, Nebulex ${{ matrix.nebulex_version }})
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+      matrix:
+        otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
+        elixir_version: ${{ fromJson(needs.test-matrix.outputs.matrix).elixir_version }}
+        rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
+        nebulex_version: ["2", "3"]
+        include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
+        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -337,7 +344,7 @@ jobs:
           path: |
             ~/deps
             ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-nebulex-${{ matrix.nebulex_version }}-${{ hashFiles('**/mix.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
