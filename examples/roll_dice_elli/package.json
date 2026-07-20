@@ -2,7 +2,7 @@
   "dependencies": {
     "@opentelemetry/api": "^1.4.1",
     "@opentelemetry/auto-instrumentations-web": "^0.65.0",
-    "@opentelemetry/context-zone": "^1.13.0",
+    "@opentelemetry/context-zone": "^2.0.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
     "@opentelemetry/exporter-zipkin": "^2.9.0",
     "@opentelemetry/instrumentation-document-load": "^0.65.0",
