@@ -54,14 +54,30 @@ defmodule OpentelemetryNebulex.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
-      {:nebulex, "~> 2.1", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_api, "~> 1.4"},
-      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:telemetry, "~> 1.0"}
-    ]
+    ] ++ nebulex_deps()
+  end
+
+  # NEBULEX_VERSION selects which major the dev/test suite runs against;
+  # the library itself has no runtime dependency on nebulex
+  defp nebulex_deps do
+    case System.get_env("NEBULEX_VERSION", "3") do
+      "2" ->
+        [{:nebulex, "== 2.6.6", only: [:dev, :test]}]
+
+      "3" ->
+        [
+          {:nebulex, "== 3.0.4", only: [:dev, :test]},
+          {:nebulex_local, "== 3.0.0", only: [:dev, :test]},
+          {:nebulex_distributed, "== 3.2.3", only: [:dev, :test]}
+        ]
+    end
   end
 end

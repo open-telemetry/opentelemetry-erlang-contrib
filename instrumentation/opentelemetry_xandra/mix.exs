@@ -45,11 +45,12 @@ defmodule OpentelemetryXandra.MixProject do
   defp deps do
     [
       # Dev and test dependencies
-      {:decimal, "~> 2.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.38", only: :dev},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:xandra, "~> 0.18", only: [:dev, :test]},
+      # override until a Xandra release allows decimal ~> 3.0 (already relaxed on main)
+      {:decimal, "== 3.1.1", only: [:dev, :test], override: true},
+      {:ex_doc, "== 0.40.3", only: :dev},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:xandra, "== 0.19.4", only: [:dev, :test]},
 
       # Library dependencies
       {:opentelemetry_api, "~> 1.0"},

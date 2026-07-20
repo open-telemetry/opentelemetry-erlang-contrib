@@ -31,7 +31,7 @@ defmodule OpentelemetryOban.PluginHandlerTest do
 
   test "does not create spans when tracing plugins is disabled" do
     TestHelpers.remove_oban_handlers()
-    OpentelemetryOban.setup(trace: [:jobs])
+    OpentelemetryOban.setup(plugin: :disabled)
 
     :telemetry.execute(
       [:oban, :plugin, :start],
@@ -74,10 +74,12 @@ defmodule OpentelemetryOban.PluginHandlerTest do
     exception = %UndefinedFunctionError{
       arity: 0,
       function: :error,
-      message: nil,
+      message: "function Some.error/0 is undefined (module Some is not available)",
       module: Some,
       reason: nil
     }
+
+    stacktrace = [{Some, :error, [], []}]
 
     :telemetry.execute(
       [:oban, :plugin, :exception],
@@ -85,21 +87,24 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       %{
         plugin: Elixir.Oban.Plugins.Stager,
         kind: :error,
-        stacktrace: [
-          {Some, :error, [], []}
-        ],
+        stacktrace: stacktrace,
         reason: exception
       }
     )
 
-    expected_status = OpenTelemetry.status(:error, Exception.message(exception))
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, exception, stacktrace))
 
     assert_receive {:span,
                     span(
                       name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
                       events: events,
                       status: ^expected_status
                     )}
+
+    assert %{"error.type": "UndefinedFunctionError"} =
+             :otel_attributes.map(span_attributes)
 
     [
       event(
@@ -108,7 +113,52 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       )
     ] = :otel_events.list(events)
 
-    assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
+    assert [:"exception.stacktrace", :"exception.type"] ==
+             Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "records span on plugin error with non-exception reason" do
+    :telemetry.execute(
+      [:oban, :plugin, :start],
+      %{system_time: System.system_time()},
+      %{plugin: Elixir.Oban.Plugins.Stager}
+    )
+
+    # Test with an atom error reason like :badarg
+    stacktrace = [{Some, :error, [], []}]
+
+    :telemetry.execute(
+      [:oban, :plugin, :exception],
+      %{duration: 444},
+      %{
+        plugin: Elixir.Oban.Plugins.Stager,
+        kind: :error,
+        stacktrace: stacktrace,
+        reason: :badarg
+      }
+    )
+
+    expected_status =
+      OpenTelemetry.status(:error, Exception.format_banner(:error, :badarg, stacktrace))
+
+    assert_receive {:span,
+                    span(
+                      name: "Elixir.Oban.Plugins.Stager process",
+                      attributes: span_attributes,
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    refute Map.has_key?(:otel_attributes.map(span_attributes), :"error.type")
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [:"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
@@ -119,6 +169,20 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       assert %{
                "oban.plugin": Elixir.Oban.Plugins.Cron,
                "oban.plugins.cron.jobs_count": 3
+             } ==
+               receive_span_attrs(Oban.Plugins.Cron)
+    end
+
+    test "Oban.Plugins.Cron plugin without :jobs in metadata" do
+      # Oban omits :jobs from the [:oban, :plugin, :stop] metadata when the
+      # scheduled insert fails (Oban.Plugins.Cron returns {:error, meta} with an
+      # :error key and no :jobs). jobs_count must default to 0 rather than crash
+      # the telemetry handler on length(nil), which would detach it.
+      execute_plugin(Oban.Plugins.Cron, %{error: %RuntimeError{message: "insert failed"}})
+
+      assert %{
+               "oban.plugin": Elixir.Oban.Plugins.Cron,
+               "oban.plugins.cron.jobs_count": 0
              } ==
                receive_span_attrs(Oban.Plugins.Cron)
     end
@@ -160,6 +224,18 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       assert %{
                "oban.plugin": Elixir.Oban.Pro.Plugins.DynamicCron,
                "oban.pro.plugins.dynamic_cron.jobs_count": 3
+             } ==
+               receive_span_attrs(Oban.Pro.Plugins.DynamicCron)
+    end
+
+    test "Oban.Pro.Plugins.DynamicCron plugin without :jobs in metadata" do
+      execute_plugin(Oban.Pro.Plugins.DynamicCron, %{
+        error: %RuntimeError{message: "insert failed"}
+      })
+
+      assert %{
+               "oban.plugin": Elixir.Oban.Pro.Plugins.DynamicCron,
+               "oban.pro.plugins.dynamic_cron.jobs_count": 0
              } ==
                receive_span_attrs(Oban.Pro.Plugins.DynamicCron)
     end

@@ -67,13 +67,13 @@ defmodule OpentelemetryGrpc.MixProject do
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:telemetry, "~> 1.0"},
-      {:grpc, "~> 0.8"},
-      {:protobuf, "~> 0.15"},
-      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
-      {:ex_doc, "~> 0.38", only: [:dev], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:grpc, "~> 0.11"},
+      {:protobuf, "~> 0.17"},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:excoveralls, "== 0.18.5", only: :test},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 
