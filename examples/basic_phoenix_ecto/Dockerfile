@@ -12,8 +12,8 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim
 #
-ARG BUILDER_IMAGE="hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim"
-ARG RUNNER_IMAGE="debian:bullseye-20210902-slim"
+ARG BUILDER_IMAGE="hexpm/elixir:1.12.0-erlang-24.0.1-debian-bullseye-20210902-slim@sha256:e4d20ac075e569e320872fc933ea837ca1765658fa96281fe09339285992596b"
+ARG RUNNER_IMAGE="debian:bullseye-20210902-slim@sha256:e3ed4be20c22a1358020358331d177aa2860632f25b21681d79204ace20455a6"
 
 FROM ${BUILDER_IMAGE} as builder
 

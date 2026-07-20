@@ -4,7 +4,7 @@ services:
     build: .
 
   otel:
-    image: otel/opentelemetry-collector-contrib-dev:latest
+    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:96a6845a1249d202d2ca975aeceabe368c430988aa9e6a81f58746ee9baaf70e
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - '55681:55681'
@@ -13,13 +13,13 @@ services:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
 
   zipkin:
-    image: openzipkin/zipkin-slim
+    image: openzipkin/zipkin-slim@sha256:fc29b9862c14f4fc241cf0259c585e1cfd4e9b18f01ad36d86adaabb7d01815c
     ports:
       - '9411:9411'
 
   # Jaeger
   jaeger-all-in-one:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:latest@sha256:ab6f1a1f0fb49ea08bcd19f6b84f6081d0d44b364b6de148e1798eb5816bacac
     ports:
       - "16686:16686"
       - "14268"
