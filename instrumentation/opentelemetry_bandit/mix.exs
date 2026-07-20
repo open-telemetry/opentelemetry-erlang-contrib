@@ -1,7 +1,7 @@
 defmodule OpentelemetryBandit.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
 
   def project do
     [
@@ -79,13 +79,13 @@ defmodule OpentelemetryBandit.MixProject do
       {:telemetry, "~> 1.2"},
 
       # dev dependencies
-      {:ex_doc, "~> 0.36", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.18", only: :test},
-      {:bandit, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.7", only: [:dev, :test]},
-      {:req, "~> 0.5", only: [:dev, :test]}
+      {:ex_doc, "== 0.40.3", only: :dev, runtime: false},
+      {:excoveralls, "== 0.18.5", only: :test},
+      {:bandit, "== 1.12.0", only: [:dev, :test], runtime: false},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:req, "== 0.6.3", only: [:dev, :test]}
     ]
   end
 

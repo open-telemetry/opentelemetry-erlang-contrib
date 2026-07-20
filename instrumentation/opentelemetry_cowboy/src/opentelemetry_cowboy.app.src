@@ -7,6 +7,7 @@
     stdlib,
     opentelemetry_api,
     opentelemetry_telemetry,
+    otel_http,
     telemetry
    ]},
   {exclude_paths, ["rebar.lock"]},

@@ -39,7 +39,7 @@ Supported opt-in attributes can be configured using the `opt_in_attrs` option.
 ### Opt-in Semantic Convention Attributes
 
 Otel SemConv requires users to explicitly opt in for any attribute with a
-requirement level of `opt-in`. To ensure compatability, always use the
+requirement level of `opt-in`. To ensure compatibility, always use the
 SemConv attribute.
 
 Example:
@@ -105,7 +105,7 @@ Supported options:
 * `client_address_headers` - Headers to use for extracting original client request address info. Default: `[<<"forwarded">>, <<"x-forwarded-for">>]`
 * `client_headers_sort_fn` - Custom client header sort fn. See `otel_http` for more info. Default: `undefined`
 * `handler_id` - Only set when running multiple instances on different endpoints. Default: `otel_cowboy`
-* `opt_in_attrs` - Use semantic conventions library to ensure compatability, e.g. `[{?HTTP_REQUEST_BODY_SIZE, true}]`. Default: `[]`
+* `opt_in_attrs` - Use semantic conventions library to ensure compatibility, e.g. `[{?HTTP_REQUEST_BODY_SIZE, true}]`. Default: `[]`
 * `public_endpoint` - Endpoint is public. Propagated traces will be added as a link. Default: `false`
 * `public_endpoint_fn` - Default function returns `false`. See docs for more info.
 * `request_headers` - List of request headers to add as attributes. (lowercase). Default: `[]`

@@ -45,7 +45,7 @@ defmodule OpentelemetryProcessPropagator do
   Example of using `fetch_parent_ctx/1` to find a parent context.
 
   ```elixir
-  OpenTelemetry.with_span :span_started_in_your_app do
+  OpenTelemetry.Tracer.with_span :span_started_in_your_app do
     # some span being created in a process spawned by a library
     # you don't control, e.g. Ecto preloads
 

@@ -1,7 +1,7 @@
 defmodule OpentelemetryPhoenix.MixProject do
   use Mix.Project
 
-  @version "2.0.0"
+  @version "2.0.1"
 
   def project do
     [
@@ -70,18 +70,18 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:otel_http, "~> 0.2"},
       {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},
-      {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
-      {:opentelemetry_bandit, "~> 0.2.0", only: [:dev, :test]},
-      {:opentelemetry_cowboy, "~> 1.0.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.36", only: [:dev], runtime: false},
-      {:phoenix, "~> 1.7", only: [:dev, :test]},
-      {:phoenix_html, "~> 4.1", only: [:dev, :test]},
-      {:plug_cowboy, "~> 2.5", only: [:dev, :test]},
-      {:bandit, "~> 1.5", only: [:dev, :test]},
-      {:req, "~> 0.5", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:cowboy_telemetry, "== 0.4.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_bandit, "== 0.3.0", only: [:dev, :test]},
+      {:opentelemetry_cowboy, "== 1.0.0", only: [:dev, :test]},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:phoenix, "== 1.8.9", only: [:dev, :test]},
+      {:phoenix_html, "== 4.3.0", only: [:dev, :test]},
+      {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
+      {:bandit, "== 1.12.0", only: [:dev, :test]},
+      {:req, "== 0.6.3", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

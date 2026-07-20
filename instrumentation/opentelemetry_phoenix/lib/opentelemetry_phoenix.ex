@@ -53,7 +53,7 @@ defmodule OpentelemetryPhoenix do
       end
 
   """
-  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
 
   alias OpenTelemetry.Tracer
 
@@ -62,13 +62,16 @@ defmodule OpentelemetryPhoenix do
   @tracer_id __MODULE__
 
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix() | adapter()]
+  @type opts :: [endpoint_prefix() | adapter() | liveview()]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
 
   @typedoc "The phoenix server adapter being used. Required"
   @type adapter :: {:adapter, :cowboy2 | :bandit}
+
+  @typedoc "Attach LiveView handlers. Optional"
+  @type liveview :: {:liveview, boolean()}
 
   @doc """
   Initializes and configures the telemetry handlers.
@@ -122,7 +125,10 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, :live_view, :handle_event, :exception],
         [:phoenix, :live_component, :handle_event, :start],
         [:phoenix, :live_component, :handle_event, :stop],
-        [:phoenix, :live_component, :handle_event, :exception]
+        [:phoenix, :live_component, :handle_event, :exception],
+        [:phoenix, :live_component, :update, :start],
+        [:phoenix, :live_component, :update, :stop],
+        [:phoenix, :live_component, :update, :exception]
       ],
       &__MODULE__.handle_liveview_event/4,
       %{}
@@ -150,7 +156,7 @@ defmodule OpentelemetryPhoenix do
     attributes = %{
       :"phoenix.plug" => meta.plug,
       :"phoenix.action" => meta.plug_opts,
-      URLAttributes.url_template() => meta.route
+      HTTPAttributes.http_route() => meta.route
     }
 
     Tracer.update_name("#{meta.conn.method} #{meta.route}")
@@ -194,6 +200,20 @@ defmodule OpentelemetryPhoenix do
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
       "#{inspect(live_view)}.handle_event##{event}",
+      meta,
+      %{kind: :server}
+    )
+  end
+
+  def handle_liveview_event(
+        [:phoenix, :live_component, :update, :start],
+        _measurements,
+        %{component: component} = meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(component)}.update",
       meta,
       %{kind: :server}
     )
