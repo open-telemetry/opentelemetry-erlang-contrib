@@ -8,5 +8,5 @@ config :opentelemetry,
          #
          # If you are running it locally, kindly change it to the correct
          # hostname such as `localhost`, `0.0.0.0` and etc.
-         exporter: {:opentelemetry_exporter, %{endpoints: [{:http, 'otel', 55681, []}]}}
+         exporter: {:opentelemetry_exporter, %{endpoints: [{:http, ~c"otel", 55681, []}]}}
        }

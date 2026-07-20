@@ -10,7 +10,7 @@ defmodule BasicElixir.MixProject do
       deps: deps(),
       releases: [
         basic_elixir: [
-          applications: [opentelemetry: :temporary]
+          applications: [opentelemetry_exporter: :permanent, opentelemetry: :temporary]
         ]
       ]
     ]
