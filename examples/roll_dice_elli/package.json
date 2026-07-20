@@ -8,7 +8,7 @@
     "@opentelemetry/instrumentation-document-load": "^0.65.0",
     "@opentelemetry/sdk-trace-web": "^2.9.0",
     "esbuild": "0.25.0",
-    "htmx.org": "^1.9.2"
+    "htmx.org": "^2.0.0"
   },
   "scripts": {
     "build": "esbuild js/app.js --bundle --outfile=priv/static/index.js"
