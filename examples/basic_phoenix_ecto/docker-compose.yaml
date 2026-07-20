@@ -1,7 +1,7 @@
 version: '3'
 services:
   postgres:
-    image: 'postgres:latest'
+    image: 'postgres:latest@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a'
     ports:
       - 5432:5432
 
@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: demo_dev
 
   otel:
-    image: otel/opentelemetry-collector-contrib-dev:latest
+    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:96a6845a1249d202d2ca975aeceabe368c430988aa9e6a81f58746ee9baaf70e
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - "4318:4318"
@@ -25,14 +25,14 @@ services:
       - zipkin
 
   zipkin:
-    image: openzipkin/zipkin-slim
+    image: openzipkin/zipkin-slim@sha256:fc29b9862c14f4fc241cf0259c585e1cfd4e9b18f01ad36d86adaabb7d01815c
     container_name: "zipkin"
     ports:
       - '9411:9411'
 
   # Jaeger
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:latest@sha256:ab6f1a1f0fb49ea08bcd19f6b84f6081d0d44b364b6de148e1798eb5816bacac
     container_name: "jaeger"
     ports:
       - "4317:4317"
