@@ -55,7 +55,7 @@ defmodule TestJobThatReturnsError do
   end
 end
 
-defmodule TestJobThatThrowsException do
+defmodule TestJobThatRaisesException do
   use Oban.Worker, queue: :events, max_attempts: 1
 
   @impl Oban.Worker
@@ -63,6 +63,24 @@ defmodule TestJobThatThrowsException do
     raise %UndefinedFunctionError{
       message: "function Some.error/0 is undefined (module Some is not available)"
     }
+  end
+end
+
+defmodule TestJobThatThrowsValue do
+  use Oban.Worker, queue: :events, max_attempts: 1
+
+  @impl Oban.Worker
+  def perform(_job) do
+    throw "value"
+  end
+end
+
+defmodule TestJobThatExitsAbnormally do
+  use Oban.Worker, queue: :events, max_attempts: 1
+
+  @impl Oban.Worker
+  def perform(_job) do
+    exit :abnormal
   end
 end
 

@@ -248,7 +248,7 @@ defmodule OpentelemetryObanTest do
   end
 
   test "records spans for Oban jobs that stop with an exception" do
-    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatThrowsException.new(%{}))
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatRaisesException.new(%{}))
     assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
 
     expected_status = OpenTelemetry.status(:error, "")
@@ -273,10 +273,10 @@ defmodule OpentelemetryObanTest do
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
-             "oban.job.worker": "TestJobThatThrowsException",
+             "oban.job.worker": "TestJobThatRaisesException",
              "messaging.operation.type": :process,
              "messaging.message.id": ^id,
-             "messaging.client.id": "TestJobThatThrowsException",
+             "messaging.client.id": "TestJobThatRaisesException",
              "messaging.system": :oban,
              "error.type": "UndefinedFunctionError"
            } = attrs
@@ -290,6 +290,102 @@ defmodule OpentelemetryObanTest do
 
     assert [:"exception.message", :"exception.stacktrace", :"exception.type"] ==
              Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
+  test "records spans for Oban jobs that stop with an unhandled throw" do
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatThrowsValue.new(%{}))
+    assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
+
+    expected_status = OpenTelemetry.status(:error, "")
+
+    assert_receive {:span,
+                    span(
+                      name: "process events",
+                      attributes: attributes,
+                      kind: :consumer,
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    assert %{
+             "messaging.destination.name": "events",
+             "messaging.operation.name": "process",
+             "oban.job.attempt": 1,
+             "oban.job.inserted_at": _inserted_at,
+             "oban.job.job_id": ^id,
+             "oban.job.max_attempts": 1,
+             "oban.job.priority": 0,
+             "oban.job.scheduled_at": _scheduled_at,
+             "oban.job.worker": "TestJobThatThrowsValue",
+             "messaging.operation.type": :process,
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJobThatThrowsValue",
+             "messaging.system": :oban,
+             "error.type": "Oban.CrashError"
+           } = attrs
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert %{
+             :"exception.type" => "Elixir.Oban.CrashError",
+             :"exception.message" => "** (throw) \"value\"",
+             :"exception.stacktrace" => _
+           } = :otel_attributes.map(event_attributes)
+  end
+
+  test "records spans for Oban jobs that stop with an abnormal exit" do
+    {:ok, %{id: id}} = OpentelemetryOban.insert(TestJobThatExitsAbnormally.new(%{}))
+    assert %{success: 0, discard: 1} = Oban.drain_queue(queue: :events)
+
+    expected_status = OpenTelemetry.status(:error, "")
+
+    assert_receive {:span,
+                    span(
+                      name: "process events",
+                      attributes: attributes,
+                      kind: :consumer,
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+
+    assert %{
+             "messaging.destination.name": "events",
+             "messaging.operation.name": "process",
+             "oban.job.attempt": 1,
+             "oban.job.inserted_at": _inserted_at,
+             "oban.job.job_id": ^id,
+             "oban.job.max_attempts": 1,
+             "oban.job.priority": 0,
+             "oban.job.scheduled_at": _scheduled_at,
+             "oban.job.worker": "TestJobThatExitsAbnormally",
+             "messaging.operation.type": :process,
+             "messaging.message.id": ^id,
+             "messaging.client.id": "TestJobThatExitsAbnormally",
+             "messaging.system": :oban,
+             "error.type": "Oban.CrashError"
+           } = attrs
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert %{
+             :"exception.type" => "Elixir.Oban.CrashError",
+             :"exception.message" => "** (exit) :abnormal",
+             :"exception.stacktrace" => _
+           } = :otel_attributes.map(event_attributes)
   end
 
   test "spans inside the job are associated with the job trace" do
