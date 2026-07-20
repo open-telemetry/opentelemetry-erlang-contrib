@@ -33,8 +33,9 @@ defmodule Demo.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.8.0"},
+      {:phoenix, "~> 1.7.0"},
       {:phoenix_ecto, "~> 4.4"},
+      {:phoenix_view, "~> 2.0"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 3.0"},
@@ -52,7 +53,7 @@ defmodule Demo.MixProject do
       {:opentelemetry_exporter, "~> 1.3"},
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry, "~> 1.2"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry_cowboy, path: "../../instrumentation/opentelemetry_cowboy"},
       {:opentelemetry_phoenix, path: "../../instrumentation/opentelemetry_phoenix"},
       {:opentelemetry_ecto, path: "../../instrumentation/opentelemetry_ecto"}
