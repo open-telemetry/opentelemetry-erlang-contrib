@@ -1,9 +1,13 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
 import Config
 
-try do
-  import_config "#{Mix.env()}.exs"
-rescue
-  _ -> :ok
+if config_env() == :test do
+  config :opentelemetry_oban,
+    ecto_repos: [TestRepo]
+
+  config :opentelemetry_oban, TestRepo,
+    hostname: "localhost",
+    username: "postgres",
+    password: "postgres",
+    database: "opentelemetry_oban_test",
+    pool: Ecto.Adapters.SQL.Sandbox
 end
