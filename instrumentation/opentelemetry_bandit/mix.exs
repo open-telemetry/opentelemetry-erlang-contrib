@@ -85,7 +85,7 @@ defmodule OpentelemetryBandit.MixProject do
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
-      {:req, "== 0.6.2", only: [:dev, :test]}
+      {:req, "== 0.6.3", only: [:dev, :test]}
     ]
   end
 

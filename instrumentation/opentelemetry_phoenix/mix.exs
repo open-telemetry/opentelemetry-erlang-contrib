@@ -80,7 +80,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:phoenix_html, "== 4.3.0", only: [:dev, :test]},
       {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
       {:bandit, "== 1.12.0", only: [:dev, :test]},
-      {:req, "== 0.6.2", only: [:dev, :test]},
+      {:req, "== 0.6.3", only: [:dev, :test]},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
