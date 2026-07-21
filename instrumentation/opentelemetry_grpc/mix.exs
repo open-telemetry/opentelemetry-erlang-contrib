@@ -81,13 +81,13 @@ defmodule OpentelemetryGrpc.MixProject do
   defp grpc_deps do
     case System.get_env("GRPC_VERSION", "1") do
       "0" ->
-        [{:grpc, "== 0.11.5"}]
+        [{:grpc, "~> 0.11"}]
 
       "1" ->
         [
           {:grpc, "~> 0.11 or ~> 1.0"},
-          {:grpc_server, "== 1.0.0", only: [:dev, :test]},
-          {:gun, "== 2.2.0", only: [:dev, :test]}
+          {:grpc_server, "~> 1.0", only: [:dev, :test]},
+          {:gun, "~> 2.2", only: [:dev, :test]}
         ]
     end
   end
