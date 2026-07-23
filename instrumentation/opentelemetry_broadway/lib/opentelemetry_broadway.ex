@@ -2,7 +2,8 @@ defmodule OpentelemetryBroadway do
   @moduledoc """
   OpenTelemetry tracing for [Broadway](https://elixir-broadway.org/) pipelines with optional trace propagation support.
 
-  It supports job start, stop, and exception events with automatic distributed tracing context extraction.
+  It supports message processor start, stop, and exception events, plus batch processor start
+  and stop events with automatic distributed tracing context extraction.
 
   ## Usage
 
@@ -65,6 +66,7 @@ defmodule OpentelemetryBroadway do
   alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
   alias OpenTelemetry.SemConv.Incubating.MessagingAttributes
+  alias OpentelemetryBroadway.BroadwayAttributes
 
   @tracer_id __MODULE__
 
@@ -121,26 +123,45 @@ defmodule OpentelemetryBroadway do
       |> NimbleOptions.validate!(@nimble_options_schema)
       |> Enum.into(%{})
 
-    :telemetry.attach(
-      "#{__MODULE__}.message_start",
-      [:broadway, :processor, :message, :start],
-      &__MODULE__.handle_message_start/4,
-      config
-    )
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.message_start",
+        [:broadway, :processor, :message, :start],
+        &__MODULE__.handle_message_start/4,
+        config
+      )
 
-    :telemetry.attach(
-      "#{__MODULE__}.message_stop",
-      [:broadway, :processor, :message, :stop],
-      &__MODULE__.handle_message_stop/4,
-      config
-    )
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.message_stop",
+        [:broadway, :processor, :message, :stop],
+        &__MODULE__.handle_message_stop/4,
+        config
+      )
 
-    :telemetry.attach(
-      "#{__MODULE__}.message_exception",
-      [:broadway, :processor, :message, :exception],
-      &__MODULE__.handle_message_exception/4,
-      config
-    )
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.message_exception",
+        [:broadway, :processor, :message, :exception],
+        &__MODULE__.handle_message_exception/4,
+        config
+      )
+
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.batch_processor_start",
+        [:broadway, :batch_processor, :start],
+        &__MODULE__.handle_batch_start/4,
+        config
+      )
+
+    :ok =
+      :telemetry.attach(
+        "#{__MODULE__}.batch_processor_stop",
+        [:broadway, :batch_processor, :stop],
+        &__MODULE__.handle_batch_stop/4,
+        config
+      )
 
     :ok
   end
@@ -203,17 +224,97 @@ defmodule OpentelemetryBroadway do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
+  @doc false
+  def handle_batch_start(
+        _event,
+        _measurements,
+        %{
+          topology_name: topology_name,
+          name: name,
+          messages: messages,
+          batch_info: batch_info
+        } = metadata,
+        config
+      ) do
+    span_name = "#{inspect(topology_name)}/#{Atom.to_string(batch_info.batcher)} batch"
+    client_id = inspect(name)
+
+    span_opts = %{
+      kind: :consumer,
+      attributes: build_batch_attributes(messages, client_id)
+    }
+
+    links = collect_batch_links(messages, config.span_relationship)
+    span_opts = put_links(span_opts, links)
+
+    OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, span_opts)
+  end
+
+  @doc false
+  def handle_batch_stop(
+        _event,
+        _measurements,
+        %{
+          successful_messages: successful_messages,
+          failed_messages: failed_messages
+        } = metadata,
+        _config
+      ) do
+    ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
+
+    Span.set_attributes(ctx, [
+      {BroadwayAttributes.messaging_broadway_batch_successful_count(), length(successful_messages)},
+      {BroadwayAttributes.messaging_broadway_batch_failed_count(), length(failed_messages)}
+    ])
+
+    Span.set_status(ctx, batch_status(successful_messages, failed_messages))
+    OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
+  end
+
   defp otel_status(%{status: :ok}), do: OpenTelemetry.status(:ok)
   defp otel_status(%{status: {:failed, err}}), do: OpenTelemetry.status(:error, format_error(err))
   defp otel_status(_), do: OpenTelemetry.status(:unset)
 
-  defp build_message_attributes(%Broadway.Message{}, client_id) do
+  defp build_message_attributes(%Broadway.Message{data: data, metadata: metadata}, client_id) do
     %{
       MessagingAttributes.messaging_system() => :broadway,
       MessagingAttributes.messaging_operation_type() => :process,
       MessagingAttributes.messaging_client_id() => client_id
     }
+    |> maybe_put_body_size(data)
+    |> maybe_put_message_id(metadata)
   end
+
+  defp build_batch_attributes(messages, client_id) do
+    %{
+      MessagingAttributes.messaging_system() => :broadway,
+      MessagingAttributes.messaging_operation_type() => :process,
+      MessagingAttributes.messaging_client_id() => client_id,
+      MessagingAttributes.messaging_batch_message_count() => length(messages)
+    }
+  end
+
+  defp batch_status(_successful_messages, []), do: OpenTelemetry.status(:ok)
+
+  defp batch_status(_successful_messages, failed_messages) do
+    OpenTelemetry.status(:error, "#{length(failed_messages)} messages failed")
+  end
+
+  defp maybe_put_body_size(attrs, data) when is_binary(data) do
+    Map.put(attrs, MessagingAttributes.messaging_message_body_size(), byte_size(data))
+  end
+
+  defp maybe_put_body_size(attrs, _data), do: attrs
+
+  defp maybe_put_message_id(attrs, %{message_id: message_id}) when is_binary(message_id) do
+    Map.put(attrs, MessagingAttributes.messaging_message_id(), message_id)
+  end
+
+  defp maybe_put_message_id(attrs, %{delivery_tag: delivery_tag}) when is_integer(delivery_tag) do
+    Map.put(attrs, MessagingAttributes.messaging_message_id(), Integer.to_string(delivery_tag))
+  end
+
+  defp maybe_put_message_id(attrs, _metadata), do: attrs
 
   defp format_error(err) when is_binary(err), do: err
   defp format_error(err), do: inspect(err)
@@ -255,6 +356,14 @@ defmodule OpentelemetryBroadway do
     []
   end
 
+  defp collect_batch_links(_messages, :none), do: []
+
+  defp collect_batch_links(messages, _relationship) do
+    messages
+    |> Enum.flat_map(&link_from_propagated_ctx/1)
+    |> Enum.uniq_by(&{&1.trace_id, &1.span_id})
+  end
+
   defp extract_and_attach(message) do
     case get_propagated_ctx(message) do
       {_links, parent_ctx} when parent_ctx != :undefined ->
@@ -274,18 +383,20 @@ defmodule OpentelemetryBroadway do
   end
 
   defp get_propagated_ctx(message) do
-    message
-    |> get_message_headers()
-    |> Enum.map(&normalize_header/1)
-    |> Enum.reject(&is_nil/1)
-    |> extract_to_ctx()
+    headers =
+      message
+      |> get_message_headers()
+      |> Enum.map(&normalize_header/1)
+      |> Enum.reject(&is_nil/1)
+
+    extract_to_ctx(headers, message)
   end
 
-  defp extract_to_ctx([]) do
+  defp extract_to_ctx([], _message) do
     {[], :undefined}
   end
 
-  defp extract_to_ctx(headers) do
+  defp extract_to_ctx(headers, message) do
     ctx =
       Ctx.new()
       |> :otel_propagator_text_map.extract_to(headers)
@@ -300,8 +411,12 @@ defmodule OpentelemetryBroadway do
 
       span_ctx ->
         # Return links first, then context (for parent-child relationships)
-        {[OpenTelemetry.link(span_ctx)], ctx}
+        {[OpenTelemetry.link(span_ctx, build_link_attributes(message))], ctx}
     end
+  end
+
+  defp build_link_attributes(%Broadway.Message{} = message) do
+    maybe_put_message_id(%{}, message.metadata)
   end
 
   # RabbitMQ: headers are in metadata.headers as a list

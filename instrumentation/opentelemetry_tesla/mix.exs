@@ -63,16 +63,16 @@ defmodule OpentelemetryTesla.MixProject do
   defp deps do
     [
       {:nimble_options, "~> 1.1"},
-      {:opentelemetry, "~> 1.0", only: :test},
+      {:opentelemetry, "== 1.7.0", only: :test},
       {:opentelemetry_api, "~> 1.2"},
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:tesla, "~> 1.4"},
       {:otel_http, "~> 0.2"},
-      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
-      {:bypass, "~> 2.1", only: :test},
-      {:jason, "~> 1.3", only: :test},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:ex_doc, "== 0.40.3", only: :dev, runtime: false},
+      {:bypass, "== 2.1.0", only: :test},
+      {:jason, "== 1.4.5", only: :test},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

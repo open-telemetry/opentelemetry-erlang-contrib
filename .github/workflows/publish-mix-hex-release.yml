@@ -7,6 +7,7 @@ on:
         description: "Package"
         type: choice
         options:
+          - "absinthe"
           - "aws_xray"
           - "bandit"
           - "broadway"
@@ -66,7 +67,7 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Read file
         id: set-config
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
@@ -122,7 +123,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - run: npm install semver
       - name: "Update Files"
         id: update-files
@@ -211,7 +212,7 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ inputs.otp-version }}

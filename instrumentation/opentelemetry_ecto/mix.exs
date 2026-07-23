@@ -72,15 +72,15 @@ defmodule OpentelemetryEcto.MixProject do
       {:opentelemetry_api, "~> 1.4"},
       {:opentelemetry_process_propagator, "~> 0.3"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
-      {:opentelemetry, "~> 1.5", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.8", only: [:dev, :test]},
-      {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
-      {:ecto_sqlite3, "~> 0.22", only: [:dev, :test]},
-      {:ecto_sql, "~> 3.12", only: [:dev, :test]},
-      {:postgrex, "~> 0.20", only: [:dev, :test]},
-      {:myxql, "~> 0.8", only: [:dev, :test]},
-      {:tds, "~> 2.3", only: [:dev, :test]},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:ecto_sqlite3, "== 0.24.1", only: [:dev, :test]},
+      {:ecto_sql, "== 3.14.0", only: [:dev, :test]},
+      {:postgrex, "== 0.22.3", only: [:dev, :test]},
+      {:myxql, "== 0.9.0", only: [:dev, :test]},
+      {:tds, "== 2.3.8", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

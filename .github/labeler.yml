@@ -98,6 +98,11 @@ opentelemetry_finch:
       - any-glob-to-any-file:
           - instrumentation/opentelemetry_finch/**/*
 
+opentelemetry_grpc:
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_grpc/**/*
+
 opentelemetry_grpcbox:
   - changed-files:
       - any-glob-to-any-file:

@@ -173,6 +173,20 @@ defmodule OpentelemetryOban.PluginHandlerTest do
                receive_span_attrs(Oban.Plugins.Cron)
     end
 
+    test "Oban.Plugins.Cron plugin without :jobs in metadata" do
+      # Oban omits :jobs from the [:oban, :plugin, :stop] metadata when the
+      # scheduled insert fails (Oban.Plugins.Cron returns {:error, meta} with an
+      # :error key and no :jobs). jobs_count must default to 0 rather than crash
+      # the telemetry handler on length(nil), which would detach it.
+      execute_plugin(Oban.Plugins.Cron, %{error: %RuntimeError{message: "insert failed"}})
+
+      assert %{
+               "oban.plugin": Elixir.Oban.Plugins.Cron,
+               "oban.plugins.cron.jobs_count": 0
+             } ==
+               receive_span_attrs(Oban.Plugins.Cron)
+    end
+
     test "Oban.Plugins.Gossip plugin" do
       execute_plugin(Oban.Plugins.Gossip, %{gossip_count: 3})
 
@@ -210,6 +224,18 @@ defmodule OpentelemetryOban.PluginHandlerTest do
       assert %{
                "oban.plugin": Elixir.Oban.Pro.Plugins.DynamicCron,
                "oban.pro.plugins.dynamic_cron.jobs_count": 3
+             } ==
+               receive_span_attrs(Oban.Pro.Plugins.DynamicCron)
+    end
+
+    test "Oban.Pro.Plugins.DynamicCron plugin without :jobs in metadata" do
+      execute_plugin(Oban.Pro.Plugins.DynamicCron, %{
+        error: %RuntimeError{message: "insert failed"}
+      })
+
+      assert %{
+               "oban.plugin": Elixir.Oban.Pro.Plugins.DynamicCron,
+               "oban.pro.plugins.dynamic_cron.jobs_count": 0
              } ==
                receive_span_attrs(Oban.Pro.Plugins.DynamicCron)
     end

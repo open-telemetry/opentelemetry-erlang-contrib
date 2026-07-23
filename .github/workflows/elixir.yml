@@ -23,7 +23,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Read file
         id: set-matrix
         run: |
@@ -44,15 +44,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -85,15 +85,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -125,7 +125,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: circleci/postgres:13.5-ram
+        image: circleci/postgres:13.5-ram@sha256:e66508c97d327b2837a523d9644c45cda2a2689641ec8361c8beaa7cbf975ff5
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
@@ -134,15 +134,15 @@ jobs:
           POSTGRES_DB: opentelemetry_dataloader_test
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -174,7 +174,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: postgres:18.3
+        image: postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -183,7 +183,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       postgres-r1:
-        image: postgres:18.3
+        image: postgres:18.4@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a
         ports:
           - 5433:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -192,7 +192,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_ecto_test
       mysql:
-        image: mysql:9.6
+        image: mysql:9.7@sha256:8fdf311514c91fa5014e93e98e19d7f5d9eb162a462c13100c956dacc278ee21
         env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
@@ -200,22 +200,22 @@ jobs:
         ports:
           - 3306:3306
       mssql:
-        image: mcr.microsoft.com/azure-sql-edge
+        image: mcr.microsoft.com/azure-sql-edge@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
         env:
           ACCEPT_EULA: Y
           MSSQL_SA_PASSWORD: MSSQLpass1!
         ports:
           - 1433:1433
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -246,15 +246,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -265,6 +265,52 @@ jobs:
         run: mix deps.get
       - name: Compile project
         run: mix compile
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
+  opentelemetry-grpc:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_grpc'))
+    env:
+      app: "opentelemetry_grpc"
+      GRPC_VERSION: ${{ matrix.grpc_version }}
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ubuntu-24.04
+    name: Opentelemetry gRPC test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }}, gRPC ${{ matrix.grpc_version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
+        elixir_version: ${{ fromJson(needs.test-matrix.outputs.matrix).elixir_version }}
+        rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
+        grpc_version: ["0", "1"]
+        include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
+        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-type: strict
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-grpc-${{ matrix.grpc_version }}-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
       - name: Check formatting
         run: mix format --check-formatted
         if: matrix.check_formatted
@@ -285,7 +331,46 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          version-type: strict
+          otp-version: ${{ matrix.otp_version }}
+          elixir-version: ${{ matrix.elixir_version }}
+          rebar3-version: ${{ matrix.rebar3_version }}
+      - name: Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/deps
+            ~/_build
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+      - name: Fetch deps
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: mix deps.get
+      - name: Compile project
+        run: mix compile --warnings-as-errors
+      - name: Check formatting
+        run: mix format --check-formatted
+        if: matrix.check_formatted
+      - name: Test
+        run: mix test
+
+  opentelemetry-absinthe:
+    needs: [test-matrix]
+    if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_absinthe'))
+    env:
+      app: "opentelemetry_absinthe"
+    defaults:
+      run:
+        working-directory: instrumentation/${{ env.app }}
+    runs-on: ubuntu-22.04
+    name: Opentelemetry Absinthe test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
@@ -293,7 +378,7 @@ jobs:
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: |
             ~/deps
@@ -315,29 +400,36 @@ jobs:
     if: (contains(github.event.pull_request.labels.*.name, 'elixir') && contains(github.event.pull_request.labels.*.name, 'opentelemetry_nebulex'))
     env:
       app: "opentelemetry_nebulex"
+      NEBULEX_VERSION: ${{ matrix.nebulex_version }}
     defaults:
       run:
         working-directory: instrumentation/${{ env.app }}
     runs-on: ubuntu-24.04
-    name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
+    name: Opentelemetry Nebulex test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }}, Nebulex ${{ matrix.nebulex_version }})
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+      matrix:
+        otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
+        elixir_version: ${{ fromJson(needs.test-matrix.outputs.matrix).elixir_version }}
+        rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
+        nebulex_version: ["2", "3"]
+        include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
+        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
             ~/_build
-          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-v3-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-build-${{ matrix.otp_version }}-${{ matrix.elixir_version }}-nebulex-${{ matrix.nebulex_version }}-${{ hashFiles('**/mix.lock') }}
       - name: Fetch deps
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: mix deps.get
@@ -364,7 +456,7 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       postgres:
-        image: circleci/postgres:13.5-ram
+        image: circleci/postgres:13.5-ram@sha256:e66508c97d327b2837a523d9644c45cda2a2689641ec8361c8beaa7cbf975ff5
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         env:
@@ -372,15 +464,15 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: opentelemetry_oban_test
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -411,15 +503,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -451,18 +543,18 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       redis:
-        image: redis:alpine
+        image: redis:alpine@sha256:9d317178eceac8454a2284a9e6df2466b93c745529947f0cd42a0fa9609d7005
         ports: ["6379:6379"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -493,15 +585,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -532,15 +624,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -571,15 +663,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -610,15 +702,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -650,20 +742,20 @@ jobs:
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     services:
       cassandra:
-        image: cassandra
+        image: cassandra@sha256:e52bb93c21f69cc5c2f5eb9e7d9736b10a047ad38bc7776480c7dbbf7d4e0ba7
         ports:
           - 9042:9042
         options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps
@@ -694,15 +786,15 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: erlef/setup-beam@v1
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
           otp-version: ${{ matrix.otp_version }}
           elixir-version: ${{ matrix.elixir_version }}
           rebar3-version: ${{ matrix.rebar3_version }}
       - name: Cache
-        uses: actions/cache@v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/deps

@@ -84,7 +84,7 @@ defmodule OpentelemetryOban.PluginHandler do
   defp set_error_type(_error), do: :ok
 
   defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Cron} = metadata) do
-    %{"oban.plugins.cron.jobs_count": length(metadata[:jobs])}
+    %{"oban.plugins.cron.jobs_count": length(metadata[:jobs] || [])}
   end
 
   defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Gossip} = metadata) do
@@ -103,7 +103,7 @@ defmodule OpentelemetryOban.PluginHandler do
   end
 
   defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicCron} = metadata) do
-    %{"oban.pro.plugins.dynamic_cron.jobs_count": length(metadata[:jobs])}
+    %{"oban.pro.plugins.dynamic_cron.jobs_count": length(metadata[:jobs] || [])}
   end
 
   defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicLifeline} = metadata) do
