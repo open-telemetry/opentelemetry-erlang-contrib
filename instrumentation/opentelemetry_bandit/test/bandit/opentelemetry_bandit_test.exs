@@ -453,7 +453,20 @@ defmodule OpentelemetryBanditTest do
         assert Map.get(:otel_attributes.map(span_attributes), attribute) == expected_value
       end
 
-      assert [] = :otel_events.list(events)
+      [
+        event(
+          name: :exception,
+          attributes: event_attributes
+        )
+      ] = :otel_events.list(events)
+
+      exception_type_attribute = ExceptionAttributes.exception_type()
+      exception_stacktrace_attribute = ExceptionAttributes.exception_stacktrace()
+
+      assert %{
+               ^exception_type_attribute => "throw:<<\"something\">>",
+               ^exception_stacktrace_attribute => _
+             } = :otel_attributes.map(event_attributes)
     end
 
     test "with exit" do
@@ -486,7 +499,20 @@ defmodule OpentelemetryBanditTest do
         assert Map.get(:otel_attributes.map(span_attributes), attribute) == expected_value
       end
 
-      assert [] = :otel_events.list(events)
+      [
+        event(
+          name: :exception,
+          attributes: event_attributes
+        )
+      ] = :otel_events.list(events)
+
+      exception_type_attribute = ExceptionAttributes.exception_type()
+      exception_stacktrace_attribute = ExceptionAttributes.exception_stacktrace()
+
+      assert %{
+               ^exception_type_attribute => "exit:abnormal_reason",
+               ^exception_stacktrace_attribute => _
+             } = :otel_attributes.map(event_attributes)
     end
 
     test "with halted request" do
