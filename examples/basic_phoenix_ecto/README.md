@@ -38,6 +38,32 @@ Assuming you already have Docker and Docker Compose installed:
    look at the sample trace.
 7. Run `docker compose down` to destroy the created resources.
 
+# Adding traces into your Elixir project
+
+1. Add otel dependencies into your project's `mix.exs` file
+```
+  defp deps do
+    [...
+      {:opentelemetry_phoenix, "~> 1.0.0-rc.7"},
+      {:opentelemetry_ecto, "~> 1.1.0"},
+      {:opentelemetry_exporter, "~> 1.2.1"}
+    ]
+  end
+```
+2. Run `mix deps.get` in order to get the otel dependencies into your project
+3. Add the `docker-compose-dependencies.yaml` in yout project folder
+4. Add the following snippet to your project's `dev.exs` file
+```
+  config :opentelemetry, :processors,
+    otel_batch_processor: %{
+      exporter: {:opentelemetry_exporter, %{endpoints: ["http://localhost:4318"]}}
+    }
+```
+5. run `docker-compose -f docker-compose-dependencies.yaml up -d`
+6. run `iex -S mix` or `iex -S mix phx.server` for a phoenix project
+7. Check the `Getting Started` session steps `4` and `5` to check the traces
+
+
 ## Different ways to export traces
 
 In general, there are 2 ways you can export your OpenTelemetry traces.
