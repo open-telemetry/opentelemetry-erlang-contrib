@@ -18,17 +18,18 @@ defmodule OpentelemetryCommanded.ApplicationTest do
     test "Success should create span", context do
       :ok = app_dispatch(context, %C.Ok{id: "ACC123"})
 
+      assert_receive {:span, span(name: "opentelemetry_commanded.test", span_id: test_span_id)}
+
+      # Match on the parent to ensure context has been propagated across the
+      # process, and to skip the extra dispatch span emitted by the process
+      # manager reacting to OkEvent
       assert_receive {:span,
                       span(
                         name: "commanded.application.dispatch",
                         kind: :consumer,
-                        parent_span_id: parent_span_id,
+                        parent_span_id: ^test_span_id,
                         attributes: attributes
                       )}
-
-      # Get parent span to ensure context has been propagated across the process
-      assert_receive {:span, span(name: parent_span_name, span_id: ^parent_span_id)}
-      assert parent_span_name in ["opentelemetry_commanded.test"]
 
       attributes = :otel_attributes.map(attributes)
 

@@ -57,13 +57,13 @@ defmodule OpentelemetryDataloader.MixProject do
       {:telemetry, "~> 1.0"},
       {:opentelemetry_api, "~> 1.3"},
       {:opentelemetry_telemetry, "~> 1.1"},
-      {:dataloader, "~> 2.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.7", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.4", only: [:dev, :test]},
-      {:ex_doc, "~> 0.40", only: [:dev], runtime: false},
-      {:ecto_sql, ">= 3.0.0", only: [:dev, :test]},
-      {:postgrex, ">= 0.19.0", only: [:dev, :test]},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:dataloader, "== 2.0.2", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:ecto_sql, "== 3.14.0", only: [:dev, :test]},
+      {:postgrex, "== 0.22.3", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
       {:opentelemetry_process_propagator, "~> 0.3"}
     ]
   end

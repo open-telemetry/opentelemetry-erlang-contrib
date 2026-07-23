@@ -58,6 +58,26 @@ processing.
 | `:link`  | Create a span link to the propagated context            |
 | `:none`  | Ignore propagated context entirely                      |
 
+## `propagate_trace_headers`
+
+Controls whether trace context is injected into outgoing HTTP request headers
+(W3C Trace Context, B3, etc.) for distributed tracing across service boundaries.
+Opt-out: enabled by default; set to `false` to disable.
+
+| Property | Value                                                       |
+| -------- | ----------------------------------------------------------- |
+| Type     | `:boolean`                                                  |
+| Default  | `true`                                                      |
+| Name     | `propagate_trace_headers`                                   |
+
+| Value   | Behavior                                                       |
+| ------- | -------------------------------------------------------------- |
+| `true`  | Inject trace headers into outgoing requests (distributed tracing) |
+| `false` | Do not inject headers (spans remain local)                     |
+
+Applies to HTTP client instrumentations (Req, Tesla). Packages that always inject
+(HTTPoison, Finch, gRPC, Commanded) have no toggle.
+
 ## Module Names in Attribute Values
 
 When an attribute value is an Elixir module name, use the short form without the
