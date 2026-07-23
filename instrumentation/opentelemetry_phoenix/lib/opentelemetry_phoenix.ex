@@ -126,6 +126,9 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, :live_component, :handle_event, :start],
         [:phoenix, :live_component, :handle_event, :stop],
         [:phoenix, :live_component, :handle_event, :exception],
+        [:phoenix, :live_view, :render, :start],
+        [:phoenix, :live_view, :render, :stop],
+        [:phoenix, :live_view, :render, :exception],
         [:phoenix, :live_component, :update, :start],
         [:phoenix, :live_component, :update, :stop],
         [:phoenix, :live_component, :update, :exception]
@@ -206,16 +209,44 @@ defmodule OpentelemetryPhoenix do
   end
 
   def handle_liveview_event(
-        [:phoenix, :live_component, :update, :start],
+        [:phoenix, _live, :render, :start],
         _measurements,
-        %{component: component} = meta,
+        %{socket: %{view: live_view}, component: component} = meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(component)}.render",
+      meta,
+      %{attributes: %{:"live_view.module" => inspect(live_view)}}
+    )
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :render, :start],
+        _measurements,
+        %{socket: %{view: live_view}} = meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(live_view)}.render",
+      meta,
+      %{kind: :server}
+    )
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :update, :start],
+        _measurements,
+        %{socket: %{view: live_view}, component: component} = meta,
         _handler_configuration
       ) do
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
       "#{inspect(component)}.update",
       meta,
-      %{kind: :server}
+      %{attributes: %{:"live_view.module" => inspect(live_view)}}
     )
   end
 
