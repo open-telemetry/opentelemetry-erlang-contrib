@@ -211,6 +211,20 @@ defmodule OpentelemetryPhoenix do
   def handle_liveview_event(
         [:phoenix, _live, :render, :start],
         _measurements,
+        %{socket: %{view: live_view}, component: component} = meta,
+        _handler_configuration
+      ) do
+    OpentelemetryTelemetry.start_telemetry_span(
+      @tracer_id,
+      "#{inspect(component)}.render",
+      meta,
+      %{attributes: %{:"live_view.module" => inspect(live_view)}}
+    )
+  end
+
+  def handle_liveview_event(
+        [:phoenix, _live, :render, :start],
+        _measurements,
         %{socket: %{view: live_view}} = meta,
         _handler_configuration
       ) do

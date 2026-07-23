@@ -260,6 +260,70 @@ defmodule OpentelemetryPhoenixTest do
            ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
   end
 
+  test "records spans for Phoenix LiveComponent render" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.component_render_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :stop],
+      %{system_time: System.system_time()},
+      LiveViewMeta.component_render_stop()
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      attributes: attributes
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+  end
+
+  test "handles exception during Phoenix LiveComponent render" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :start],
+      %{system_time: System.system_time()},
+      LiveViewMeta.component_render_start()
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :render, :exception],
+      %{system_time: System.system_time()},
+      LiveViewMeta.component_render_exception()
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      attributes: attributes,
+                      events: events
+                    )}
+
+    attrs = :otel_attributes.map(attributes)
+    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+
+    [
+      event(
+        name: :exception,
+        attributes: event_attributes
+      )
+    ] = :otel_events.list(events)
+
+    assert [
+             ExceptionAttributes.exception_message(),
+             ExceptionAttributes.exception_stacktrace(),
+             ExceptionAttributes.exception_type()
+           ] == Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+  end
+
   test "records spans for Phoenix LiveComponent update" do
     OpentelemetryPhoenix.setup(adapter: :cowboy2)
 
