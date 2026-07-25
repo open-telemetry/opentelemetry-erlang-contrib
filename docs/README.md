@@ -13,3 +13,4 @@ Technical specifications:
 - [Configuration Options](reference/configuration-options.md): standard option types, defaults, naming conventions, SemConv requirement level mapping, and package support matrix
 - [Custom Span Attributes](reference/custom-span-attributes.md): how to define package-specific span attributes using a `[Component]Attributes` module
 - [Recording Exceptions](reference/recording-exceptions.md): exception event fields, span status description strings, `error.type` values, and `erlang.exception.kind`
+- [Context Propagation Precedence](reference/context-propagation.md): why `:telemetry` handlers must check for an already-attached context before falling back to a `$callers` ancestor
