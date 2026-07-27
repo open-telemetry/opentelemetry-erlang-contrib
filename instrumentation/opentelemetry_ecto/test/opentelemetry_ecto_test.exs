@@ -403,13 +403,24 @@ defmodule OpentelemetryEctoTest do
                     span(
                       name: "SELECT users",
                       status: {:status, :error, message},
-                      attributes: attributes
+                      attributes: attributes,
+                      events: events
                     )}
 
     assert message =~ "non_existent_field does not exist"
 
     assert %{unquote(ErrorAttributes.error_type()) => :undefined_column} =
              :otel_attributes.map(attributes)
+
+    assert [event(name: :exception, attributes: exception_attributes)] =
+             :otel_events.list(events)
+
+    assert %{
+             "exception.type": "Elixir.Postgrex.Error",
+             "exception.message": exception_message
+           } = :otel_attributes.map(exception_attributes)
+
+    assert exception_message =~ "non_existent_field does not exist"
   end
 
   test "sets error message on error - myxql" do
@@ -425,13 +436,24 @@ defmodule OpentelemetryEctoTest do
                     span(
                       name: "SELECT users",
                       status: {:status, :error, message},
-                      attributes: attributes
+                      attributes: attributes,
+                      events: events
                     )}
 
     assert message =~ "Unknown column 'u0.non_existent_field'"
 
     assert %{unquote(ErrorAttributes.error_type()) => 1054} =
              :otel_attributes.map(attributes)
+
+    assert [event(name: :exception, attributes: exception_attributes)] =
+             :otel_events.list(events)
+
+    assert %{
+             "exception.type": "Elixir.MyXQL.Error",
+             "exception.message": exception_message
+           } = :otel_attributes.map(exception_attributes)
+
+    assert exception_message =~ "Unknown column 'u0.non_existent_field'"
   end
 
   test "sets error message on error - tds" do
@@ -447,13 +469,24 @@ defmodule OpentelemetryEctoTest do
                     span(
                       name: "SELECT users",
                       status: {:status, :error, message},
-                      attributes: attributes
+                      attributes: attributes,
+                      events: events
                     )}
 
     assert message =~ "Invalid column name 'non_existent_field'"
 
     assert %{unquote(ErrorAttributes.error_type()) => 207} =
              :otel_attributes.map(attributes)
+
+    assert [event(name: :exception, attributes: exception_attributes)] =
+             :otel_events.list(events)
+
+    assert %{
+             "exception.type": "Elixir.Tds.Error",
+             "exception.message": exception_message
+           } = :otel_attributes.map(exception_attributes)
+
+    assert exception_message =~ "Invalid column name 'non_existent_field'"
   end
 
   test "sets error message on error - sqlite3" do
@@ -469,13 +502,73 @@ defmodule OpentelemetryEctoTest do
                     span(
                       name: "SELECT users",
                       status: {:status, :error, message},
-                      attributes: attributes
+                      attributes: attributes,
+                      events: events
                     )}
 
     assert message =~ "no such column: u0.non_existent_field"
 
     assert %{unquote(ErrorAttributes.error_type()) => :_OTHER} =
              :otel_attributes.map(attributes)
+
+    assert [event(name: :exception, attributes: exception_attributes)] =
+             :otel_events.list(events)
+
+    assert %{
+             "exception.type": "Elixir.Exqlite.Error",
+             "exception.message": exception_message
+           } = :otel_attributes.map(exception_attributes)
+
+    assert exception_message =~ "no such column: u0.non_existent_field"
+  end
+
+  test "uses the real stacktrace from event metadata when stacktrace: true is set" do
+    setup_instrumentation()
+
+    try do
+      Repo.all(from(u in "users", select: u.non_existent_field), stacktrace: true)
+    rescue
+      _ -> :ok
+    end
+
+    assert_receive {:span, span(name: "SELECT users", events: events)}
+
+    assert [event(name: :exception, attributes: exception_attributes)] =
+             :otel_events.list(events)
+
+    assert %{"exception.stacktrace": stacktrace} = :otel_attributes.map(exception_attributes)
+
+    assert stacktrace =~ "test/opentelemetry_ecto_test.exs"
+  end
+
+  test "falls back to inspect/1 for non-exception error reasons" do
+    setup_instrumentation()
+
+    :telemetry.execute(
+      [:opentelemetry_ecto, :test_repo, :query],
+      %{total_time: 1_000_000},
+      %{
+        type: :ecto_sql_query,
+        repo: Repo,
+        result: {:error, :rollback},
+        params: [],
+        cast_params: nil,
+        query: "SELECT * FROM users",
+        source: "users",
+        stacktrace: nil,
+        options: []
+      }
+    )
+
+    assert_receive {:span,
+                    span(
+                      name: "SELECT users",
+                      status: {:status, :error, message},
+                      events: events
+                    )}
+
+    assert message == inspect(:rollback)
+    assert :otel_events.list(events) == []
   end
 
   test "preloads in sequence are tied to the parent span" do
