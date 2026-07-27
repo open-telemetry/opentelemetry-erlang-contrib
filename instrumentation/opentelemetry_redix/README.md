@@ -36,7 +36,7 @@ dependencies in `mix.exs`:
 ```elixir
   def deps do
     [
-      {:opentelemetry_redix, "~> 0.1"}
+      {:opentelemetry_redix, "~> 0.2"}
     ]
   end
 ```
@@ -51,4 +51,3 @@ dependencies in `mix.exs`:
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/opentelemetry_redix](https://hexdocs.pm/opentelemetry_redix).
-

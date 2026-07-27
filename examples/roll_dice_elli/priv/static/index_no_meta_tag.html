@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <script src="/static/index.js"> </script>
+  </head>
+  <body>
+    <div id="dice-result-div">0</div>
+
+    <button hx-get="/rolldice" hx-target="#dice-result-div" hx-swap="innerHTML">
+      Roll
+    </button>
+
+  </body>
+</html>

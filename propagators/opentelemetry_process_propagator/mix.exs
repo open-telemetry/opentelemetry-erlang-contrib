@@ -9,7 +9,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       app: app,
       version: to_string(Keyword.fetch!(desc, :vsn)),
       description: to_string(Keyword.fetch!(desc, :description)),
-      elixir: "~> 1.10",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(Keyword.fetch!(config, :deps)),
       name: "Opentelemetry Process Propagator",
@@ -44,10 +44,10 @@ defmodule OpentelemetryProcessPropagator.MixProject do
       dep when is_atom(dep) -> {dep, ">= 0.0.0"}
     end)
     |> Enum.concat([
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.28.3", only: :dev, runtime: false},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]}
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "== 0.40.3", only: :dev, runtime: false},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]}
     ])
   end
 
@@ -77,13 +77,13 @@ defmodule OpentelemetryProcessPropagator.MixProject do
   end
 
   defp load_config do
-    {:ok, config} = :file.consult('rebar.config')
+    {:ok, config} = :file.consult(~c"rebar.config")
 
     config
   end
 
   defp load_app do
-    {:ok, [{:application, name, desc}]} = :file.consult('src/opentelemetry_process_propagator.app.src')
+    {:ok, [{:application, name, desc}]} = :file.consult(~c"src/opentelemetry_process_propagator.app.src")
 
     {name, desc}
   end

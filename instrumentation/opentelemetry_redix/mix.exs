@@ -1,18 +1,26 @@
 defmodule OpentelemetryRedix.MixProject do
   use Mix.Project
 
+  @version "0.2.0"
+
   def project do
     [
       app: :opentelemetry_redix,
       description: description(),
-      version: "0.1.1",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       source_url:
-        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_redix"
+        "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_redix",
+      docs: [
+        source_url_pattern:
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_redix/%{path}#L%{line}",
+        main: "OpentelemetryRedix",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -47,13 +55,16 @@ defmodule OpentelemetryRedix.MixProject do
 
   defp deps do
     [
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.28.0", only: [:dev], runtime: false},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:redix, "~> 1.0", only: [:dev, :test]},
-      {:telemetry, "~> 0.4 or ~> 1.0"}
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:nimble_options, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_process_propagator, "~> 0.3"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:redix, "== 1.6.0", only: [:dev, :test]},
+      {:telemetry, "~> 1.0"}
     ]
   end
 end

@@ -59,7 +59,7 @@ if config_env() == :prod do
     otel_batch_processor: %{
       # Using `otel` here since we are starting through docker-compose where
       # otel refer to the hostname of the OpenCollector,
-        #
+      #
       # If you are running it locally, kindly change it to the correct
       # hostname such as `localhost`, `0.0.0.0` and etc.
       exporter: {:opentelemetry_exporter, %{endpoints: ["http://otel:4318"]}}
@@ -84,15 +84,15 @@ if config_env() == :prod do
       # }
     }
 
-    # Example configuration for Lightstep.com, for more refers to:
-    # https://github.com/open-telemetry/opentelemetry-erlang/tree/main/apps/opentelemetry_exporter#application-environment
-    # config :opentelemetry_exporter,
-    #   # You can also configure the compression type for exporting traces.
-    #   oltp_traces_compression: :gzip,
-    #   otlp_traces_endpoint: "https://ingest.lightstep.com:443/traces/otlp/v0.9",
-    #   otlp_headers: [
-    #     {"lightstep-access-token", System.get_env("LIGHTSTEP_ACCESS_TOKEN")}
-    #   ]
+  # Example configuration for Lightstep.com, for more refers to:
+  # https://github.com/open-telemetry/opentelemetry-erlang/tree/main/apps/opentelemetry_exporter#application-environment
+  # config :opentelemetry_exporter,
+  #   # You can also configure the compression type for exporting traces.
+  #   oltp_traces_compression: :gzip,
+  #   otlp_traces_endpoint: "https://ingest.lightstep.com:443/traces/otlp/v0.9",
+  #   otlp_headers: [
+  #     {"lightstep-access-token", System.get_env("LIGHTSTEP_ACCESS_TOKEN")}
+  #   ]
 
   # ## Using releases
   #

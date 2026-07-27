@@ -1,14 +1,13 @@
 {application, opentelemetry_telemetry,
  [{description, "Telemetry to OpenTelemetry Bridge"},
-  {vsn, "1.0.0"},
+  {vsn, "1.1.2"},
   {registered, []},
   {applications,
    [kernel,
     stdlib,
     opentelemetry,
     opentelemetry_api,
-    telemetry,
-    telemetry_registry
+    telemetry
    ]},
   {env,[]},
   {modules, []},

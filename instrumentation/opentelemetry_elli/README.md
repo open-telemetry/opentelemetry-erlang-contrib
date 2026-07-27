@@ -10,7 +10,7 @@ Elli middleware for OpenTelemetry instrumentation.
 {deps, [opentelemetry_elli]}.
 ```
 
-While using the `elli_middleware` callback, place `oc_elli_middelware` as the first module to be called in the list of handlers:
+While using the `elli_middleware` callback, place `oc_elli_middleware` as the first module to be called in the list of handlers:
 
 ``` erlang
 [{callback, elli_middleware},
@@ -73,7 +73,7 @@ be added to `sys.config` to exclude the URLs `/health` and `/metrics`:
 
 ``` erlang
 
-{opentelemetry_elli, [{excluded_urls, ["/health", "/metrics"]}]}
+{opentelemetry_elli, [{excluded_paths, ["/health", "/metrics"]}]}
 ```
 
 An OS environment variable, `OTEL_ELLI_EXCLUDED_URLS`, is also read and is a

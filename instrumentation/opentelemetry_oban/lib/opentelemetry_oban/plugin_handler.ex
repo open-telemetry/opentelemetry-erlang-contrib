@@ -1,5 +1,9 @@
 defmodule OpentelemetryOban.PluginHandler do
+  @moduledoc false
+
+  alias OpenTelemetry.Tracer
   alias OpenTelemetry.Span
+  alias OpenTelemetry.SemConv.ErrorAttributes
 
   @tracer_id __MODULE__
 
@@ -41,26 +45,91 @@ defmodule OpentelemetryOban.PluginHandler do
       @tracer_id,
       "#{plugin} process",
       metadata,
-      %{}
+      %{attributes: %{"oban.plugin": plugin}}
     )
   end
 
   def handle_plugin_stop(_event, _measurements, metadata, _config) do
+    Tracer.set_attributes(end_span_plugin_attrs(metadata))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
   def handle_plugin_exception(
         _event,
         _measurements,
-        %{stacktrace: stacktrace, error: error} = metadata,
+        %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
         _config
       ) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
     # Record exception and mark the span as errored
-    Span.record_exception(ctx, error, stacktrace)
-    Span.set_status(ctx, OpenTelemetry.status(:error, ""))
+    # We use :otel_span.record_exception/5 (Erlang) instead of Span.record_exception/3 (Elixir)
+    # because the Elixir version only works with exception structs (e.g., %RuntimeError{}),
+    # while the Erlang version handles ANY error reason (atoms like :badarg, tuples, etc.)
+    :otel_span.record_exception(ctx, kind, reason, stacktrace, [])
+
+    Span.set_status(
+      ctx,
+      OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
+    )
+
+    set_error_type(reason)
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
+  end
+
+  defp set_error_type(%struct_name{} = error) when is_exception(error),
+    do: Tracer.set_attribute(ErrorAttributes.error_type(), inspect(struct_name))
+
+  defp set_error_type(_error), do: :ok
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Cron} = metadata) do
+    %{"oban.plugins.cron.jobs_count": length(metadata[:jobs] || [])}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Gossip} = metadata) do
+    %{"oban.plugins.gossip.gossip_count": metadata[:gossip_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Lifeline} = metadata) do
+    %{
+      "oban.plugins.lifeline.discarded_count": metadata[:discarded_count],
+      "oban.plugins.lifeline.rescued_count": metadata[:rescued_count]
+    }
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Pruner} = metadata) do
+    %{"oban.plugins.pruner.pruned_count": metadata[:pruned_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicCron} = metadata) do
+    %{"oban.pro.plugins.dynamic_cron.jobs_count": length(metadata[:jobs] || [])}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicLifeline} = metadata) do
+    %{
+      "oban.pro.plugins.dynamic_lifeline.discarded_count": metadata[:discarded_count],
+      "oban.pro.plugins.dynamic_lifeline.rescued_count": metadata[:rescued_count]
+    }
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPrioritizer} = metadata) do
+    %{"oban.pro.plugins.dynamic_prioritizer.reprioritized_count": metadata[:reprioritized_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPruner} = metadata) do
+    %{"oban.pro.plugins.dynamic_pruner.pruned_count": metadata[:pruned_count]}
+  end
+
+  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicScaler} = metadata) do
+    %{
+      "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_to": metadata[:scaler][:last_scaled_to],
+      "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_at":
+        DateTime.to_iso8601(metadata[:scaler][:last_scaled_at])
+    }
+  end
+
+  defp end_span_plugin_attrs(_) do
+    %{}
   end
 end

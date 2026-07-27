@@ -7,7 +7,8 @@ defmodule Demo.Application do
 
   @impl true
   def start(_type, _args) do
-    OpentelemetryPhoenix.setup()
+    :opentelemetry_cowboy.setup()
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
     OpentelemetryEcto.setup([:demo, :repo])
 
     children = [

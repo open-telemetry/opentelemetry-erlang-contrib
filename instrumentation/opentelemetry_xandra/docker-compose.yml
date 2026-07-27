@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  cassandra:
+    image: cassandra:${CASSANDRA_VERSION:-4.1}
+    ports:
+      - "9042:9042" # TCP connections
+    environment:
+      - HEAP_NEWSIZE=1M
+      - MAX_HEAP_SIZE=200M
+    healthcheck:
+      test: [ "CMD-SHELL", "nodetool -h ::FFFF:127.0.0.1 status" ]
+      interval: 20s
+      timeout: 10s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m

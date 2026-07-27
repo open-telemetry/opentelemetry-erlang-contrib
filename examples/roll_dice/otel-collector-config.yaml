@@ -1,0 +1,46 @@
+# OpenTelemetry Collector config that receives OTLP and exports to Zipkin
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        cors:
+          allowed_origins:
+          - "http://localhost:4000"
+        endpoint: "0.0.0.0:4318"
+processors:
+exporters:
+  otlp:
+    endpoint: jaeger-all-in-one:4317
+    tls:
+      insecure: true
+    sending_queue:
+      batch:
+
+  debug:
+    verbosity: detailed
+    sampling_initial: 1
+    sampling_thereafter: 1
+
+extensions:
+  zpages: {}
+
+service:
+  telemetry:
+    logs:
+      level: "debug"
+  extensions: [zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: []
+      exporters: [debug, otlp]
+    metrics:
+      receivers: [otlp]
+      processors: []
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: []
+      exporters: [debug]

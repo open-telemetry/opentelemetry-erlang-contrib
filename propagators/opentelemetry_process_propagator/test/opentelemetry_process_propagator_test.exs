@@ -55,6 +55,24 @@ defmodule OpentelemetryProcessPropagatorTest do
 
       assert_receive ^ctx
     end
+
+    test "fetches the parent ctx when parent is named" do
+      Process.register(self(), TestParent)
+
+      span_ctx = Tracer.start_span("test")
+      Tracer.set_current_span(span_ctx)
+
+      ctx = Ctx.get_current()
+
+      pid = self()
+
+      :proc_lib.spawn(fn ->
+        p_ctx = fetch_parent_ctx()
+        send(pid, p_ctx)
+      end)
+
+      assert_receive ^ctx
+    end
   end
 
   describe "fetch_parent_ctx/1" do

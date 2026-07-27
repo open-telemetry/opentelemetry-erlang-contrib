@@ -1,0 +1,22 @@
+services:
+  otel:
+    image: otel/opentelemetry-collector-contrib:0.157.0@sha256:f2f01157055a9b2aab9df7118e1f1c9abf345e99b23bc7a2bc791db374a7d0f6
+    command: ["--config=/conf/otel-collector-config.yaml"]
+    privileged: true
+    ports:
+      - 4317:4317
+      - 4318:4318
+      - 55679:55679
+    volumes:
+      - ./otel-collector-config.yaml:/conf/otel-collector-config.yaml
+    links:
+      - jaeger-all-in-one
+
+  jaeger-all-in-one:
+    image: jaegertracing/jaeger:2.20.0@sha256:46a886260e04002d8f45e213fc39063fa11a50446048fdaa64786fc0840cb9f8
+    restart: always
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "16686:16686"
+      - "4317"

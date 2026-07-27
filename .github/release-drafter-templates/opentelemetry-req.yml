@@ -1,0 +1,6 @@
+_extends: opentelemetry-erlang-contrib:/.github/release-drafter.yml
+name-template: 'Opentelemetry Req - v$RESOLVED_VERSION'
+tag-template: 'opentelemetry-req-v$RESOLVED_VERSION'
+tag-prefix: opentelemetry-req-v
+include-paths:
+  - instrumentation/opentelemetry_req/

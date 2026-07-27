@@ -45,12 +45,12 @@ defmodule OpentelemetryProcessPropagator do
   Example of using `fetch_parent_ctx/1` to find a parent context.
 
   ```elixir
-  OpenTelemetry.with_span :span_started_in_your_app do
+  OpenTelemetry.Tracer.with_span :span_started_in_your_app do
     # some span being created in a process spawned by a library
     # you don't control, e.g. Ecto preloads
 
     Task.async(fn ->
-      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(:"$callers")
+      parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(1, :"$callers")
 
       OpenTelemetry.Ctx.attach(parent_ctx)
 
@@ -82,9 +82,9 @@ defmodule OpentelemetryProcessPropagator do
   """
 
   @doc """
-  Attempt to fetch an otel context from a give pid.
+  Attempt to fetch an otel context from a given pid.
   """
-  @spec fetch_ctx(pid) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_ctx(pid) :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_ctx(pid), to: :opentelemetry_process_propagator
 
   @doc """
@@ -92,14 +92,14 @@ defmodule OpentelemetryProcessPropagator do
 
   This is equivalent to calling `fetch_parent_ctx(1, :"$ancestors")`
   """
-  @spec fetch_parent_ctx() :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx() :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_parent_ctx(), to: :opentelemetry_process_propagator
 
   @doc """
   Attempt to find an otel context in a spawning process within `n` number of parent
-  processes
+  processes.
   """
-  @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx(non_neg_integer()) :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_parent_ctx(depth), to: :opentelemetry_process_propagator
 
   @doc """
@@ -110,6 +110,6 @@ defmodule OpentelemetryProcessPropagator do
   Processes spawned by `proc_lib` are stored under `:"$ancestors`. The
   Elixir `Task` module uses the `:"$callers` key.
   """
-  @spec fetch_parent_ctx(non_neg_integer(), atom()) :: OpenTelemetry.span_ctx() | :undefined
+  @spec fetch_parent_ctx(non_neg_integer(), atom()) :: OpenTelemetry.Ctx.t() | :undefined
   defdelegate fetch_parent_ctx(max_depth, key), to: :opentelemetry_process_propagator
 end
