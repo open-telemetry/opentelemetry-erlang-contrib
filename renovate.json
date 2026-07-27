@@ -19,18 +19,20 @@
   },
   "customManagers": [
     {
-      "customType": "regex",
+      "customType": "jsonata",
+      "fileFormat": "json",
       "managerFilePatterns": ["/^renovate\\.json$/"],
-      "matchStrings": ["\"elixir\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "matchStrings": ["{ \"currentValue\": constraints.elixir }"],
       "depNameTemplate": "elixir-lang/elixir",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver",
       "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
     },
     {
-      "customType": "regex",
+      "customType": "jsonata",
+      "fileFormat": "json",
       "managerFilePatterns": ["/^renovate\\.json$/"],
-      "matchStrings": ["\"erlang\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "matchStrings": ["{ \"currentValue\": constraints.erlang }"],
       "depNameTemplate": "erlang/otp",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "loose",
@@ -39,7 +41,7 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["custom.regex"],
+      "matchManagers": ["custom.jsonata"],
       "matchDepNames": ["elixir-lang/elixir", "erlang/otp"],
       "dependencyDashboardApproval": true,
       "groupName": "renovate toolchain constraints",
