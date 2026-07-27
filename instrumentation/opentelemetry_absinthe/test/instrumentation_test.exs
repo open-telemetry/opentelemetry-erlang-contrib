@@ -39,6 +39,71 @@ defmodule OpentelemetryAbsintheTest.InstrumentationTest do
     assert @trace_attributes = attrs |> Map.keys() |> Enum.sort()
   end
 
+  describe "error_status option" do
+    test "default (:all) marks span as error when resolver returns error" do
+      Instrumentation.setup()
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert {:status, :error, ""} = status
+    end
+
+    test "default (:all) does not mark span as error when resolver succeeds" do
+      Instrumentation.setup()
+      status = Query.query_for_status(Queries.query(), variables: %{"isbn" => "A1"})
+
+      assert :undefined = status
+    end
+
+    test ":none never marks span as error even when resolver returns error" do
+      Instrumentation.setup(error_status: :none)
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert :undefined = status
+    end
+
+    test "custom function can selectively mark errors" do
+      classifier = fn errors ->
+        has_not_found? =
+          Enum.any?(errors, fn
+            %{message: "not found"} -> true
+            _ -> false
+          end)
+
+        if has_not_found?, do: :error, else: :ok
+      end
+
+      Instrumentation.setup(error_status: classifier)
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert {:status, :error, ""} = status
+    end
+
+    test "custom function can suppress known errors" do
+      classifier = fn _errors -> :ok end
+
+      Instrumentation.setup(error_status: classifier)
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert :undefined = status
+    end
+
+    test "error_status can be configured via application env" do
+      Application.put_env(:opentelemetry_absinthe, :trace_options, error_status: :none)
+      Instrumentation.setup()
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert :undefined = status
+    end
+
+    test "error_status passed to setup/1 takes precedence over application env" do
+      Application.put_env(:opentelemetry_absinthe, :trace_options, error_status: :none)
+      Instrumentation.setup(error_status: :all)
+      status = Query.query_for_status(Queries.failing_query())
+
+      assert {:status, :error, ""} = status
+    end
+  end
+
   describe "handles metadata" do
     setup do
       config =

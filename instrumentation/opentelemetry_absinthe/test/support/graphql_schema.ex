@@ -36,6 +36,12 @@ defmodule OpentelemetryAbsintheTest.Support.GraphQL.Schema do
     end
 
     field :books, list_of(:book)
+
+    field :failing_book, :book do
+      resolve(fn _parent, _args, _resolution ->
+        {:error, "not found"}
+      end)
+    end
   end
 
   mutation do

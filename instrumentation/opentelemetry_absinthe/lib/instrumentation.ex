@@ -12,7 +12,7 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
   alias OpentelemetryAbsinthe.TelemetryMetadata
 
   require OpenTelemetry.Tracer, as: Tracer
-  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
+  require OpenTelemetry.SemConv.Incubating.GraphqlAttributes, as: GraphqlConventions
   require Logger
   require Record
 
@@ -42,9 +42,11 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
   Record.defrecord(:span_ctx, @span_ctx_fields)
 
   @default_operation_span "GraphQL Operation"
-  @graphql_document Conventions.graphql_document()
-  @graphql_operation_name Conventions.graphql_operation_name()
-  @graphql_operation_type Conventions.graphql_operation_type()
+  @graphql_document GraphqlConventions.graphql_document()
+  @graphql_operation_name GraphqlConventions.graphql_operation_name()
+  @graphql_operation_type GraphqlConventions.graphql_operation_type()
+
+  @type error_status_option :: :all | :none | (list() -> :ok | :error)
 
   @default_config [
     span_name: :dynamic,
@@ -55,7 +57,8 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     trace_request_selections: true,
     trace_response_result: false,
     trace_response_errors: false,
-    trace_subscriptions: false
+    trace_subscriptions: false,
+    error_status: :all
   ]
 
   def setup(instrumentation_opts \\ []) do
@@ -137,7 +140,7 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     |> Tracer.update_name()
 
     errors = data.blueprint.result[:errors]
-    status = status(errors)
+    status = status(errors, config.error_status)
     set_status(status)
 
     []
@@ -220,9 +223,11 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     Tracer.set_current_span(ctx)
   end
 
-  defp status(nil), do: :ok
-  defp status([]), do: :ok
-  defp status(_error), do: :error
+  defp status(nil, _option), do: :ok
+  defp status([], _option), do: :ok
+  defp status(_errors, :none), do: :ok
+  defp status(_errors, :all), do: :error
+  defp status(errors, fun) when is_function(fun, 1), do: fun.(errors)
 
   defp set_status(:ok), do: :ok
   defp set_status(:error), do: Tracer.set_status(OpenTelemetry.status(:error, ""))

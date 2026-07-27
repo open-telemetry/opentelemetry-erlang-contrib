@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.0] - 2026-02-20
+
+### Added
+
+- Add `error_status` option to control span error classification (#221)
+
+---
+
+## [2.3.2] - 2025-01-27
+
+### Fixed
+
+- Docs work properly now, thanks to @hissssst
+
+---
+
+## [2.3.1] - 2024-10-09
+
+### Changed
+
+- Use `opentelemetry_semantic_conventions` 1.x
+
+---
+
 ## [2.3.0] - 2024-05-27
 
 ### Added
