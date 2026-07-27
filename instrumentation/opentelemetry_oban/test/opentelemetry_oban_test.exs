@@ -147,6 +147,8 @@ defmodule OpentelemetryObanTest do
                       status: :undefined
                     )}
 
+    attrs = :otel_attributes.map(attributes)
+
     assert %{
              "messaging.destination.name": "events",
              "messaging.operation.name": "process",
@@ -156,12 +158,31 @@ defmodule OpentelemetryObanTest do
              "oban.job.max_attempts": 1,
              "oban.job.priority": 0,
              "oban.job.scheduled_at": _scheduled_at,
+             "oban.job.queue": "events",
+             "oban.job.attempted_at": _attempted_at,
              "oban.job.worker": "TestJob",
              "messaging.message.id": ^id,
              "messaging.client.id": "TestJob",
              "messaging.operation.type": :process,
              "messaging.system": :oban
-           } = :otel_attributes.map(attributes)
+           } = attrs
+
+    refute Map.has_key?(attrs, :"oban.job.workflow_id")
+  end
+
+  test "records the workflow id when the job belongs to an Oban Pro workflow" do
+    OpentelemetryOban.insert(TestJob.new(%{}, meta: %{"workflow_id" => "workflow-123"}))
+    assert %{success: 1, failure: 0} = Oban.drain_queue(queue: :events)
+
+    assert_receive {:span,
+                    span(
+                      name: "process events",
+                      attributes: attributes,
+                      kind: :consumer,
+                      status: :undefined
+                    )}
+
+    assert %{"oban.job.workflow_id": "workflow-123"} = :otel_attributes.map(attributes)
   end
 
   test "records spans for Oban jobs that stop with {:error, :something}" do

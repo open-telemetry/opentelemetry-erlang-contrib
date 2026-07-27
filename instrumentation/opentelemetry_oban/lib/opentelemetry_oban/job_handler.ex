@@ -79,28 +79,33 @@ defmodule OpentelemetryOban.JobHandler do
         scheduled_at: scheduled_at,
         attempt: attempt,
         max_attempts: max_attempts,
-        meta: job_meta
+        meta: job_meta,
+        attempted_at: attempted_at
       }
     } = metadata
 
     links = setup_context_propagation(job_meta, config.span_relationship)
 
-    attributes = %{
-      MessagingAttributes.messaging_system() => :oban,
-      MessagingAttributes.messaging_operation_name() => "process",
-      MessagingAttributes.messaging_message_id() => id,
-      MessagingAttributes.messaging_client_id() => worker,
-      MessagingAttributes.messaging_destination_name() => queue,
-      MessagingAttributes.messaging_operation_type() =>
-        MessagingAttributes.messaging_operation_type_values().process,
-      :"oban.job.job_id" => id,
-      :"oban.job.worker" => worker,
-      :"oban.job.priority" => priority,
-      :"oban.job.attempt" => attempt,
-      :"oban.job.max_attempts" => max_attempts,
-      :"oban.job.inserted_at" => DateTime.to_iso8601(inserted_at),
-      :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at)
-    }
+    attributes =
+      %{
+        MessagingAttributes.messaging_system() => :oban,
+        MessagingAttributes.messaging_operation_name() => "process",
+        MessagingAttributes.messaging_message_id() => id,
+        MessagingAttributes.messaging_client_id() => worker,
+        MessagingAttributes.messaging_destination_name() => queue,
+        MessagingAttributes.messaging_operation_type() =>
+          MessagingAttributes.messaging_operation_type_values().process,
+        :"oban.job.job_id" => id,
+        :"oban.job.worker" => worker,
+        :"oban.job.queue" => queue,
+        :"oban.job.priority" => priority,
+        :"oban.job.attempt" => attempt,
+        :"oban.job.max_attempts" => max_attempts,
+        :"oban.job.inserted_at" => DateTime.to_iso8601(inserted_at),
+        :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at),
+        :"oban.job.attempted_at" => DateTime.to_iso8601(attempted_at)
+      }
+      |> put_workflow_id(job_meta)
 
     span_name = "process #{queue}"
 
@@ -136,6 +141,13 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp put_links(span_opts, []), do: span_opts
   defp put_links(span_opts, links), do: Map.put(span_opts, :links, links)
+
+  defp put_workflow_id(attributes, job_meta) do
+    case get_in(job_meta, ["workflow_id"]) do
+      nil -> attributes
+      workflow_id -> Map.put(attributes, :"oban.job.workflow_id", workflow_id)
+    end
+  end
 
   defp setup_context_propagation(job_meta, :child), do: extract_and_attach(job_meta)
   defp setup_context_propagation(job_meta, :link), do: link_from_propagated_ctx(job_meta)
