@@ -6,6 +6,10 @@
     ":preserveSemverRanges"
   ],
   "ignorePaths":[],
+  "constraints": {
+    "elixir": "1.18.2",
+    "erlang": "27.2.4"
+  },
   "labels": ["renovate"],
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 10,
@@ -13,7 +17,36 @@
   "vulnerabilityAlerts": {
     "schedule": ["at any time"]
   },
+  "customManagers": [
+    {
+      "customType": "jsonata",
+      "fileFormat": "json",
+      "managerFilePatterns": ["/^renovate\\.json$/"],
+      "matchStrings": ["{ \"currentValue\": constraints.elixir }"],
+      "depNameTemplate": "elixir-lang/elixir",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
+    },
+    {
+      "customType": "jsonata",
+      "fileFormat": "json",
+      "managerFilePatterns": ["/^renovate\\.json$/"],
+      "matchStrings": ["{ \"currentValue\": constraints.erlang }"],
+      "depNameTemplate": "erlang/otp",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "loose",
+      "extractVersionTemplate": "^OTP-(?<version>.+)$"
+    }
+  ],
   "packageRules": [
+    {
+      "matchManagers": ["custom.jsonata"],
+      "matchDepNames": ["elixir-lang/elixir", "erlang/otp"],
+      "dependencyDashboardApproval": true,
+      "groupName": "renovate toolchain constraints",
+      "addLabels": ["chore"]
+    },
     {
       "matchUpdateTypes": ["patch", "pin", "digest"],
       "groupName": "patch updates",
