@@ -3,6 +3,8 @@
 OpentelemetryNebulex uses `telemetry` handlers to create `OpenTelemetry` spans
 from Nebulex command events.
 
+Both Nebulex v2 and v3 command events are supported.
+
 ## Installation
 
 The package can be installed by adding `opentelemetry_nebulex` to your list of

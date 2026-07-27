@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+  * Support Nebulex v3 command events
+
 ## 0.2.0
 
 ### Changed
