@@ -6,6 +6,10 @@
     ":preserveSemverRanges"
   ],
   "ignorePaths":[],
+  "constraints": {
+    "elixir": "1.18.2",
+    "erlang": "27.2.4"
+  },
   "labels": ["renovate"],
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 10,
