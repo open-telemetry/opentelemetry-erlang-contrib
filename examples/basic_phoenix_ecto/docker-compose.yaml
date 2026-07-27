@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: demo_dev
 
   otel:
-    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:96a6845a1249d202d2ca975aeceabe368c430988aa9e6a81f58746ee9baaf70e
+    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:97c4470de76dd8110af99801c651fb422d94bfd115d6337ecd10864a54f4e98d
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - "4318:4318"
