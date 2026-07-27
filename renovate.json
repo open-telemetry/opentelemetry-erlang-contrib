@@ -17,7 +17,34 @@
   "vulnerabilityAlerts": {
     "schedule": ["at any time"]
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^renovate\\.json$/"],
+      "matchStrings": ["\"elixir\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "elixir-lang/elixir",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^renovate\\.json$/"],
+      "matchStrings": ["\"erlang\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "erlang/otp",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "loose",
+      "extractVersionTemplate": "^OTP-(?<version>.+)$"
+    }
+  ],
   "packageRules": [
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["elixir-lang/elixir", "erlang/otp"],
+      "dependencyDashboardApproval": true,
+      "groupName": "renovate toolchain constraints",
+      "addLabels": ["chore"]
+    },
     {
       "matchUpdateTypes": ["patch", "pin", "digest"],
       "groupName": "patch updates",
