@@ -270,7 +270,7 @@ defmodule OpentelemetryEcto do
   @doc false
   def handle_event(_event, measurements, meta, config) do
     %{query: query, source: source, result: query_result, repo: repo, type: type} =
-      config.telemetry_metadata_preprocessor.(meta)
+      preprocessed_meta = config.telemetry_metadata_preprocessor.(meta)
 
     per_query_opts = query_opts(meta)
 
@@ -325,6 +325,10 @@ defmodule OpentelemetryEcto do
       })
 
     case query_result do
+      {:error, %{__exception__: true} = exception} ->
+        OpenTelemetry.Span.record_exception(s, exception, Map.get(preprocessed_meta, :stacktrace))
+        OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(exception)))
+
       {:error, error} ->
         OpenTelemetry.Span.set_status(s, OpenTelemetry.status(:error, format_error(error)))
 
@@ -346,7 +350,7 @@ defmodule OpentelemetryEcto do
     Exception.message(exception)
   end
 
-  defp format_error(_), do: ""
+  defp format_error(reason), do: inspect(reason)
 
   defp set_server_address(attrs, repo, repo_config) do
     case repo.__adapter__() do
