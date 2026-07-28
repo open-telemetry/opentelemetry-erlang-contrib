@@ -115,13 +115,14 @@ defmodule OpentelemetryOban.JobHandler do
     OpentelemetryTelemetry.start_telemetry_span(@tracer_id, span_name, metadata, span_opts)
   end
 
-  def handle_job_stop(_event, _measurements, metadata, _config) do
+  def handle_job_stop(_event, measurements, metadata, _config) do
+    set_measurements_attributes(measurements)
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
   def handle_job_exception(
         _event,
-        _measurements,
+        measurements,
         %{stacktrace: stacktrace, error: error} = metadata,
         _config
       ) do
@@ -131,7 +132,16 @@ defmodule OpentelemetryOban.JobHandler do
     Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     set_error_type(error)
 
+    set_measurements_attributes(measurements)
+
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
+  end
+
+  defp set_measurements_attributes(%{duration: duration, queue_time: queue_time}) do
+    OpenTelemetry.Tracer.set_attributes(%{
+      :"oban.job.duration_us" => System.convert_time_unit(duration, :native, :microsecond),
+      :"oban.job.queue_time_us" => System.convert_time_unit(queue_time, :nanosecond, :microsecond)
+    })
   end
 
   defp set_error_type(%struct_name{} = error) when is_exception(error),
