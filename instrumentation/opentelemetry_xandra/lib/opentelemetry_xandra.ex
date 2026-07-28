@@ -21,7 +21,7 @@ defmodule OpentelemetryXandra do
   @tracer_id __MODULE__
 
   @typedoc """
-  Thet type for a function that returns the statement to be used in the span.
+  The type for a function that returns the statement to be used in the span.
 
   See `attach/1` for more information.
   """

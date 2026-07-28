@@ -197,6 +197,13 @@ if otp_vsn >= 27 do
       )
     end
 
+    # Finch 0.22+ returns :pool_not_available while a fresh HTTP/2 connection
+    # is still being established. Retrying it is safe with the otherwise
+    # disabled retries: the request never reached the server, so it cannot
+    # produce duplicate spans.
+    defp retry_pool_not_available(_request, %Req.HTTPError{reason: :pool_not_available}), do: true
+    defp retry_pool_not_available(_request, _response_or_exception), do: false
+
     adapter_suites =
       for adapter <- [:bandit, :cowboy], protocol <- [:http1, :http2], do: {adapter, protocol}
 
@@ -213,7 +220,9 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -238,7 +247,7 @@ if otp_vsn >= 27 do
               {URLAttributes.url_path(), "/users/1234"},
               {URLAttributes.url_query(), "a=1&b=abc"},
               {URLAttributes.url_scheme(), :http},
-              {URLAttributes.url_template(), "/users/:user_id"},
+              {HTTPAttributes.http_route(), "/users/:user_id"},
               {:"phoenix.action", :user},
               {:"phoenix.plug", OpentelemetryPhoenix.Integration.TracingTest.TestController}
             ]
@@ -263,7 +272,9 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -301,7 +312,9 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -329,7 +342,9 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -370,7 +385,9 @@ if otp_vsn >= 27 do
 
             Req.get!("http://localhost:#{adapter_info.port}/with_body",
               headers: %{"test-header" => "request header"},
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -439,7 +456,9 @@ if otp_vsn >= 27 do
                 "traceparent" => "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
                 "tracestate" => "congo=t61rcWkgMzE"
               },
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -500,7 +519,9 @@ if otp_vsn >= 27 do
             setup_adapter(unquote(adapter))
 
             Req.get("http://localhost:#{adapter_info.port}/router/oops",
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 
@@ -555,7 +576,9 @@ if otp_vsn >= 27 do
             setup_adapter(unquote(adapter))
 
             Req.get("http://localhost:#{adapter_info.port}/halted",
-              retry: false,
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
               connect_options: [protocols: [unquote(protocol)]]
             )
 

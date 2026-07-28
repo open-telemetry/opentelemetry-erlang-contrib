@@ -160,4 +160,44 @@ defmodule OpentelemetryDataloaderTest do
   defp kv_query(:test_maps, ids), do: Enum.map(ids, &%{id: &1})
   defp kv_query(TestModule, ids), do: Enum.map(ids, &%{id: &1})
   defp kv_query("test_keys", ids), do: Enum.map(ids, & &1)
+
+  test "keeps a context already attached to self instead of a more distant $callers ancestor" do
+    test_pid = self()
+
+    ancestor_pid =
+      spawn(fn ->
+        "ancestor" |> OpenTelemetry.Tracer.start_span() |> OpenTelemetry.Tracer.set_current_span()
+
+        ancestor_trace_id =
+          OpenTelemetry.Tracer.current_span_ctx() |> OpenTelemetry.Span.trace_id()
+
+        send(test_pid, {:ancestor_trace_id, ancestor_trace_id})
+
+        receive do
+          :stop -> :ok
+        end
+      end)
+
+    assert_receive {:ancestor_trace_id, ancestor_trace_id}
+
+    Process.put(:"$callers", [ancestor_pid])
+    "self" |> OpenTelemetry.Tracer.start_span() |> OpenTelemetry.Tracer.set_current_span()
+    self_trace_id = OpenTelemetry.Tracer.current_span_ctx() |> OpenTelemetry.Span.trace_id()
+
+    OpentelemetryDataloader.handle_event(
+      [:dataloader, :source, :run, :start],
+      %{},
+      %{},
+      %{tracer_id: OpentelemetryDataloader}
+    )
+
+    run_trace_id = OpenTelemetry.Tracer.current_span_ctx() |> OpenTelemetry.Span.trace_id()
+
+    assert run_trace_id == self_trace_id
+    refute run_trace_id == ancestor_trace_id
+
+    send(ancestor_pid, :stop)
+    OpenTelemetry.Tracer.end_span()
+    OpenTelemetry.Tracer.end_span()
+  end
 end

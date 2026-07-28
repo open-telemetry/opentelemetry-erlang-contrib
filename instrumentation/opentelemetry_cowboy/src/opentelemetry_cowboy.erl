@@ -39,7 +39,7 @@ Supported opt-in attributes can be configured using the `opt_in_attrs` option.
 ### Opt-in Semantic Convention Attributes
 
 Otel SemConv requires users to explicitly opt in for any attribute with a
-requirement level of `opt-in`. To ensure compatability, always use the
+requirement level of `opt-in`. To ensure compatibility, always use the
 SemConv attribute.
 
 Example:
@@ -95,7 +95,8 @@ default_opts() ->
         scheme_headers => [<<"forwarded">>, <<"x-forwarded-proto">>],
         scheme_headers_sort_fn => undefined,
         server_address_headers => [<<"forwarded">>, <<"x-forwarded-host">>, <<"host">>],
-        server_address_headers_sort_fn => undefined
+        server_address_headers_sort_fn => undefined,
+        valid_schemes => #{<<"http">> => http, <<"https">> => https}
     }.
 
 ?DOC("""
@@ -105,7 +106,7 @@ Supported options:
 * `client_address_headers` - Headers to use for extracting original client request address info. Default: `[<<"forwarded">>, <<"x-forwarded-for">>]`
 * `client_headers_sort_fn` - Custom client header sort fn. See `otel_http` for more info. Default: `undefined`
 * `handler_id` - Only set when running multiple instances on different endpoints. Default: `otel_cowboy`
-* `opt_in_attrs` - Use semantic conventions library to ensure compatability, e.g. `[{?HTTP_REQUEST_BODY_SIZE, true}]`. Default: `[]`
+* `opt_in_attrs` - Use semantic conventions library to ensure compatibility, e.g. `[{?HTTP_REQUEST_BODY_SIZE, true}]`. Default: `[]`
 * `public_endpoint` - Endpoint is public. Propagated traces will be added as a link. Default: `false`
 * `public_endpoint_fn` - Default function returns `false`. See docs for more info.
 * `request_headers` - List of request headers to add as attributes. (lowercase). Default: `[]`
@@ -114,6 +115,7 @@ Supported options:
 * `scheme_headers_sort_fn` - Custom scheme header sort fn. See `otel_http` for more info. Default: `undefined`
 * `server_address_headers` - Headers to use for extracting original server address info. Default: `[<<"forwarded">>, <<"x-forwarded-host">>, <<"host">>]`
 * `server_address_headers_sort_fn` - Custom server header sort fn. See `otel_http` for more info. Default: `undefined`
+* `valid_schemes` - Map of valid scheme binaries to atoms. Unknown schemes return `undefined`. Default: `#{<<"http">> => http, <<"https">> => https}`
 """).
 -spec setup() -> ok.
 setup() ->
@@ -227,7 +229,8 @@ otel_http_extract_scheme(Headers, SortFn) ->
 extract_scheme(Req, Config) ->
     #{
         scheme_headers := SchemeHeaders,
-        scheme_headers_sort_fn := SortFn
+        scheme_headers_sort_fn := SortFn,
+        valid_schemes := ValidSchemes
     } = Config,
     #{
         headers := Headers,
@@ -236,12 +239,7 @@ extract_scheme(Req, Config) ->
     SchemeHeaders1 = extract_headers(Headers, SchemeHeaders),
     case otel_http_extract_scheme(SchemeHeaders1, SortFn) of
         undefined ->
-            case ReqScheme of
-                <<"http">> ->
-                    http;
-                <<"https">> ->
-                    https
-            end;
+            maps:get(ReqScheme, ValidSchemes, undefined);
         ParsedScheme ->
             ParsedScheme
     end.

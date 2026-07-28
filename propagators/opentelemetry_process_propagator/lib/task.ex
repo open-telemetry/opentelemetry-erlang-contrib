@@ -55,6 +55,8 @@ defmodule OpentelemetryProcessPropagator.Task do
   alias OpentelemetryProcessPropagator.Task.Wrapper
   require OpenTelemetry.Tracer
 
+  @type t :: Task.t()
+
   @doc """
   Returns a stream that runs the given function `fun` concurrently
   on each element in `enumerable` with the current `t:OpenTelemetry.Ctx.t/0`

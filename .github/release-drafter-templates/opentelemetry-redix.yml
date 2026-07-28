@@ -1,4 +1,4 @@
-_extends: opentelemetry-erlang-contrib:.github/release-drafter.yml
+_extends: opentelemetry-erlang-contrib:/.github/release-drafter.yml
 name-template: 'Opentelemetry Redix - v$RESOLVED_VERSION'
 tag-template: 'opentelemetry-redix-v$RESOLVED_VERSION'
 tag-prefix: opentelemetry-redix-v

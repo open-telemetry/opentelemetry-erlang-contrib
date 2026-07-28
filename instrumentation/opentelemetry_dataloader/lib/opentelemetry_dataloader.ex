@@ -45,7 +45,11 @@ defmodule OpentelemetryDataloader do
   def handle_event(event, measurements, metadata, config)
 
   def handle_event(@run_start, _measurements, metadata, config) do
-    parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+    parent_ctx =
+      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
+        :undefined -> OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+        ctx -> ctx
+      end
 
     if parent_ctx != :undefined do
       OpenTelemetry.Ctx.attach(parent_ctx)
@@ -68,7 +72,11 @@ defmodule OpentelemetryDataloader do
   end
 
   def handle_event(@batch_start, _measurements, metadata, config) do
-    parent_ctx = OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+    parent_ctx =
+      case OpentelemetryProcessPropagator.fetch_ctx(self()) do
+        :undefined -> OpentelemetryProcessPropagator.fetch_parent_ctx(4, :"$callers")
+        ctx -> ctx
+      end
 
     if parent_ctx != :undefined do
       OpenTelemetry.Ctx.attach(parent_ctx)

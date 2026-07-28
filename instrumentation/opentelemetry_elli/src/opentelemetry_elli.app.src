@@ -6,6 +6,8 @@
    [kernel,
     stdlib,
     opentelemetry_api,
+    opentelemetry_semantic_conventions,
+    otel_http,
     elli
    ]},
   {env,[]},

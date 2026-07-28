@@ -9,21 +9,18 @@ defmodule OpentelemetryHTTPoison do
   use HTTPoison.Base
 
   require OpenTelemetry
-  require OpenTelemetry.SemanticConventions.Trace, as: Conventions
   require OpenTelemetry.Span
   require OpenTelemetry.Tracer
   require Record
   require Logger
 
   alias HTTPoison.Request
+  alias OpenTelemetry.SemConv.ErrorAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
+  alias OpenTelemetry.SemConv.Incubating.URLAttributes
+  alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.Tracer
   alias OpentelemetryHTTPoison.Configuration
-
-  @http_url Atom.to_string(Conventions.http_url())
-  @http_method Atom.to_string(Conventions.http_method())
-  @http_route Atom.to_string(Conventions.http_route())
-  @http_status_code Atom.to_string(Conventions.http_status_code())
-  @net_peer_name Atom.to_string(Conventions.net_peer_name())
 
   @doc ~S"""
   Configures OpentelemetryHTTPoison using the provided `opts` `Keyword list`.
@@ -161,7 +158,7 @@ defmodule OpentelemetryHTTPoison do
       |> get_resource_route(request)
       |> case do
         resource_route when is_binary(resource_route) ->
-          [{@http_route, resource_route}]
+          [{HTTPAttributes.http_route(), resource_route}]
 
         nil ->
           []
@@ -192,12 +189,17 @@ defmodule OpentelemetryHTTPoison do
   end
 
   def process_response_status_code(status_code) do
-    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     if status_code >= 400 do
       Tracer.set_status(:error, "")
+
+      Tracer.set_attributes(%{
+        HTTPAttributes.http_response_status_code() => status_code,
+        ErrorAttributes.error_type() => to_string(status_code)
+      })
+    else
+      Tracer.set_attribute(HTTPAttributes.http_response_status_code(), status_code)
     end
 
-    Tracer.set_attribute(@http_status_code, status_code)
     end_span()
     status_code
   end
@@ -208,7 +210,7 @@ defmodule OpentelemetryHTTPoison do
   end
 
   # see https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#name
-  defp default_span_name(request), do: request.method |> Atom.to_string() |> String.upcase()
+  defp default_span_name(request), do: request.method |> parse_method() |> Atom.to_string()
 
   @ctx_key {__MODULE__, :parent_ctx}
   defp save_parent_ctx do
@@ -224,14 +226,21 @@ defmodule OpentelemetryHTTPoison do
 
   defp get_standard_ot_attributes(request, host) do
     [
-      {@http_method,
-       request.method
-       |> Atom.to_string()
-       |> String.upcase()},
-      {@http_url, strip_uri_credentials(request.url)},
-      {@net_peer_name, host}
+      {HTTPAttributes.http_request_method(), parse_method(request.method)},
+      {URLAttributes.url_full(), strip_uri_credentials(request.url)},
+      {ServerAttributes.server_address(), host}
     ]
   end
+
+  defp parse_method(:connect), do: HTTPAttributes.http_request_method_values().connect
+  defp parse_method(:delete), do: HTTPAttributes.http_request_method_values().delete
+  defp parse_method(:get), do: HTTPAttributes.http_request_method_values().get
+  defp parse_method(:head), do: HTTPAttributes.http_request_method_values().head
+  defp parse_method(:options), do: HTTPAttributes.http_request_method_values().options
+  defp parse_method(:patch), do: HTTPAttributes.http_request_method_values().patch
+  defp parse_method(:post), do: HTTPAttributes.http_request_method_values().post
+  defp parse_method(:put), do: HTTPAttributes.http_request_method_values().put
+  defp parse_method(:trace), do: HTTPAttributes.http_request_method_values().trace
 
   defp get_ot_attributes(opts) do
     default_ot_attributes = Configuration.get(:ot_attributes)

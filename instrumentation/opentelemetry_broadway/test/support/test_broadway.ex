@@ -11,7 +11,10 @@ defmodule TestBroadway do
         default: []
       ],
       batchers: [
-        default: []
+        default: [
+          batch_size: 2,
+          batch_timeout: 10
+        ]
       ]
     )
   end

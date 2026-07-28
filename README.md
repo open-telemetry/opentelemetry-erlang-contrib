@@ -58,6 +58,13 @@ We'd love your help!. Use tags [up-for-grabs][up-for-grabs-issues] and
 [good first issue][good-first-issues] to get started with the project. Follow
 [CONTRIBUTING](CONTRIBUTING.md) guide to report issues or submit a proposal.
 
+### Emeritus
+
+- [Andrea Leopardi](https://github.com/whatyouhide), Approver
+
+For more information about the emeritus role, see the
+[community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
+
 ## Useful links
 
 - For more information on OpenTelemetry, see [opentelemetry.io](https://opentelemetry.io).
