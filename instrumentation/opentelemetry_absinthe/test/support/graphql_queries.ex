@@ -56,6 +56,16 @@ defmodule OpentelemetryAbsintheTest.Support.GraphQL.Queries do
     """
   end
 
+  def failing_query do
+    """
+    query {
+      failingBook {
+        title
+      }
+    }
+    """
+  end
+
   def invalid_query do
     "invalid_query"
   end

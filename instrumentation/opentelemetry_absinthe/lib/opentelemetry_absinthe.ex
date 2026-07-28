@@ -20,7 +20,7 @@ defmodule OpentelemetryAbsinthe do
   config :opentelemetry_absinthe,
     trace_options: [
       trace_request_query: false,
-      trace_response_error: true,
+      trace_response_errors: true,
       ...
     ]
   ```
@@ -28,7 +28,7 @@ defmodule OpentelemetryAbsinthe do
   ```
   OpentelemetryAbsinthe.setup(
     trace_request_query: false,
-    trace_response_error: true,
+    trace_response_errors: true,
     ...
   )
   ```
@@ -73,6 +73,38 @@ defmodule OpentelemetryAbsinthe do
     * `trace_response_result`(default: #{Keyword.fetch!(@config, :trace_response_result)}): attaches the result returned by the server as an attribute
     * `trace_response_errors`(default: #{Keyword.fetch!(@config, :trace_response_errors)}): attaches the errors returned by the server as an attribute
     * `trace_subscriptions`(default: #{Keyword.fetch!(@config, :trace_subscriptions)}): attaches to `[:absinthe, :subscription, :publish]` (`:start` and `:stop`)
+    * `error_status`(default: `#{Keyword.fetch!(@config, :error_status)}`): controls when GraphQL errors in the response set the span status to `:error`.
+
+      By default, any non-empty error list in the GraphQL response causes the span to be marked as an error.
+      In many applications, GraphQL errors represent business-level outcomes (e.g. "not found", "unauthorized",
+      "validation failed") rather than server failures. These inflate error rate metrics in observability tools
+      and can trigger false alerts.
+
+      This option lets you control which errors should actually mark the span as failed:
+
+        - `:all` (default): any GraphQL error in the response marks the span as error. This preserves
+          the current behavior and is fully backward compatible.
+        - `:none`: GraphQL errors never affect the span status. Useful when all resolver-level errors
+          are expected business outcomes and error tracking is handled at the field/resolver level.
+        - `(errors -> :ok | :error)`: a custom function that receives the list of GraphQL error maps
+          and returns `:ok` or `:error`. This allows fine-grained classification based on error codes,
+          messages, or any other error attributes.
+
+      Example — only treat internal server errors as span errors:
+
+      ```elixir
+      OpentelemetryAbsinthe.setup(
+        error_status: fn errors ->
+          has_server_error? =
+            Enum.any?(errors, fn
+              %{extensions: %{code: "INTERNAL_SERVER_ERROR"}} -> true
+              _ -> false
+            end)
+
+          if has_server_error?, do: :error, else: :ok
+        end
+      )
+      ```
 
   ## Telemetry
 

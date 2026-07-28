@@ -2,7 +2,7 @@ defmodule OpentelemetryAbsinthe.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/instrumentation/opentelemetry_absinthe"
-  @version "2.3.0"
+  @version "2.4.0"
 
   def project do
     [
@@ -14,7 +14,8 @@ defmodule OpentelemetryAbsinthe.MixProject do
       deps: deps(),
       docs: docs(),
       package: package(),
-      aliases: aliases()
+      aliases: aliases(),
+      description: description()
     ]
   end
 
@@ -51,7 +52,7 @@ defmodule OpentelemetryAbsinthe.MixProject do
     [
       {:opentelemetry, "~> 1.1", only: :test},
       {:opentelemetry_exporter, "~> 1.1", only: :test},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:credo, "~> 1.4", only: [:dev, :test]},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
@@ -69,8 +70,6 @@ defmodule OpentelemetryAbsinthe.MixProject do
   def package do
     [
       name: "opentelemetry_absinthe",
-      description:
-        "OpentelemetryAbsinthe is a opentelemetry-instrumented wrapper around Absinthe",
       licenses: ["Apache-2.0"],
       links: %{
         "Github" => @source_url,
@@ -80,5 +79,9 @@ defmodule OpentelemetryAbsinthe.MixProject do
         "OpenTelemetry.io" => "https://opentelemetry.io"
       }
     ]
+  end
+
+  def description do
+    "OpentelemetryAbsinthe is a OpenTelemetry instrumentation library for Absinthe."
   end
 end
