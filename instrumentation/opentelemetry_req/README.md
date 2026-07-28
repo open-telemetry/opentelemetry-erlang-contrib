@@ -5,15 +5,14 @@
 
 [Req](https://hex.pm/packages/req) plugin for OpenTelemetry instrumentation and propagation.
 
-See [Docs](https://hex.pm/packages/opentelemetry_req) for usage instructions.
+See [Docs](https://hexdocs.pm/opentelemetry_req) for usage instructions.
 
 ## Installation
 
 ```elixir
 def deps do
   [
-    {:opentelemetry_req, "~> 0.1.0"}
+    {:opentelemetry_req, "~> 1.0.0-beta.1"}
   ]
 end
 ```
-

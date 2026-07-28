@@ -7,14 +7,18 @@ on:
         description: "Package"
         type: choice
         options:
+          - "absinthe"
           - "aws_xray"
+          - "bandit"
+          - "broadway"
           - "cowboy"
           - "dataloader"
           - "ecto"
           - "elli"
           - "finch"
+          - "grpc"
           - "grpcbox"
-          - "http_instrumentation"
+          - "http"
           - "httpoison"
           - "nebulex"
           - "oban"
@@ -24,7 +28,21 @@ on:
           - "redix"
           - "req"
           - "tesla"
+          - "xandra"
+          - "commanded"
         required: true
+      otp-version:
+        description: "OTP version"
+        type: string
+        default: "27.1"
+      elixir-version:
+        description: "Elixir version"
+        type: string
+        default: "1.17.3"
+      rebar3-version:
+        description: "Rebar3 version"
+        type: string
+        default: "3.24.0"
       action:
         description: "Publish release"
         required: true
@@ -32,6 +50,10 @@ on:
         options:
           - prep
           - publish
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   config:
@@ -45,10 +67,10 @@ jobs:
       tag_prefix: ${{ steps.set-config.outputs.tag_prefix}}
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Read file
         id: set-config
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         env:
           package: ${{ inputs.package }}
         with:
@@ -101,11 +123,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: npm install semver
       - name: "Update Files"
         id: update-files
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -136,26 +158,26 @@ jobs:
               case 'elixir':
                 srcFilePath = `${needs.config.outputs.working_directory}/mix.exs`;
                 core.debug(`Source file path: ${srcFilePath}`)
-                
+
                 srcVersionRegex = /@version\s+"[^"]+"/;
                 core.debug(`Source version regex: ${srcVersionRegex}`)
-                
+
                 vsnLineTemplate = `@version "${version}"`;
                 core.debug(`Version line template: ${vsnLineTemplate}`)
-                
+
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               case 'elixir-erlang':
               case 'erlang':
                 srcFilePath = `${needs.config.outputs.working_directory}/src/${needs.config.outputs.package_name}.app.src`;
                 core.debug(`Source file path: ${srcFilePath}`)
-                
+
                 srcVersionRegex = /{vsn,\s+"[^"]+"},/;
                 core.debug(`Source version regex: ${srcVersionRegex}`)
-                
+
                 vsnLineTemplate = `{vsn, "${version}"},`;
                 core.debug(`Version line template: ${vsnLineTemplate}`)
-                
+
                 core.setOutput('srcFilePath', srcFilePath);
                 break;
               default:
@@ -190,12 +212,12 @@ jobs:
               }
             }
 
-      - uses: erlef/setup-beam@a23b1fc4452a892cf3e92cbc2c405256cd6c27ec # v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
         with:
           version-type: strict
-          otp-version: "25.3.2.5"
-          elixir-version: "1.14.5"
-          rebar3-version: "3.22.1"
+          otp-version: ${{ inputs.otp-version }}
+          elixir-version: ${{ inputs.elixir-version }}
+          rebar3-version: ${{ inputs.rebar3-version }}
 
       - name: "Mix Hex Publish Dry-run"
         if: ${{ needs.config.outputs.build_tool == 'mix' }}
@@ -212,13 +234,13 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 upgrade
+          rebar3 update
           rebar3 hex publish --dry-run --yes
 
       - name: "Open a Version Update PR"
         if: ${{ env.releasePrepped == 'false' }}
         id: version-update-pr
-        uses: peter-evans/create-pull-request@b1ddad2c994a25fbc81a28b3ec0e368bb2021c50 # v6
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           add-paths: |
             ${{ steps.update-files.outputs.srcFilePath }}
@@ -259,6 +281,6 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.OTEL_HEX_KEY }}
         run: |
-          rebar3 upgrade
+          rebar3 update
           rebar3 hex publish --yes
           echo "published=true" >> $GITHUB_ENV

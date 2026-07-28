@@ -21,13 +21,13 @@ There is no additional prerequisite setup for [plug_cowboy](https://hex.pm/packa
 
 ```erlang
 {deps, [
-  {opentelemetry_cowboy, "~> 0.3"}
+  {opentelemetry_cowboy, "~> 1.0"}
 ]}
 ```
 ```elixir
 def deps do
   [
-    {:opentelemetry_cowboy, "~> 0.3"}
+    {:opentelemetry_cowboy, "~> 1.0"}
   ]
 end
 ```

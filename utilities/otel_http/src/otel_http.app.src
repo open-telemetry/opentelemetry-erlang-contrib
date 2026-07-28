@@ -1,0 +1,22 @@
+{application, otel_http, [
+    {description, "OpenTelemetry Instrumentation utilities for HTTP libraries"},
+    {vsn, "0.2.0"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {exclude_paths, ["rebar.lock"]},
+    {env, []},
+    {modules, []},
+    {doc, "doc"},
+    {licenses, ["Apache-2.0"]},
+    {links, [
+        {"GitHub",
+            "https://github.com/open-telemetry/opentelemetry-erlang-contrib/tree/main/utilities/otel_http"},
+        {"OpenTelemetry Erlang", "https://github.com/open-telemetry/opentelemetry-erlang"},
+        {"OpenTelemetry Erlang Contrib",
+          "https://github.com/open-telemetry/opentelemetry-erlang-contrib"},
+        {"OpenTelemetry.io", "https://opentelemetry.io"}
+    ]}
+]}.

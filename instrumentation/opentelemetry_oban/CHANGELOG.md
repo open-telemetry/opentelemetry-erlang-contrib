@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Fix `OpentelemetryOban.PluginHandler` crashing with `:badarg` when an
+  `Oban.Plugins.Cron` (or `Oban.Pro.Plugins.DynamicCron`) `[:oban, :plugin, :stop]`
+  event carries no `:jobs` in its metadata. Oban omits `:jobs` when the scheduled
+  insert fails (e.g. a transient DB error), so `length(metadata[:jobs])` raised on
+  `nil` and `:telemetry` detached the handler, silently disabling plugin tracing
+  until the next restart. `jobs_count` now defaults to `0`.
+
+## 1.1.1
+
+### Fixed
+
+* Fixes broken handling and recording of Oban Plugin exceptions
+
 ## 1.1.0
 
 ### Changed

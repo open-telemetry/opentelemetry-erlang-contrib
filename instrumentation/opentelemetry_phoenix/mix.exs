@@ -1,7 +1,7 @@
 defmodule OpentelemetryPhoenix.MixProject do
   use Mix.Project
 
-  @version "1.2.0"
+  @version "2.0.1"
 
   def project do
     [
@@ -62,19 +62,26 @@ defmodule OpentelemetryPhoenix.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:nimble_options, "~> 0.5 or ~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_telemetry, "~> 1.0"},
+      {:nimble_options, "~> 1.0"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_process_propagator, "~> 0.3"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
-      {:telemetry, "~> 0.4 or ~> 1.0"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
+      {:otel_http, "~> 0.2"},
+      {:telemetry, "~> 1.0"},
       {:plug, ">= 1.11.0"},
-      {:cowboy_telemetry, "~> 0.4", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.0", only: [:dev, :test]},
-      {:opentelemetry_exporter, "~> 1.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.31", only: [:dev], runtime: false},
-      {:plug_cowboy, "~> 2.4", only: [:dev, :test]},
-      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false}
+      {:cowboy_telemetry, "== 0.4.0", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]},
+      {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
+      {:opentelemetry_bandit, "== 0.3.0", only: [:dev, :test]},
+      {:opentelemetry_cowboy, "== 1.0.0", only: [:dev, :test]},
+      {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
+      {:phoenix, "== 1.8.9", only: [:dev, :test]},
+      {:phoenix_html, "== 4.3.0", only: [:dev, :test]},
+      {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
+      {:bandit, "== 1.12.3", only: [:dev, :test]},
+      {:req, "== 0.6.3", only: [:dev, :test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

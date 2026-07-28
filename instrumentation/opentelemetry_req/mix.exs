@@ -1,14 +1,14 @@
 defmodule OpentelemetryReq.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "1.0.0"
 
   def project do
     [
       app: :opentelemetry_req,
       description: description(),
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Opentelemetry Req",
@@ -59,11 +59,17 @@ defmodule OpentelemetryReq.MixProject do
   defp deps do
     [
       {:jason, "~> 1.3"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_semantic_conventions, "~> 0.2"},
+      {:nimble_options, "~> 1.1"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_semantic_conventions, "~> 1.27"},
+      {:otel_http, "~> 0.2"},
       {:req, ">= 0.3.5"},
-      {:ex_doc, "~> 0.31", only: [:dev, :test]},
-      {:opentelemetry, "~> 1.0", only: :test}
+      {:ex_doc, "== 0.40.3", only: [:dev, :test]},
+      {:opentelemetry_exporter, "== 1.10.0", only: [:test]},
+      {:opentelemetry, "== 1.7.0", only: :test},
+      {:bypass, "== 2.1.0", only: :test},
+      {:plug, "== 1.20.3", only: [:test]},
+      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
 end
