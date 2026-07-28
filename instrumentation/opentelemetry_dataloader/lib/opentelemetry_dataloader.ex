@@ -84,8 +84,8 @@ defmodule OpentelemetryDataloader do
 
     attributes =
       case metadata.batch do
-        # Ecto source
-        {batch_name, _batch_args} ->
+        # Ecto source: batch key paired with the MapSet of pending entries
+        {batch_name, %MapSet{}} ->
           %{
             "dataloader.batch_key" => inspect(batch_name)
           }
@@ -93,7 +93,7 @@ defmodule OpentelemetryDataloader do
         # KV source with atom key
         batch_name when is_atom(batch_name) ->
           %{
-            "dataloader.batch_key" => to_string(batch_name)
+            "dataloader.batch_key" => inspect(batch_name)
           }
 
         # KV source with binary key
