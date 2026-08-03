@@ -52,8 +52,7 @@ on:
           - publish
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   config:
@@ -68,6 +67,8 @@ jobs:
       working_directory: ${{ steps.set-config.outputs.working_directory }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Read file
         id: set-config
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
@@ -77,7 +78,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const steps = ${{ toJson(steps) }};
 
             const configFile = JSON.parse(fs.readFileSync('.github/hex-packages.json', 'UTF8'))
             const packageConfig = configFile[process.env.package]
@@ -117,24 +117,32 @@ jobs:
       - name: "Fetch Github Draft Release"
         id: fetch-release
         run: |
-          release="$(gh api repos/${{ github.repository }}/releases --jq '.[] | select(.draft == true)  | select(.tag_name | test("^${{ needs.config.outputs.tag_prefix }}"))')"
+          release="$(gh api "repos/$REPOSITORY/releases" --jq ".[] | select(.draft == true)  | select(.tag_name | test(\"^$TAG_PREFIX\"))")"
 
           echo "gh_release=$release" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          TAG_PREFIX: ${{ needs.config.outputs.tag_prefix }}
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - run: npm install semver
+        with:
+          persist-credentials: false
+      # Pinned, though the audit still flags it because transitive deps are not.
+      - run: npm install semver@7.8.5 # zizmor: ignore[adhoc-packages]
       - name: "Update Files"
         id: update-files
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+          STEPS_JSON: ${{ toJson(steps) }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const semver = require('semver');
-            const needs = ${{ toJson(needs) }};
-            const steps = ${{ toJson(steps) }};
+            const needs = JSON.parse(process.env.NEEDS_JSON);
+            const steps = JSON.parse(process.env.STEPS_JSON);
 
             const ghRelease = JSON.parse(steps["fetch-release"]["outputs"]["gh_release"])
 
@@ -262,7 +270,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit ${{ env.gh_release_tag_name }} --draft=false --latest
+          gh release edit "$gh_release_tag_name" --draft=false --latest
 
       - name: "Mix Publish to Hex"
         id: mix-hex-publish
