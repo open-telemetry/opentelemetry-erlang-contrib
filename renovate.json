@@ -8,7 +8,7 @@
   "ignorePaths":[],
   "constraints": {
     "elixir": "1.20.2",
-    "erlang": "27.2.4"
+    "erlang": "27.2.4.0"
   },
   "labels": ["renovate"],
   "schedule": ["before 6am on monday"],
@@ -33,16 +33,15 @@
       "fileFormat": "json",
       "managerFilePatterns": ["/^renovate\\.json$/"],
       "matchStrings": ["{ \"currentValue\": constraints.erlang }"],
-      "depNameTemplate": "erlang/otp",
+      "depNameTemplate": "containerbase/erlang-prebuild",
       "datasourceTemplate": "github-releases",
-      "versioningTemplate": "loose",
-      "extractVersionTemplate": "^OTP-(?<version>.+)$"
+      "versioningTemplate": "loose"
     }
   ],
   "packageRules": [
     {
       "matchManagers": ["custom.jsonata"],
-      "matchDepNames": ["elixir-lang/elixir", "erlang/otp"],
+      "matchDepNames": ["elixir-lang/elixir", "containerbase/erlang-prebuild"],
       "dependencyDashboardApproval": true,
       "groupName": "renovate toolchain constraints",
       "addLabels": ["chore"]
