@@ -39,7 +39,7 @@ defmodule Demo.MixProject do
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_reload, "== 1.6.2", only: :dev},
+      {:phoenix_live_reload, "== 1.7.0", only: :dev},
       {:phoenix_live_view, "~> 0.20.0"},
       {:floki, "== 0.38.4", only: :test},
       {:phoenix_live_dashboard, "~> 0.8"},
