@@ -4,7 +4,7 @@ services:
     build: .
 
   otel:
-    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:97c4470de76dd8110af99801c651fb422d94bfd115d6337ecd10864a54f4e98d
+    image: otel/opentelemetry-collector-contrib-dev:latest@sha256:bbebdda8aa57c5bac5a98570bdc94872b7fdf56b93e7b5e25906843012589e92
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - '55681:55681'
