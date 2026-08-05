@@ -1,4 +1,4 @@
-defmodule TestJobThatThrowsException do
+defmodule TestJobThatRaisesException do
   use Oban.Worker, queue: :events, max_attempts: 1
 
   @impl Oban.Worker
