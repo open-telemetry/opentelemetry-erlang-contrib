@@ -1,6 +1,16 @@
 # Changelog
 
-### 1.0.0-rc.1
+## 1.0.1
+
+### Fixes
+
+- Ensure redirects do not modify the parent span
+
+### Changes
+
+- Require `req ~> 0.7.1`
+
+## 1.0.0-rc.1
 
 ### Features
 
