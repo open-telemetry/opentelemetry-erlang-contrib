@@ -4,7 +4,7 @@
 
 ### Fixes
 
-- Ensure redirects do not modify the parent span
+- Spans are properly restarted, data doesn't leak to parent span by accident.
 
 ### Changes
 
