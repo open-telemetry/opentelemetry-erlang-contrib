@@ -333,6 +333,45 @@ defmodule OpentelemetryReqTest do
     end
   end
 
+  describe "redirects" do
+    test "redirect does not modify parent span", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/initial", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("location", "http://localhost:#{bypass.port}/final")
+        |> Plug.Conn.send_resp(302, "")
+      end)
+
+      Bypass.expect_once(bypass, "GET", "/final", fn conn ->
+        conn
+        |> Plug.Conn.put_status(200)
+        |> Req.Test.text("ok")
+      end)
+
+      require OpenTelemetry.Tracer, as: Tracer
+
+      Tracer.with_span "parent" do
+        Req.get!(client(), url: "http://localhost:#{bypass.port}/initial")
+      end
+
+      assert_receive {:span, span(name: :GET, attributes: redirect_span_attrs)}
+      redirect_attrs = :otel_attributes.map(redirect_span_attrs)
+      assert redirect_attrs[HTTPAttributes.http_response_status_code()] == 302
+
+      assert_receive {:span, span(name: :GET, attributes: final_span_attrs)}
+      final_attrs = :otel_attributes.map(final_span_attrs)
+      assert final_attrs[HTTPAttributes.http_response_status_code()] == 200
+
+      assert_receive {:span, span(name: "parent", attributes: parent_attrs)}
+      parent_attr_map = :otel_attributes.map(parent_attrs)
+
+      refute Map.has_key?(parent_attr_map, HTTPAttributes.http_response_status_code()),
+             "parent span must not have http.response.status_code attribute from a redirect"
+
+      refute Map.has_key?(parent_attr_map, ErrorAttributes.error_type()),
+             "parent span must not have error.type attribute from a redirect"
+    end
+  end
+
   describe "propagation" do
     test "off by default" do
       plug = fn conn ->
