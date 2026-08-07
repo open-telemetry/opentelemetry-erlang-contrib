@@ -1,6 +1,16 @@
 # Changelog
 
-### 1.0.0-rc.1
+## Unreleased
+
+### Fixes
+
+- Spans are properly restarted, data doesn't leak to parent span by accident.
+
+### Changes
+
+- Require `req ~> 0.7`
+
+## 1.0.0-rc.1
 
 ### Features
 
