@@ -16,7 +16,8 @@ if otp_vsn >= 27 do
     @adapters [:cowboy, :bandit]
 
     defmodule TestHTML do
-      def index(assigns), do: "Hello #{assigns.message}"
+      import Phoenix.Template, only: [embed_templates: 1]
+      embed_templates "templates/test_html/*"
     end
 
     defmodule TestController do
@@ -623,12 +624,15 @@ if otp_vsn >= 27 do
             {:ok, _} = start_supervised(adapter_info.spec)
             setup_adapter(unquote(adapter))
 
-            Req.get("http://localhost:#{adapter_info.port}/rendered",
-              retry: &retry_pool_not_available/2,
-              retry_delay: 100,
-              retry_log_level: false,
-              connect_options: [protocols: [unquote(protocol)]]
-            )
+            response =
+              Req.get!("http://localhost:#{adapter_info.port}/rendered",
+                retry: &retry_pool_not_available/2,
+                retry_delay: 100,
+                retry_log_level: false,
+                connect_options: [protocols: [unquote(protocol)]]
+              )
+
+            assert response.body == "Hello hi"
 
             assert_receive {:span,
                             span(
