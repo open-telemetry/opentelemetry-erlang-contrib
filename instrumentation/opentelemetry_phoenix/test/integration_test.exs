@@ -15,6 +15,10 @@ if otp_vsn >= 27 do
 
     @adapters [:cowboy, :bandit]
 
+    defmodule TestHTML do
+      def index(assigns), do: "Hello #{assigns.message}"
+    end
+
     defmodule TestController do
       use Phoenix.Controller,
         formats: [:html, :json]
@@ -47,6 +51,12 @@ if otp_vsn >= 27 do
       def halted(conn, _params) do
         conn |> send_resp(500, "Internal Server Error") |> halt()
       end
+
+      def rendered(conn, _params) do
+        conn
+        |> put_view(html: TestHTML)
+        |> render("index.html", message: "hi")
+      end
     end
 
     defmodule Router do
@@ -66,6 +76,8 @@ if otp_vsn >= 27 do
       get("/router/oops", TestController, :oops)
 
       get("/halted", TestController, :halted)
+
+      get("/rendered", TestController, :rendered)
     end
 
     for adapter <- @adapters do
@@ -603,6 +615,28 @@ if otp_vsn >= 27 do
             for {attr, val} <- expected_attrs do
               assert Map.get(attrs, attr) == val, " expected #{attr} to equal #{val}"
             end
+          end)
+        end
+
+        test "records a span for controller render", %{unquote(adapter) => adapter_info} do
+          capture_log(fn ->
+            {:ok, _} = start_supervised(adapter_info.spec)
+            setup_adapter(unquote(adapter))
+
+            Req.get("http://localhost:#{adapter_info.port}/rendered",
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
+              connect_options: [protocols: [unquote(protocol)]]
+            )
+
+            assert_receive {:span,
+                            span(
+                              name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#index.html",
+                              kind: :server
+                            )}
+
+            assert_receive {:span, span(name: "GET /rendered", kind: :server)}
           end)
         end
       end
