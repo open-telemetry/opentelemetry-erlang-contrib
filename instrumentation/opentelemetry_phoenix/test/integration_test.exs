@@ -18,6 +18,8 @@ if otp_vsn >= 27 do
     defmodule TestHTML do
       import Phoenix.Template, only: [embed_templates: 1]
       embed_templates "templates/test_html/*"
+
+      def boom(_assigns), do: raise("boom")
     end
 
     defmodule TestController do
@@ -58,6 +60,12 @@ if otp_vsn >= 27 do
         |> put_view(html: TestHTML)
         |> render("index.html", message: "hi")
       end
+
+      def rendered_exception(conn, _params) do
+        conn
+        |> put_view(html: TestHTML)
+        |> render("boom.html", %{})
+      end
     end
 
     defmodule Router do
@@ -79,6 +87,8 @@ if otp_vsn >= 27 do
       get("/halted", TestController, :halted)
 
       get("/rendered", TestController, :rendered)
+
+      get("/rendered/exception", TestController, :rendered_exception)
     end
 
     for adapter <- @adapters do
@@ -190,23 +200,27 @@ if otp_vsn >= 27 do
       adapters
     end
 
-    defp setup_adapter(adapter, opts \\ [])
+    defp setup_adapter(adapter, opts \\ [], phoenix_opts \\ [])
 
-    defp setup_adapter(:bandit, opts) do
+    defp setup_adapter(:bandit, opts, phoenix_opts) do
       OpentelemetryBandit.setup(opts)
 
       OpentelemetryPhoenix.setup(
-        adapter: :bandit,
-        endpoint_prefix: [:phoenix, :bandit, :endpoint]
+        Keyword.merge(phoenix_opts,
+          adapter: :bandit,
+          endpoint_prefix: [:phoenix, :bandit, :endpoint]
+        )
       )
     end
 
-    defp setup_adapter(:cowboy, opts) do
+    defp setup_adapter(:cowboy, opts, phoenix_opts) do
       :opentelemetry_cowboy.setup(opts)
 
       OpentelemetryPhoenix.setup(
-        adapter: :cowboy2,
-        endpoint_prefix: [:phoenix, :cowboy, :endpoint]
+        Keyword.merge(phoenix_opts,
+          adapter: :cowboy2,
+          endpoint_prefix: [:phoenix, :cowboy, :endpoint]
+        )
       )
     end
 
@@ -638,6 +652,67 @@ if otp_vsn >= 27 do
                             span(
                               name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#index.html",
                               kind: :server
+                            )}
+
+            assert_receive {:span, span(name: "GET /rendered", kind: :server)}
+          end)
+        end
+
+        test "records an exception span when controller render raises", %{
+          unquote(adapter) => adapter_info
+        } do
+          capture_log(fn ->
+            {:ok, _} = start_supervised(adapter_info.spec)
+            setup_adapter(unquote(adapter))
+
+            Req.get("http://localhost:#{adapter_info.port}/rendered/exception",
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false,
+              connect_options: [protocols: [unquote(protocol)]]
+            )
+
+            expected_status = OpenTelemetry.status(:error, "")
+
+            assert_receive {:span,
+                            span(
+                              name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#boom.html",
+                              kind: :server,
+                              status: ^expected_status,
+                              events: events
+                            )}
+
+            [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
+
+            assert [
+                     ExceptionAttributes.exception_message(),
+                     ExceptionAttributes.exception_stacktrace(),
+                     ExceptionAttributes.exception_type()
+                   ] ==
+                     Enum.sort(Map.keys(:otel_attributes.map(event_attributes)))
+          end)
+        end
+
+        test "does not record a controller render span when controller: false", %{
+          unquote(adapter) => adapter_info
+        } do
+          capture_log(fn ->
+            {:ok, _} = start_supervised(adapter_info.spec)
+            setup_adapter(unquote(adapter), [], controller: false)
+
+            response =
+              Req.get!("http://localhost:#{adapter_info.port}/rendered",
+                retry: &retry_pool_not_available/2,
+                retry_delay: 100,
+                retry_log_level: false,
+                connect_options: [protocols: [unquote(protocol)]]
+              )
+
+            assert response.body == "Hello hi"
+
+            refute_receive {:span,
+                            span(
+                              name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#index.html"
                             )}
 
             assert_receive {:span, span(name: "GET /rendered", kind: :server)}
