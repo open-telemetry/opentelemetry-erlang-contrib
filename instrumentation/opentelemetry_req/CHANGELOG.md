@@ -8,7 +8,7 @@
 
 ### Changes
 
-- Require `req ~> 0.7.1`
+- Require `req ~> 0.7`
 
 ## 1.0.0-rc.1
 
