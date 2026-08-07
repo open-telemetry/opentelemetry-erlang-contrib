@@ -17,7 +17,7 @@ if otp_vsn >= 27 do
 
     defmodule TestHTML do
       import Phoenix.Template, only: [embed_templates: 1]
-      embed_templates "templates/test_html/*"
+      embed_templates("templates/test_html/*")
 
       def boom(_assigns), do: raise("boom")
     end
@@ -710,10 +710,7 @@ if otp_vsn >= 27 do
 
             assert response.body == "Hello hi"
 
-            refute_receive {:span,
-                            span(
-                              name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#index.html"
-                            )}
+            refute_receive {:span, span(name: "OpentelemetryPhoenix.Integration.TracingTest.TestHTML#index.html")}
 
             assert_receive {:span, span(name: "GET /rendered", kind: :server)}
           end)

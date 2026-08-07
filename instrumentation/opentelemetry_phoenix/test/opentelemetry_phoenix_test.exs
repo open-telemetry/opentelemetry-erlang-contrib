@@ -417,5 +417,4 @@ defmodule OpentelemetryPhoenixTest do
 
     refute_receive {:span, _}
   end
-
 end
