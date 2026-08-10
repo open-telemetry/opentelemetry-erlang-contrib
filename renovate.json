@@ -40,16 +40,17 @@
   ],
   "packageRules": [
     {
-      "matchManagers": ["custom.jsonata"],
-      "matchDepNames": ["elixir-lang/elixir", "containerbase/erlang-prebuild"],
-      "dependencyDashboardApproval": true,
-      "groupName": "renovate toolchain constraints",
-      "addLabels": ["chore"]
-    },
-    {
       "matchUpdateTypes": ["patch", "pin", "digest"],
       "groupName": "patch updates",
       "addLabels": ["patch", "chore", "skip-changelog"]
+    },
+    {
+      "matchManagers": ["custom.jsonata"],
+      "matchDepNames": ["elixir-lang/elixir", "containerbase/erlang-prebuild"],
+      "matchUpdateTypes": ["major", "minor"],
+      "dependencyDashboardApproval": true,
+      "groupName": "renovate toolchain constraints",
+      "addLabels": ["chore"]
     },
     {
       "matchDatasources": ["hex"],
