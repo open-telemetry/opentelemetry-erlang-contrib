@@ -42,6 +42,7 @@
     {
       "matchManagers": ["custom.jsonata"],
       "matchDepNames": ["elixir-lang/elixir", "containerbase/erlang-prebuild"],
+      "matchUpdateTypes": ["major", "minor"],
       "dependencyDashboardApproval": true,
       "groupName": "renovate toolchain constraints",
       "addLabels": ["chore"]
