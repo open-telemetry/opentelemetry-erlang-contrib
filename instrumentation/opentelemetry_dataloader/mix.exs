@@ -62,7 +62,7 @@ defmodule OpentelemetryDataloader.MixProject do
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
       {:ecto_sql, "== 3.14.0", only: [:dev, :test]},
-      {:postgrex, "== 0.22.3", only: [:dev, :test]},
+      {:postgrex, "== 0.22.4", only: [:dev, :test]},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
       {:opentelemetry_process_propagator, "~> 0.3"}
     ]
