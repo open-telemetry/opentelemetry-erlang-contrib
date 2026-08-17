@@ -87,7 +87,9 @@ defmodule OpentelemetryGrpc.MixProject do
         [
           {:grpc, "~> 0.11 or ~> 1.0"},
           {:grpc_server, "~> 1.0", only: [:dev, :test]},
-          {:gun, "~> 2.2", only: [:dev, :test]}
+          # grpc 1.x only accepts gun ~> 2.4.0; a wider range lets the resolver
+          # take a newer gun and silently fall back to grpc 0.11
+          {:gun, "~> 2.4.0", only: [:dev, :test]}
         ]
     end
   end
