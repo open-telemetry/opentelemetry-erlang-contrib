@@ -773,7 +773,13 @@ jobs:
     name: OpenTelemetry Xandra test on Elixir ${{ matrix.elixir_version }} (OTP ${{ matrix.otp_version }})
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.test-matrix.outputs.matrix) }}
+      matrix:
+        otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
+        # xandra 0.20+ requires Elixir 1.17+, so the shared elixir_version list does not apply here
+        elixir_version: ["1.18.2"]
+        rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
+        include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
+        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     services:
       cassandra:
         image: cassandra@sha256:646bfb9ceca3df5a98c6916100e2cdebebbe12a54c590522909f0ae1ecca1890
