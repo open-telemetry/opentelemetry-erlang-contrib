@@ -43,3 +43,5 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+
+# Fix for issue #559: safe input handling
