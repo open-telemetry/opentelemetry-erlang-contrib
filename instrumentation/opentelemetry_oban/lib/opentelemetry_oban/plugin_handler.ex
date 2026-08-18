@@ -43,14 +43,15 @@ defmodule OpentelemetryOban.PluginHandler do
   def handle_plugin_start(_event, _measurements, %{plugin: plugin} = metadata, _config) do
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{plugin} process",
+      "#{inspect(plugin)} process",
       metadata,
-      %{attributes: %{"oban.plugin": plugin}}
+      %{attributes: %{"oban.plugin": inspect(plugin)}}
     )
   end
 
   def handle_plugin_stop(_event, _measurements, metadata, _config) do
     Tracer.set_attributes(end_span_plugin_attrs(metadata))
+    maybe_record_stop_error(metadata)
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
 
@@ -62,21 +63,58 @@ defmodule OpentelemetryOban.PluginHandler do
       ) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@tracer_id, metadata)
 
-    # Record exception and mark the span as errored
-    # We use :otel_span.record_exception/5 (Erlang) instead of Span.record_exception/3 (Elixir)
-    # because the Elixir version only works with exception structs (e.g., %RuntimeError{}),
-    # while the Erlang version handles ANY error reason (atoms like :badarg, tuples, etc.)
-    :otel_span.record_exception(ctx, kind, reason, stacktrace, [])
+    error = record_exception(ctx, kind, reason, stacktrace)
 
     Span.set_status(
       ctx,
       OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
     )
 
-    set_error_type(reason)
+    set_error_type(error)
 
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, metadata)
   end
+
+  # `Exception.normalize/3` turns Erlang-style reasons (`:badarg`, `:undef`, ...) into Elixir
+  # exception structs, so `Span.record_exception/4` can record `exception.message`. Reasons that
+  # cannot be normalized (`:throw` and `:exit` kinds) fall back to the Erlang API, which accepts
+  # any term but records no message.
+  defp record_exception(ctx, kind, reason, stacktrace) do
+    case Exception.normalize(kind, reason, stacktrace) do
+      %{__exception__: true} = exception ->
+        Span.record_exception(ctx, exception, stacktrace, [])
+        exception
+
+      not_an_exception ->
+        :otel_span.record_exception(ctx, kind, reason, stacktrace, [])
+        not_an_exception
+    end
+  end
+
+  # Plugins report failure through the `{:error, meta}` return value of `:telemetry.span/3`, which
+  # emits a `:stop` event carrying `:error` instead of an `:exception` event.
+  #
+  # `Oban.Plugins.Reindexer` has no `else` branch for the non-leader case, so every follower node
+  # reports `nil` on each scheduled run. That is a no-op rather than a failure, and it carries no
+  # diagnostic value, so it is not recorded as an error.
+  defp maybe_record_stop_error(%{error: nil}), do: :ok
+
+  defp maybe_record_stop_error(%{error: error}) do
+    reason = unwrap_error(error)
+
+    Tracer.set_status(OpenTelemetry.status(:error, format_error(reason)))
+    set_error_type(reason)
+  end
+
+  defp maybe_record_stop_error(_metadata), do: :ok
+
+  # Most plugins put their whole `{:error, reason}` return value under `:error`; `Oban.Stager`
+  # destructures it and puts the bare reason.
+  defp unwrap_error({:error, reason}), do: reason
+  defp unwrap_error(error), do: error
+
+  defp format_error(error) when is_exception(error), do: Exception.message(error)
+  defp format_error(error), do: inspect(error)
 
   defp set_error_type(%struct_name{} = error) when is_exception(error),
     do: Tracer.set_attribute(ErrorAttributes.error_type(), inspect(struct_name))
@@ -93,8 +131,8 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Lifeline} = metadata) do
     %{
-      "oban.plugins.lifeline.discarded_count": metadata[:discarded_count],
-      "oban.plugins.lifeline.rescued_count": metadata[:rescued_count]
+      "oban.plugins.lifeline.discarded_count": length(metadata[:discarded_jobs] || []),
+      "oban.plugins.lifeline.rescued_count": length(metadata[:rescued_jobs] || [])
     }
   end
 
@@ -108,8 +146,9 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicLifeline} = metadata) do
     %{
-      "oban.pro.plugins.dynamic_lifeline.discarded_count": metadata[:discarded_count],
-      "oban.pro.plugins.dynamic_lifeline.rescued_count": metadata[:rescued_count]
+      "oban.pro.plugins.dynamic_lifeline.discarded_count":
+        length(metadata[:discarded_jobs] || []),
+      "oban.pro.plugins.dynamic_lifeline.rescued_count": length(metadata[:rescued_jobs] || [])
     }
   end
 
