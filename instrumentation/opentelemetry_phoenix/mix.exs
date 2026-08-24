@@ -76,11 +76,11 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry_bandit, "== 0.3.0", only: [:dev, :test]},
       {:opentelemetry_cowboy, "== 1.0.0", only: [:dev, :test]},
       {:ex_doc, "== 0.40.3", only: [:dev], runtime: false},
-      {:phoenix, "== 1.8.11", only: [:dev, :test]},
+      {:phoenix, "== 1.8.12", only: [:dev, :test]},
       {:phoenix_html, "== 4.3.0", only: [:dev, :test]},
       {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
-      {:bandit, "== 1.12.4", only: [:dev, :test]},
-      {:req, "== 0.7.2", only: [:dev, :test]},
+      {:bandit, "== 1.12.5", only: [:dev, :test]},
+      {:req, "== 0.7.3", only: [:dev, :test]},
       {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false}
     ]
   end
