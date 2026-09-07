@@ -34,7 +34,7 @@ defmodule OpentelemetryAbsinthe.MixProject do
       main: "OpentelemetryAbsinthe",
       source_ref: @version,
       source_url: @source_url,
-      formatters: ["html"],
+      formatters: ["html", "markdown"],
       extras: ["README.md"]
     ]
   end
