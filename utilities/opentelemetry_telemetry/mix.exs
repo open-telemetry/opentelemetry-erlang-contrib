@@ -44,8 +44,8 @@ defmodule OpentelemetryTelemetry.MixProject do
       dep when is_atom(dep) -> {dep, ">= 0.0.0"}
     end)
     |> Enum.concat([
-      {:dialyxir, "== 1.4.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "== 0.40.3", only: :dev, runtime: false},
+      {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false},
+      {:ex_doc, "== 0.40.4", only: :dev, runtime: false},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "== 1.10.0", only: [:dev, :test]}
     ])
