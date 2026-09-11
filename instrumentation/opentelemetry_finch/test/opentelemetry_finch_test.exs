@@ -315,7 +315,7 @@ defmodule OpentelemetryFinchTest do
                     span(
                       name: "GET",
                       kind: :client,
-                      status: {:status, :error, "404"},
+                      status: {:status, :error, ""},
                       attributes: attributes
                     )}
 
@@ -380,7 +380,7 @@ defmodule OpentelemetryFinchTest do
                     span(
                       name: "GET",
                       kind: :client,
-                      status: {:status, :error, "503"},
+                      status: {:status, :error, ""},
                       attributes: attributes
                     )}
 
