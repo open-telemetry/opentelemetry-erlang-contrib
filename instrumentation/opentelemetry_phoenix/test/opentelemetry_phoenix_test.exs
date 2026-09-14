@@ -7,6 +7,7 @@ defmodule OpentelemetryPhoenixTest do
   require Record
 
   alias OpenTelemetry.SemConv.ExceptionAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias PhoenixLiveViewMeta, as: LiveViewMeta
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -50,7 +51,8 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
   end
 
   test "records spans for Phoenix LiveView handle_params" do
@@ -74,6 +76,96 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
+  end
+
+  test "records the route template for a parameterized LiveView route" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), "http://localhost:4000/resources/123?foo=bar")
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+
+    assert %{HTTPAttributes.http_route() => "/resources/:resource_id"} ==
+             :otel_attributes.map(attributes)
+  end
+
+  test "omits the route when the LiveView is not mounted at the router" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), nil)
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{} == :otel_attributes.map(attributes)
+
+    assert [_] = :telemetry.list_handlers([:phoenix, :live_view, :mount, :start])
+  end
+
+  test "omits the route when the socket has no router" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = LiveViewMeta.mount_start()
+    meta = %{meta | socket: %{meta.socket | router: nil}}
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "omits the route when the path matches no route" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), "http://localhost:4000/nope")
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
     assert %{} == :otel_attributes.map(attributes)
   end
 
@@ -134,7 +226,8 @@ defmodule OpentelemetryPhoenixTest do
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
 
     assert_receive {:span,
                     span(
@@ -143,7 +236,8 @@ defmodule OpentelemetryPhoenixTest do
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
 
     [
       event(
@@ -417,4 +511,6 @@ defmodule OpentelemetryPhoenixTest do
 
     refute_receive {:span, _}
   end
+
+  defp put_uri(meta, uri), do: %{meta | uri: uri}
 end

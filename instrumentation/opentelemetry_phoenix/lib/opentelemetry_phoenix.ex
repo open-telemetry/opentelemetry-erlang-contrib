@@ -204,7 +204,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.mount",
       meta,
-      %{kind: :server}
+      %{kind: :server, attributes: route_attributes(meta)}
     )
   end
 
@@ -218,7 +218,7 @@ defmodule OpentelemetryPhoenix do
       @tracer_id,
       "#{inspect(live_view)}.handle_params",
       meta,
-      %{kind: :server}
+      %{kind: :server, attributes: route_attributes(meta)}
     )
   end
 
@@ -301,6 +301,18 @@ defmodule OpentelemetryPhoenix do
     OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error, ""))
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
   end
+
+  defp route_attributes(%{uri: uri, socket: %{router: router}})
+       when is_binary(uri) and not is_nil(router) do
+    %URI{path: path, host: host} = URI.parse(uri)
+
+    case Phoenix.Router.route_info(router, "GET", path || "/", host) do
+      %{route: route} when is_binary(route) -> %{HTTPAttributes.http_route() => route}
+      _ -> %{}
+    end
+  end
+
+  defp route_attributes(_meta), do: %{}
 
   @doc false
   def handle_controller_render_event(

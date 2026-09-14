@@ -77,6 +77,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:opentelemetry_cowboy, "== 1.0.0", only: [:dev, :test]},
       {:ex_doc, "== 0.40.4", only: [:dev], runtime: false},
       {:phoenix, "== 1.8.13", only: [:dev, :test]},
+      {:phoenix_live_view, "== 1.2.11", only: [:dev, :test]},
       {:phoenix_html, "== 4.3.0", only: [:dev, :test]},
       {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
       {:bandit, "== 1.12.5", only: [:dev, :test]},
