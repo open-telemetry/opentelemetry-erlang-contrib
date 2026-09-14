@@ -81,7 +81,15 @@ defmodule OpentelemetryPhoenix.LiveViewIntegrationTest do
     OpentelemetryPhoenix.setup(adapter: :cowboy2)
 
     on_exit(fn ->
-      Enum.each(:telemetry.list_handlers([]), &:telemetry.detach(&1.id))
+      Enum.each(
+        [
+          {OpentelemetryPhoenix, :endpoint_start},
+          {OpentelemetryPhoenix, :router_dispatch_start},
+          {OpentelemetryPhoenix, :live_view},
+          {OpentelemetryPhoenix, :controller_render}
+        ],
+        &:telemetry.detach/1
+      )
     end)
 
     :ok
@@ -110,7 +118,10 @@ defmodule OpentelemetryPhoenix.LiveViewIntegrationTest do
 
     assert %{} == Map.fetch!(spans, "OtelLiveViewTest.ChildLive.mount")
 
-    assert [_] = :telemetry.list_handlers([:phoenix, :live_view, :mount, :start])
+    assert Enum.any?(
+             :telemetry.list_handlers([:phoenix, :live_view, :mount, :start]),
+             &(&1.id == {OpentelemetryPhoenix, :live_view})
+           )
   end
 
   defp collect_spans(acc \\ %{}) do

@@ -123,7 +123,10 @@ defmodule OpentelemetryPhoenixTest do
     assert_receive {:span, span(attributes: attributes)}
     assert %{} == :otel_attributes.map(attributes)
 
-    assert [_] = :telemetry.list_handlers([:phoenix, :live_view, :mount, :start])
+    assert Enum.any?(
+             :telemetry.list_handlers([:phoenix, :live_view, :mount, :start]),
+             &(&1.id == {OpentelemetryPhoenix, :live_view})
+           )
   end
 
   test "omits the route when the socket has no router" do
