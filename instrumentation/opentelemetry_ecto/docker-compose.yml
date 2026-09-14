@@ -18,7 +18,7 @@ services:
       - 5433:5432
 
   mysql:
-    image: mysql:26.7@sha256:66aec17cd21a956029b83f083b813073859e8355dc1a00e55df6ba02f0e32345
+    image: mysql:26.7@sha256:45abdd9b4144660b5c93a5b7d0ebb21e024f0ba9851ecb4ab43bf83c6bf83592
     environment:
       - MYSQL_USER=mysql
       - MYSQL_PASSWORD=mysql
