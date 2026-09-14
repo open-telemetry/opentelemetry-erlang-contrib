@@ -338,8 +338,11 @@ defmodule OpentelemetryFinch do
 
   defp maybe_add_error_type(attrs, _status, _result), do: attrs
 
+  # SemConv: "Don't set the span status description if the reason can be inferred
+  # from `http.response.status_code`."
+  # https://github.com/open-telemetry/semantic-conventions/blob/v1.39.0/docs/http/http-spans.md#L107
   defp set_span_status(span, _result, status) when is_integer(status) and status >= 400 do
-    OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:error, to_string(status)))
+    OpenTelemetry.Span.set_status(span, OpenTelemetry.status(:error, ""))
   end
 
   defp set_span_status(span, {:error, reason}, _status) do
