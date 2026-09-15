@@ -21,6 +21,17 @@ defmodule OpentelemetryPhoenix do
                       type: :boolean,
                       default: true,
                       doc: "Whether controller render traces will be instrumented."
+                    ],
+                    liveview_span_names: [
+                      type: {:in, [:module, :route]},
+                      default: :module,
+                      doc: """
+                      How LiveView span names are built. `:module` names spans after the LiveView module,
+                      such as `MyAppWeb.ResourceLive.mount`. `:route` names them after the operation and the
+                      router route, such as `live_view.mount /resources/:resource_id`, falling back to the
+                      module when the LiveView is not mounted at the router.
+                      """,
+                      type_doc: ":atom"
                     ]
                   )
 
@@ -66,8 +77,12 @@ defmodule OpentelemetryPhoenix do
 
   @tracer_id __MODULE__
 
+  @live_view_route_key {__MODULE__, :live_view_route}
+
   @typedoc "Setup options"
-  @type opts :: [endpoint_prefix() | adapter() | liveview() | controller()]
+  @type opts :: [
+          endpoint_prefix() | adapter() | liveview() | controller() | liveview_span_names()
+        ]
 
   @typedoc "The endpoint prefix in your endpoint. Defaults to `[:phoenix, :endpoint]`"
   @type endpoint_prefix :: {:endpoint_prefix, [atom()]}
@@ -81,6 +96,9 @@ defmodule OpentelemetryPhoenix do
   @typedoc "Attach controller render handlers. Optional"
   @type controller :: {:controller, boolean()}
 
+  @typedoc "How LiveView span names are built. Optional"
+  @type liveview_span_names :: {:liveview_span_names, :module | :route}
+
   @doc """
   Initializes and configures the telemetry handlers.
   """
@@ -92,7 +110,7 @@ defmodule OpentelemetryPhoenix do
     attach_router_start_handler(opts)
 
     if opts[:liveview] do
-      attach_liveview_handlers()
+      attach_liveview_handlers(opts)
     end
 
     if opts[:controller] do
@@ -122,7 +140,7 @@ defmodule OpentelemetryPhoenix do
     )
   end
 
-  def attach_liveview_handlers do
+  def attach_liveview_handlers(opts \\ []) do
     :telemetry.attach_many(
       {__MODULE__, :live_view},
       [
@@ -146,7 +164,7 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, :live_component, :update, :exception]
       ],
       &__MODULE__.handle_liveview_event/4,
-      %{}
+      %{span_names: Keyword.get(opts, :liveview_span_names, :module)}
     )
 
     :ok
@@ -198,13 +216,15 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, _live, :mount, :start],
         _measurements,
         %{socket: %{view: live_view}} = meta,
-        _handler_configuration
+        handler_configuration
       ) do
+    route = put_live_view_route(route(meta))
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.mount",
+      live_view_span_name(handler_configuration, "mount", live_view, route),
       meta,
-      %{kind: :server, attributes: route_attributes(meta)}
+      %{kind: :server, attributes: route_attributes(route)}
     )
   end
 
@@ -212,13 +232,15 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, _live, :handle_params, :start],
         _measurements,
         %{socket: %{view: live_view}} = meta,
-        _handler_configuration
+        handler_configuration
       ) do
+    route = put_live_view_route(route(meta))
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.handle_params",
+      live_view_span_name(handler_configuration, "handle_params", live_view, route),
       meta,
-      %{kind: :server, attributes: route_attributes(meta)}
+      %{kind: :server, attributes: route_attributes(route)}
     )
   end
 
@@ -226,13 +248,15 @@ defmodule OpentelemetryPhoenix do
         [:phoenix, _live, :handle_event, :start],
         _measurements,
         %{socket: %{view: live_view}, event: event} = meta,
-        _handler_configuration
+        handler_configuration
       ) do
+    route = live_view_route()
+
     OpentelemetryTelemetry.start_telemetry_span(
       @tracer_id,
-      "#{inspect(live_view)}.handle_event##{event}",
+      live_view_event_span_name(handler_configuration, live_view, route, event),
       meta,
-      %{kind: :server}
+      %{kind: :server, attributes: route_attributes(route)}
     )
   end
 
@@ -302,17 +326,50 @@ defmodule OpentelemetryPhoenix do
     OpentelemetryTelemetry.end_telemetry_span(@tracer_id, meta)
   end
 
-  defp route_attributes(%{uri: uri, socket: %{router: router}})
+  defp route(%{uri: uri, socket: %{router: router}})
        when is_binary(uri) and not is_nil(router) do
     %URI{path: path, host: host} = URI.parse(uri)
 
     case Phoenix.Router.route_info(router, "GET", path || "/", host) do
-      %{route: route} when is_binary(route) -> %{HTTPAttributes.http_route() => route}
-      _ -> %{}
+      %{route: route} when is_binary(route) -> route
+      _ -> nil
     end
   end
 
-  defp route_attributes(_meta), do: %{}
+  defp route(_meta), do: nil
+
+  defp route_attributes(nil), do: %{}
+  defp route_attributes(route), do: %{HTTPAttributes.http_route() => route}
+
+  # `handle_event` metadata carries no uri, and the socket keeps no path, so the route
+  # resolved during mount/handle_params is kept for the lifetime of the LiveView process.
+  defp put_live_view_route(nil) do
+    Process.delete(@live_view_route_key)
+    nil
+  end
+
+  defp put_live_view_route(route) do
+    Process.put(@live_view_route_key, route)
+    route
+  end
+
+  defp live_view_route, do: Process.get(@live_view_route_key)
+
+  defp live_view_span_name(%{span_names: :route}, operation, live_view, route) do
+    "live_view.#{operation} #{route || inspect(live_view)}"
+  end
+
+  defp live_view_span_name(_handler_configuration, operation, live_view, _route) do
+    "#{inspect(live_view)}.#{operation}"
+  end
+
+  defp live_view_event_span_name(%{span_names: :route}, live_view, route, event) do
+    "live_view.handle_event #{route || inspect(live_view)} #{event}"
+  end
+
+  defp live_view_event_span_name(_handler_configuration, live_view, _route, event) do
+    "#{inspect(live_view)}.handle_event##{event}"
+  end
 
   @doc false
   def handle_controller_render_event(

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+* LiveView `handle_event` spans now carry `http.route`. The route resolved during
+  `mount`/`handle_params` is kept for the lifetime of the LiveView process, since
+  `handle_event` telemetry metadata carries no URI and the socket keeps no path.
+* Added the `liveview_span_names` option. It defaults to `:module`, which keeps the
+  existing `MyAppWeb.ResourceLive.mount` names. Setting it to `:route` opts into
+  `{operation} {route}` names, such as `live_view.mount /resources/:resource_id` and
+  `live_view.handle_event /resources/:resource_id hello`, matching how span names are
+  built elsewhere in the Semantic Conventions. The module name is used as the fallback
+  when a LiveView is not mounted at the router.
+
 ## 2.0.0
 
 ### Features

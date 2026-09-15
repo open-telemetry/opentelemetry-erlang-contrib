@@ -235,14 +235,14 @@ defmodule OpentelemetryPhoenix.LiveViewIntegrationTest do
       assert %{} == attributes(collect_spans(), "OtelLiveViewTest.ResourceLive.render")
     end
 
-    test "emits a handle_event span" do
+    test "carries the route resolved during mount onto handle_event spans" do
       {:ok, view, _html} = live(build_conn(), "/resources/123")
 
       drain_spans()
 
       render_click(view, "hello", %{})
 
-      assert %{} ==
+      assert %{HTTPAttributes.http_route() => @route} ==
                attributes(collect_spans(), "OtelLiveViewTest.ResourceLive.handle_event#hello")
     end
 
@@ -255,10 +255,37 @@ defmodule OpentelemetryPhoenix.LiveViewIntegrationTest do
 
       spans = collect_spans()
 
-      assert %{} == attributes(spans, "OtelLiveViewTest.ResourceLive.handle_event#bump")
+      assert %{HTTPAttributes.http_route() => @route} ==
+               attributes(spans, "OtelLiveViewTest.ResourceLive.handle_event#bump")
 
       assert %{:"live_view.module" => "OtelLiveViewTest.ResourceLive"} ==
                attributes(spans, "OtelLiveViewTest.CounterComponent.render")
+    end
+
+    @tag setup_opts: [liveview_span_names: :route]
+    test "names spans after the route when liveview_span_names: :route" do
+      {:ok, view, _html} = live(build_conn(), "/resources/123")
+
+      spans = collect_spans()
+
+      assert %{HTTPAttributes.http_route() => @route} ==
+               attributes(spans, "live_view.mount #{@route}")
+
+      assert %{HTTPAttributes.http_route() => @route} ==
+               attributes(spans, "live_view.handle_params #{@route}")
+
+      render_click(view, "hello", %{})
+
+      assert %{HTTPAttributes.http_route() => @route} ==
+               attributes(collect_spans(), "live_view.handle_event #{@route} hello")
+    end
+
+    @tag setup_opts: [liveview_span_names: :route]
+    test "falls back to the module when the LiveView is not mounted at the router" do
+      {:ok, _view, _html} = live(build_conn(), "/resources/123")
+
+      assert %{} ==
+               attributes(collect_spans(), "live_view.mount OtelLiveViewTest.ChildLive")
     end
   end
 
