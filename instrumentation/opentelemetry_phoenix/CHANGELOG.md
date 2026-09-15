@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Bug Fixes
+
+* `setup/1` can now be called once per endpoint. The endpoint handler was
+  attached under an id that did not vary with `:endpoint_prefix`, so
+  applications running more than one endpoint silently lost the spans for
+  every endpoint after the first. Reported in #537.
+
 ### Features
 
 * LiveView `handle_event` spans now carry `http.route`. The route resolved during
