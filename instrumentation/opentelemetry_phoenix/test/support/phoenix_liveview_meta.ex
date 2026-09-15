@@ -23,16 +23,16 @@ defmodule PhoenixLiveViewMeta do
               "http://localhost:4000/assets/app.js"
             ]
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -63,18 +63,19 @@ defmodule PhoenixLiveViewMeta do
             port: 4000,
             private: %{
               :phoenix_live_view =>
-                {NnnnnWeb.MyTestLive, [action: :index, router: NnnnnWeb.Router],
+                {OpentelemetryPhoenix.TestSupport.MyTestLive,
+                 [action: :index, router: OpentelemetryPhoenix.TestSupport.Router],
                  %{extra: %{}, name: :default, vsn: 1_698_660_624_598_806_627}},
-              NnnnnWeb.Router => [],
-              :phoenix_endpoint => NnnnnWeb.Endpoint,
+              OpentelemetryPhoenix.TestSupport.Router => [],
+              :phoenix_endpoint => OpentelemetryPhoenix.TestSupport.Endpoint,
               :plug_session_fetch => :done,
               :plug_session => %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"},
               :before_send => [],
-              :phoenix_router => NnnnnWeb.Router,
+              :phoenix_router => OpentelemetryPhoenix.TestSupport.Router,
               :phoenix_request_logger => {"request_logger", "request_logger"},
               :phoenix_layout => %{_: false},
               :phoenix_format => "html",
-              :phoenix_root_layout => %{"html" => {NnnnnWeb.Layouts, :root}}
+              :phoenix_root_layout => %{"html" => {OpentelemetryPhoenix.TestSupport.Layouts, :root}}
             },
             scheme: :http,
             status: nil,
@@ -95,7 +96,7 @@ defmodule PhoenixLiveViewMeta do
                  host: "localhost",
                  peer: {{127, 0, 0, 1}, 56258},
                  bindings: %{},
-                 ref: NnnnnWeb.Endpoint.HTTP,
+                 ref: OpentelemetryPhoenix.TestSupport.Endpoint.HTTP,
                  cert: :undefined,
                  headers: %{
                    "accept" => "text/html,
@@ -206,17 +207,17 @@ defmodule PhoenixLiveViewMeta do
           },
           assign_new: {%{flash: %{}}, []},
           connect_params: %{},
-          root_view: NnnnnWeb.MyTestLive,
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive,
           conn_session: %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"}
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: nil,
         root_pid: nil,
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -261,16 +262,16 @@ defmodule PhoenixLiveViewMeta do
               "http://localhost:4000/assets/app.js"
             ]
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -301,18 +302,19 @@ defmodule PhoenixLiveViewMeta do
             port: 4000,
             private: %{
               :phoenix_live_view =>
-                {NnnnnWeb.MyTestLive, [action: :index, router: NnnnnWeb.Router],
+                {OpentelemetryPhoenix.TestSupport.MyTestLive,
+                 [action: :index, router: OpentelemetryPhoenix.TestSupport.Router],
                  %{extra: %{}, name: :default, vsn: 1_698_660_624_598_806_627}},
-              NnnnnWeb.Router => [],
-              :phoenix_endpoint => NnnnnWeb.Endpoint,
+              OpentelemetryPhoenix.TestSupport.Router => [],
+              :phoenix_endpoint => OpentelemetryPhoenix.TestSupport.Endpoint,
               :plug_session_fetch => :done,
               :plug_session => %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"},
               :before_send => [],
-              :phoenix_router => NnnnnWeb.Router,
+              :phoenix_router => OpentelemetryPhoenix.TestSupport.Router,
               :phoenix_request_logger => {"request_logger", "request_logger"},
               :phoenix_layout => %{_: false},
               :phoenix_format => "html",
-              :phoenix_root_layout => %{"html" => {NnnnnWeb.Layouts, :root}}
+              :phoenix_root_layout => %{"html" => {OpentelemetryPhoenix.TestSupport.Layouts, :root}}
             },
             scheme: :http,
             status: nil,
@@ -333,7 +335,7 @@ defmodule PhoenixLiveViewMeta do
                  host: "localhost",
                  peer: {{127, 0, 0, 1}, 56258},
                  bindings: %{},
-                 ref: NnnnnWeb.Endpoint.HTTP,
+                 ref: OpentelemetryPhoenix.TestSupport.Endpoint.HTTP,
                  cert: :undefined,
                  headers: %{
                    "accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -443,17 +445,17 @@ defmodule PhoenixLiveViewMeta do
           },
           assign_new: {%{flash: %{}}, []},
           connect_params: %{},
-          root_view: NnnnnWeb.MyTestLive,
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive,
           conn_session: %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"}
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: nil,
         root_pid: nil,
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -498,16 +500,16 @@ defmodule PhoenixLiveViewMeta do
               "http://localhost:4000/assets/app.js"
             ]
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -537,18 +539,19 @@ defmodule PhoenixLiveViewMeta do
             port: 4000,
             private: %{
               :phoenix_live_view =>
-                {NnnnnWeb.MyTestLive, [action: :index, router: NnnnnWeb.Router],
+                {OpentelemetryPhoenix.TestSupport.MyTestLive,
+                 [action: :index, router: OpentelemetryPhoenix.TestSupport.Router],
                  %{extra: %{}, name: :default, vsn: 1_698_660_624_598_806_627}},
-              NnnnnWeb.Router => [],
-              :phoenix_endpoint => NnnnnWeb.Endpoint,
+              OpentelemetryPhoenix.TestSupport.Router => [],
+              :phoenix_endpoint => OpentelemetryPhoenix.TestSupport.Endpoint,
               :plug_session_fetch => :done,
               :plug_session => %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"},
               :before_send => [],
-              :phoenix_router => NnnnnWeb.Router,
+              :phoenix_router => OpentelemetryPhoenix.TestSupport.Router,
               :phoenix_request_logger => {"request_logger", "request_logger"},
               :phoenix_layout => %{_: false},
               :phoenix_format => "html",
-              :phoenix_root_layout => %{"html" => {NnnnnWeb.Layouts, :root}}
+              :phoenix_root_layout => %{"html" => {OpentelemetryPhoenix.TestSupport.Layouts, :root}}
             },
             scheme: :http,
             status: nil,
@@ -569,7 +572,7 @@ defmodule PhoenixLiveViewMeta do
                  host: "localhost",
                  peer: {{127, 0, 0, 1}, 56258},
                  bindings: %{},
-                 ref: NnnnnWeb.Endpoint.HTTP,
+                 ref: OpentelemetryPhoenix.TestSupport.Endpoint.HTTP,
                  cert: :undefined,
                  headers: %{
                    "accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -679,17 +682,17 @@ defmodule PhoenixLiveViewMeta do
           },
           assign_new: {%{flash: %{}}, []},
           connect_params: %{},
-          root_view: NnnnnWeb.MyTestLive,
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive,
           conn_session: %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"}
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: nil,
         root_pid: nil,
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -720,18 +723,19 @@ defmodule PhoenixLiveViewMeta do
             port: 4000,
             private: %{
               :phoenix_live_view =>
-                {NnnnnWeb.MyTestLive, [action: :index, router: NnnnnWeb.Router],
+                {OpentelemetryPhoenix.TestSupport.MyTestLive,
+                 [action: :index, router: OpentelemetryPhoenix.TestSupport.Router],
                  %{extra: %{}, name: :default, vsn: 1_698_660_624_598_806_627}},
-              NnnnnWeb.Router => [],
-              :phoenix_endpoint => NnnnnWeb.Endpoint,
+              OpentelemetryPhoenix.TestSupport.Router => [],
+              :phoenix_endpoint => OpentelemetryPhoenix.TestSupport.Endpoint,
               :plug_session_fetch => :done,
               :plug_session => %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"},
               :before_send => [],
-              :phoenix_router => NnnnnWeb.Router,
+              :phoenix_router => OpentelemetryPhoenix.TestSupport.Router,
               :phoenix_request_logger => {"request_logger", "request_logger"},
               :phoenix_layout => %{_: false},
               :phoenix_format => "html",
-              :phoenix_root_layout => %{"html" => {NnnnnWeb.Layouts, :root}}
+              :phoenix_root_layout => %{"html" => {OpentelemetryPhoenix.TestSupport.Layouts, :root}}
             },
             scheme: :http,
             status: nil,
@@ -752,7 +756,7 @@ defmodule PhoenixLiveViewMeta do
                  host: "localhost",
                  peer: {{127, 0, 0, 1}, 56258},
                  bindings: %{},
-                 ref: NnnnnWeb.Endpoint.HTTP,
+                 ref: OpentelemetryPhoenix.TestSupport.Endpoint.HTTP,
                  cert: :undefined,
                  headers: %{
                    "accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -862,17 +866,17 @@ defmodule PhoenixLiveViewMeta do
           },
           assign_new: {%{flash: %{}}, []},
           connect_params: %{},
-          root_view: NnnnnWeb.MyTestLive,
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive,
           conn_session: %{"_csrf_token" => "iaStQzWwaLUalOzgSFV3BMPG"}
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: nil,
         root_pid: nil,
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -888,9 +892,9 @@ defmodule PhoenixLiveViewMeta do
         }
       },
       stacktrace: [
-        {NnnnnWeb.MyTestLive, :handle_params, 3,
+        {OpentelemetryPhoenix.TestSupport.MyTestLive, :handle_params, 3,
          [
-           file: ~c"lib/nnnnn_web/live/my_test_live.ex",
+           file: ~c"lib/opentelemetry_phoenix/test_support/live/my_test_live.ex",
            line: 28,
            error_info: %{module: Exception}
          ]},
@@ -902,9 +906,12 @@ defmodule PhoenixLiveViewMeta do
         {Phoenix.LiveView.Static, :render, 3, [file: ~c"lib/phoenix_live_view/static.ex", line: 119]},
         {Phoenix.LiveView.Controller, :live_render, 3, [file: ~c"lib/phoenix_live_view/controller.ex", line: 39]},
         {Phoenix.Router, :__call__, 5, [file: ~c"lib/phoenix/router.ex", line: 432]},
-        {NnnnnWeb.Endpoint, :plug_builder_call, 2, [file: ~c"lib/nnnnn_web/endpoint.ex", line: 1]},
-        {NnnnnWeb.Endpoint, :"call (overridable 3)", 2, [file: ~c"deps/plug/lib/plug/debugger.ex", line: 136]},
-        {NnnnnWeb.Endpoint, :call, 2, [file: ~c"lib/nnnnn_web/endpoint.ex", line: 1]},
+        {OpentelemetryPhoenix.TestSupport.Endpoint, :plug_builder_call, 2,
+         [file: ~c"lib/opentelemetry_phoenix/test_support/endpoint.ex", line: 1]},
+        {OpentelemetryPhoenix.TestSupport.Endpoint, :"call (overridable 3)", 2,
+         [file: ~c"deps/plug/lib/plug/debugger.ex", line: 136]},
+        {OpentelemetryPhoenix.TestSupport.Endpoint, :call, 2,
+         [file: ~c"lib/opentelemetry_phoenix/test_support/endpoint.ex", line: 1]},
         {Phoenix.Endpoint.SyncCodeReloadPlug, :do_call, 4,
          [file: ~c"lib/phoenix/endpoint/sync_code_reload_plug.ex", line: 22]},
         {Plug.Cowboy.Handler, :init, 2, [file: ~c"lib/plug/cowboy/handler.ex", line: 11]},
@@ -945,16 +952,16 @@ defmodule PhoenixLiveViewMeta do
               "http://localhost:4000/assets/app.js"
             ]
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -988,16 +995,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints:
           {39_937_697_276_181_388_757_385_442_171_495_723_205,
            %{
@@ -1089,16 +1096,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 540, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints:
           {39_937_697_276_181_388_757_385_442_171_495_723_205,
            %{
@@ -1191,16 +1198,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 540, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints:
           {39_937_697_276_181_388_757_385_442_171_495_723_205,
            %{
@@ -1274,9 +1281,9 @@ defmodule PhoenixLiveViewMeta do
         }
       },
       stacktrace: [
-        {NnnnnWeb.MyTestLive, :handle_event, 3,
+        {OpentelemetryPhoenix.TestSupport.MyTestLive, :handle_event, 3,
          [
-           file: ~c"lib/nnnnn_web/live/my_test_live.ex",
+           file: ~c"lib/opentelemetry_phoenix/test_support/live/my_test_live.ex",
            line: 32,
            error_info: %{module: Exception}
          ]},
@@ -1308,16 +1315,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints:
           {39_937_697_276_181_388_757_385_442_171_495_723_205,
            %{
@@ -1409,12 +1416,12 @@ defmodule PhoenixLiveViewMeta do
             handle_params: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         assigns: %{
           id: 1,
           __changed__: %{},
@@ -1423,7 +1430,7 @@ defmodule PhoenixLiveViewMeta do
         },
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {266_426_426_202_826_600_176_910_312_284_850_323_048, %{}},
         redirected: nil,
         host_uri: %{
@@ -1440,7 +1447,7 @@ defmodule PhoenixLiveViewMeta do
       },
       params: %{},
       event: "live component test",
-      component: NnnnnWeb.MyTestLive.MyLiveComponent
+      component: OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent
     }
   end
 
@@ -1458,12 +1465,12 @@ defmodule PhoenixLiveViewMeta do
             handle_params: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         assigns: %{
           id: 1,
           __changed__: %{},
@@ -1472,7 +1479,7 @@ defmodule PhoenixLiveViewMeta do
         },
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {266_426_426_202_826_600_176_910_312_284_850_323_048, %{}},
         redirected: nil,
         host_uri: %{
@@ -1489,7 +1496,7 @@ defmodule PhoenixLiveViewMeta do
       },
       params: %{},
       event: "live component test",
-      component: NnnnnWeb.MyTestLive.MyLiveComponent
+      component: OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent
     }
   end
 
@@ -1507,16 +1514,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -1545,7 +1552,8 @@ defmodule PhoenixLiveViewMeta do
       kind: :error,
       reason: %{message: "render error", __struct__: RuntimeError, __exception__: true},
       stacktrace: [
-        {NnnnnWeb.MyTestLive, :render, 1, [file: ~c"lib/nnnnn_web/live/my_test_live.ex", line: 10]}
+        {OpentelemetryPhoenix.TestSupport.MyTestLive, :render, 1,
+         [file: ~c"lib/opentelemetry_phoenix/test_support/live/my_test_live.ex", line: 10]}
       ]
     })
   end
@@ -1564,16 +1572,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -1588,7 +1596,7 @@ defmodule PhoenixLiveViewMeta do
           authority: nil
         }
       },
-      component: NnnnnWeb.MyTestLive.MyLiveComponent,
+      component: OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent,
       id: 1,
       cid: 1,
       force?: false,
@@ -1605,7 +1613,8 @@ defmodule PhoenixLiveViewMeta do
       kind: :error,
       reason: %{message: "render error", __struct__: RuntimeError, __exception__: true},
       stacktrace: [
-        {NnnnnWeb.MyTestLive.MyLiveComponent, :render, 1, [file: ~c"lib/nnnnn_web/live/my_live_component.ex", line: 20]}
+        {OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent, :render, 1,
+         [file: ~c"lib/opentelemetry_phoenix/test_support/live/my_live_component.ex", line: 20]}
       ]
     })
   end
@@ -1624,16 +1633,16 @@ defmodule PhoenixLiveViewMeta do
             mount: [],
             after_render: []
           },
-          root_view: NnnnnWeb.MyTestLive
+          root_view: OpentelemetryPhoenix.TestSupport.MyTestLive
         },
         __struct__: Phoenix.LiveView.Socket,
         parent_pid: nil,
         assigns: %{__changed__: %{}, flash: %{}, live_action: :index},
-        endpoint: NnnnnWeb.Endpoint,
-        view: NnnnnWeb.MyTestLive,
+        endpoint: OpentelemetryPhoenix.TestSupport.Endpoint,
+        view: OpentelemetryPhoenix.TestSupport.MyTestLive,
         transport_pid: IEx.Helpers.pid(0, 540, 0),
         root_pid: IEx.Helpers.pid(0, 548, 0),
-        router: NnnnnWeb.Router,
+        router: OpentelemetryPhoenix.TestSupport.Router,
         fingerprints: {nil, %{}},
         redirected: nil,
         host_uri: %{
@@ -1648,7 +1657,7 @@ defmodule PhoenixLiveViewMeta do
           authority: nil
         }
       },
-      component: NnnnnWeb.MyTestLive.MyLiveComponent,
+      component: OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent,
       assigns_sockets: [{%{id: 1}, %{}}]
     }
   end
@@ -1662,7 +1671,8 @@ defmodule PhoenixLiveViewMeta do
       kind: :error,
       reason: %{message: "update error", __struct__: RuntimeError, __exception__: true},
       stacktrace: [
-        {NnnnnWeb.MyTestLive.MyLiveComponent, :update, 2, [file: ~c"lib/nnnnn_web/live/my_live_component.ex", line: 15]}
+        {OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent, :update, 2,
+         [file: ~c"lib/opentelemetry_phoenix/test_support/live/my_live_component.ex", line: 15]}
       ]
     })
   end

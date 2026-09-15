@@ -47,7 +47,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.mount",
                       attributes: attributes
                     )}
 
@@ -72,7 +72,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_params",
                       attributes: attributes
                     )}
 
@@ -189,7 +189,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_event#hello",
                       attributes: attributes
                     )}
 
@@ -225,7 +225,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.mount",
                       attributes: attributes
                     )}
 
@@ -234,7 +234,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_params",
                       attributes: attributes,
                       events: events
                     )}
@@ -274,7 +274,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_event#hello",
                       attributes: attributes,
                       events: events
                     )}
@@ -312,7 +312,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.render",
                       attributes: attributes
                     )}
 
@@ -336,7 +336,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.render",
                       attributes: attributes,
                       events: events
                     )}
@@ -374,12 +374,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.render",
                       attributes: attributes
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
   end
 
   test "handles exception during Phoenix LiveComponent render" do
@@ -399,13 +399,13 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.render",
                       attributes: attributes,
                       events: events
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
 
     [
       event(
@@ -438,12 +438,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.update",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.update",
                       attributes: attributes
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
   end
 
   test "handles exception during Phoenix LiveComponent update" do
@@ -463,13 +463,13 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.update",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.update",
                       attributes: attributes,
                       events: events
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
 
     [
       event(
