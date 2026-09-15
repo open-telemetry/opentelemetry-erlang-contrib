@@ -13,7 +13,7 @@ if otp_vsn >= 27 do
 
     @moduletag :integration
 
-    @adapters [:cowboy, :bandit]
+    @adapters [:cowboy, :cowboy_two, :bandit]
 
     defmodule TestHTML do
       import Phoenix.Template, only: [embed_templates: 1]
@@ -92,7 +92,7 @@ if otp_vsn >= 27 do
     end
 
     for adapter <- @adapters do
-      defmodule Module.concat(["#{String.capitalize(to_string(adapter))}Endpoint"]) do
+      defmodule Module.concat(["#{Macro.camelize(to_string(adapter))}Endpoint"]) do
         defmodule ErrorView do
           def render("404.json", %{kind: kind, reason: _reason, stack: _stack, conn: conn}) do
             %{error: "Got 404 from #{kind} with #{conn.method}"}
@@ -161,7 +161,7 @@ if otp_vsn >= 27 do
       :otel_simple_processor.set_exporter(:otel_exporter_pid, self())
 
       # Find available ports to use for this test
-      [bandit, cowboy] = get_unused_port_numbers(2)
+      [bandit, cowboy, cowboy_two] = get_unused_port_numbers(3)
 
       adapters = %{
         bandit: %{
@@ -184,6 +184,19 @@ if otp_vsn >= 27 do
              [
                http: [port: cowboy],
                url: [host: "cowboy-example.com"],
+               adapter: Phoenix.Endpoint.Cowboy2Adapter,
+               server: true,
+               drainer: false,
+               render_errors: [accepts: ~w(html json)]
+             ]}
+        },
+        cowboy_two: %{
+          port: cowboy_two,
+          spec:
+            {CowboyTwoEndpoint,
+             [
+               http: [port: cowboy_two],
+               url: [host: "cowboy-two-example.com"],
                adapter: Phoenix.Endpoint.Cowboy2Adapter,
                server: true,
                drainer: false,
@@ -220,6 +233,17 @@ if otp_vsn >= 27 do
         Keyword.merge(phoenix_opts,
           adapter: :cowboy2,
           endpoint_prefix: [:phoenix, :cowboy, :endpoint]
+        )
+      )
+    end
+
+    defp setup_adapter(:cowboy_two, opts, phoenix_opts) do
+      :opentelemetry_cowboy.setup(opts)
+
+      OpentelemetryPhoenix.setup(
+        Keyword.merge(phoenix_opts,
+          adapter: :cowboy2,
+          endpoint_prefix: [:phoenix, :cowboy_two, :endpoint]
         )
       )
     end
@@ -715,6 +739,35 @@ if otp_vsn >= 27 do
             assert_receive {:span, span(name: "GET /rendered", kind: :server)}
           end)
         end
+      end
+    end
+
+    describe "multiple endpoints" do
+      test "traces requests to every endpoint", %{cowboy: cowboy, cowboy_two: cowboy_two} do
+        capture_log(fn ->
+          {:ok, _} = start_supervised(cowboy.spec)
+          {:ok, _} = start_supervised(cowboy_two.spec)
+          setup_adapter(:cowboy)
+          setup_adapter(:cowboy_two)
+
+          for endpoint <- [cowboy, cowboy_two] do
+            Req.get("http://localhost:#{endpoint.port}/users/1234",
+              retry: &retry_pool_not_available/2,
+              retry_delay: 100,
+              retry_log_level: false
+            )
+
+            assert_receive {:span, span(name: name, attributes: span_attrs)}
+
+            assert "GET /users/:user_id" == name
+
+            attrs = :otel_attributes.map(span_attrs)
+
+            assert Map.get(attrs, HTTPAttributes.http_route()) == "/users/:user_id"
+            assert Map.get(attrs, :"phoenix.action") == :user
+            assert Map.get(attrs, :"phoenix.plug") == TestController
+          end
+        end)
       end
     end
 
