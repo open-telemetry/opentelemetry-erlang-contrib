@@ -7,6 +7,7 @@ defmodule OpentelemetryPhoenixTest do
   require Record
 
   alias OpenTelemetry.SemConv.ExceptionAttributes
+  alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias PhoenixLiveViewMeta, as: LiveViewMeta
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -46,11 +47,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.mount",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
   end
 
   test "records spans for Phoenix LiveView handle_params" do
@@ -70,10 +72,103 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_params",
                       attributes: attributes
                     )}
 
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
+  end
+
+  test "records the route template for a parameterized LiveView route" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), "http://localhost:4000/resources/123?foo=bar")
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+
+    assert %{HTTPAttributes.http_route() => "/resources/:resource_id"} ==
+             :otel_attributes.map(attributes)
+  end
+
+  test "omits the route when the LiveView is not mounted at the router" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), nil)
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{} == :otel_attributes.map(attributes)
+
+    assert Enum.any?(
+             :telemetry.list_handlers([:phoenix, :live_view, :mount, :start]),
+             &(&1.id == {OpentelemetryPhoenix, :live_view})
+           )
+  end
+
+  test "omits the route when the socket has no router" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = LiveViewMeta.mount_start()
+    meta = %{meta | socket: %{meta.socket | router: nil}}
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
+    assert %{} == :otel_attributes.map(attributes)
+  end
+
+  test "omits the route when the path matches no route" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    meta = put_uri(LiveViewMeta.mount_start(), "http://localhost:4000/nope")
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :start],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    :telemetry.execute(
+      [:phoenix, :live_view, :mount, :stop],
+      %{system_time: System.system_time()},
+      meta
+    )
+
+    assert_receive {:span, span(attributes: attributes)}
     assert %{} == :otel_attributes.map(attributes)
   end
 
@@ -94,7 +189,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_event#hello",
                       attributes: attributes
                     )}
 
@@ -130,20 +225,22 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.mount",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.mount",
                       attributes: attributes
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_params",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_params",
                       attributes: attributes,
                       events: events
                     )}
 
-    assert %{} == :otel_attributes.map(attributes)
+    assert %{HTTPAttributes.http_route() => "/live"} ==
+             :otel_attributes.map(attributes)
 
     [
       event(
@@ -177,7 +274,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.handle_event#hello",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.handle_event#hello",
                       attributes: attributes,
                       events: events
                     )}
@@ -215,7 +312,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.render",
                       attributes: attributes
                     )}
 
@@ -239,7 +336,7 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.render",
                       attributes: attributes,
                       events: events
                     )}
@@ -277,12 +374,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.render",
                       attributes: attributes
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
   end
 
   test "handles exception during Phoenix LiveComponent render" do
@@ -302,13 +399,13 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.render",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.render",
                       attributes: attributes,
                       events: events
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
 
     [
       event(
@@ -341,12 +438,12 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.update",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.update",
                       attributes: attributes
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
   end
 
   test "handles exception during Phoenix LiveComponent update" do
@@ -366,13 +463,13 @@ defmodule OpentelemetryPhoenixTest do
 
     assert_receive {:span,
                     span(
-                      name: "NnnnnWeb.MyTestLive.MyLiveComponent.update",
+                      name: "OpentelemetryPhoenix.TestSupport.MyTestLive.MyLiveComponent.update",
                       attributes: attributes,
                       events: events
                     )}
 
     attrs = :otel_attributes.map(attributes)
-    assert attrs[:"live_view.module"] == "NnnnnWeb.MyTestLive"
+    assert attrs[:"live_view.module"] == "OpentelemetryPhoenix.TestSupport.MyTestLive"
 
     [
       event(
@@ -417,4 +514,6 @@ defmodule OpentelemetryPhoenixTest do
 
     refute_receive {:span, _}
   end
+
+  defp put_uri(meta, uri), do: %{meta | uri: uri}
 end
