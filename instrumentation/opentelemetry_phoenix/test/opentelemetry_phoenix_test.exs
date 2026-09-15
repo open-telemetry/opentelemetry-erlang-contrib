@@ -40,6 +40,22 @@ defmodule OpentelemetryPhoenixTest do
     assert %{} == mount_attributes(meta)
   end
 
+  test "keeps module span names by default" do
+    OpentelemetryPhoenix.setup(adapter: :cowboy2)
+
+    assert %{config: %{span_names: :module}} =
+             Enum.find(
+               :telemetry.list_handlers([:phoenix, :live_view, :mount, :start]),
+               &(&1.id == {OpentelemetryPhoenix, :live_view})
+             )
+  end
+
+  test "rejects unknown liveview span name styles" do
+    assert_raise NimbleOptions.ValidationError, fn ->
+      OpentelemetryPhoenix.setup(adapter: :cowboy2, liveview_span_names: :nope)
+    end
+  end
+
   defp mount_attributes(meta) do
     :telemetry.execute(
       [:phoenix, :live_view, :mount, :start],
