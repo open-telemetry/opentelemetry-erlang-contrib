@@ -138,9 +138,8 @@ defmodule OpentelemetrySqlcommenter do
   Note: This function defaults to `prepare: :unnamed` when adding trace context.
   """
   def prepare_query(_operation, query, opts) do
-    case build_traceparent(OpenTelemetry.Tracer.current_span_ctx()) do
-      traceparent when is_binary(traceparent) ->
-        comment = "traceparent='#{traceparent}'"
+    case build_comment(OpenTelemetry.Tracer.current_span_ctx()) do
+      comment when is_binary(comment) ->
         {query, opts |> Keyword.put(:comment, comment) |> Keyword.put_new(:prepare, :unnamed)}
 
       _ ->
@@ -181,18 +180,17 @@ defmodule OpentelemetrySqlcommenter do
     span_ctx = OpenTelemetry.Tracer.current_span_ctx()
 
     with %{otel_trace_flags: "01"} <- OpenTelemetry.Span.hex_span_ctx(span_ctx),
-         traceparent when is_binary(traceparent) <- build_traceparent(span_ctx) do
-      comment = "traceparent='#{traceparent}'"
+         comment when is_binary(comment) <- build_comment(span_ctx) do
       {query, opts |> Keyword.put(:comment, comment) |> Keyword.put_new(:prepare, :unnamed)}
     else
       _ -> {query, opts}
     end
   end
 
-  defp build_traceparent(span_ctx) do
+  defp build_comment(span_ctx) do
     case OpenTelemetry.Span.hex_span_ctx(span_ctx) do
       %{otel_trace_id: trace_id, otel_span_id: span_id, otel_trace_flags: trace_flags} ->
-        "00-#{trace_id}-#{span_id}-#{trace_flags}"
+        "traceparent='00-#{trace_id}-#{span_id}-#{trace_flags}'"
 
       _ ->
         nil
