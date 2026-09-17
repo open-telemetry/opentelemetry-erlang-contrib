@@ -93,6 +93,10 @@ defmodule OpentelemetrySqlcommenter do
 
   Consider disabling it in performance-critical environments or creating a configuration option to toggle it based on your needs.
 
+  If the caller explicitly provides `prepare: :named`, that option is preserved. However,
+  because the `traceparent` comment changes between spans, each query may have different text,
+  which can reduce prepared statement cache reuse and increase statement churn.
+
   ### Alternative Approaches
 
   If you need both tracing and prepared statements, consider:
@@ -136,6 +140,7 @@ defmodule OpentelemetrySqlcommenter do
     * `{query, opts}` - Original query and options if no active sampled trace is present
 
   Note: This function defaults to `prepare: :unnamed` when adding trace context.
+  An explicitly provided `prepare` option is preserved; see the performance note above.
   """
   def prepare_query(_operation, query, opts) do
     case build_comment(OpenTelemetry.Tracer.current_span_ctx()) do
@@ -175,6 +180,7 @@ defmodule OpentelemetrySqlcommenter do
     * `{query, opts}` - Original query and options if no active trace is present
 
   Note: This function defaults to `prepare: :unnamed` when adding trace context.
+  An explicitly provided `prepare` option is preserved; see the performance note above.
   """
   def prepare_query_sampled(_operation, query, opts) do
     span_ctx = OpenTelemetry.Tracer.current_span_ctx()

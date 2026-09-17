@@ -98,6 +98,10 @@ Use this library when:
 
 Consider disabling it in performance-critical environments or creating a configuration option to toggle it based on your needs.
 
+If the caller explicitly provides `prepare: :named`, that option is preserved. However,
+because the `traceparent` comment changes between spans, each query may have different text,
+which can reduce prepared statement cache reuse and increase statement churn.
+
 ### Alternative Approaches
 
 If you need both tracing and prepared statements, consider:
