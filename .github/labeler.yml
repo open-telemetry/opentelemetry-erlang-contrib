@@ -148,6 +148,11 @@ opentelemetry_req:
       - any-glob-to-any-file:
           - instrumentation/opentelemetry_req/**/*
 
+opentelemetry_sqlcommenter:
+  - changed-files:
+      - any-glob-to-any-file:
+          - instrumentation/opentelemetry_sqlcommenter/**/*
+
 opentelemetry_telemetry:
   - changed-files:
       - any-glob-to-any-file:
