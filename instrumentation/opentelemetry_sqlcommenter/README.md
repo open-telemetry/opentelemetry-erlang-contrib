@@ -22,7 +22,7 @@ Add `opentelemetry_sqlcommenter` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:opentelemetry_sqlcommenter, "~> 0.1.1"},
+    {:opentelemetry_sqlcommenter, "~> 0.2.0"},
   ]
 end
 ```
@@ -74,8 +74,9 @@ The library:
 
 ⚠️ **Impact on Query Performance**
 
-This library disables prepared statements and query caching by setting
-`prepare: :unnamed` for all queries. This is necessary because:
+This library defaults to disabling prepared statements and query caching by setting
+`prepare: :unnamed` when adding a comment, unless the caller provides a `prepare` option.
+This is necessary because:
 
 1. SQL comments make each query unique, even if the underlying SQL is identical
 2. Prepared statements and caching rely on query text matching exactly

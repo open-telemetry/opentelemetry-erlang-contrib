@@ -42,6 +42,15 @@ defmodule OpentelemetrySqlcommenterTest do
       end
     end
 
+    test "preserves an existing prepare option" do
+      OpenTelemetry.Tracer.with_span "test_operation" do
+        {_modified_query, modified_opts} =
+          OpentelemetrySqlcommenter.prepare_query(:all, "SELECT * FROM users", prepare: :named)
+
+        assert Keyword.get(modified_opts, :prepare) == :named
+      end
+    end
+
     test "generated traceparent has correct format" do
       OpenTelemetry.Tracer.with_span "test_operation" do
         query = "SELECT * FROM users"
@@ -105,6 +114,17 @@ defmodule OpentelemetrySqlcommenterTest do
         assert Keyword.get(modified_opts, :timeout) == 5000
         assert Keyword.has_key?(modified_opts, :comment)
         assert Keyword.get(modified_opts, :prepare) == :unnamed
+      end
+    end
+
+    test "preserves an existing prepare option with sampled span" do
+      OpenTelemetry.Tracer.with_span "test_operation" do
+        {_modified_query, modified_opts} =
+          OpentelemetrySqlcommenter.prepare_query_sampled(:all, "SELECT * FROM users",
+            prepare: :named
+          )
+
+        assert Keyword.get(modified_opts, :prepare) == :named
       end
     end
   end

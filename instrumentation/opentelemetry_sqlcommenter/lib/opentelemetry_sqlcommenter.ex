@@ -24,7 +24,7 @@ defmodule OpentelemetrySqlcommenter do
   ```elixir
   def deps do
     [
-      {:opentelemetry_sqlcommenter, "~> 0.1.1"},
+      {:opentelemetry_sqlcommenter, "~> 0.2.0"},
     ]
   end
   ```
@@ -69,8 +69,9 @@ defmodule OpentelemetrySqlcommenter do
 
   ⚠️ **Impact on Query Performance**
 
-  This library disables prepared statements and query caching by setting
-  `prepare: :unnamed` for all queries. This is necessary because:
+  This library defaults to disabling prepared statements and query caching by setting
+  `prepare: :unnamed` when adding a comment, unless the caller provides a `prepare` option.
+  This is necessary because:
 
   1. SQL comments make each query unique, even if the underlying SQL is identical
   2. Prepared statements and caching rely on query text matching exactly
@@ -105,32 +106,6 @@ defmodule OpentelemetrySqlcommenter do
   - [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
   - [W3C Trace Context Specification](https://www.w3.org/TR/trace-context/)
 
-  Adds OpenTelemetry trace context to SQL queries as comments.
-
-  This module is designed to be used with Ecto repositories to automatically inject
-  OpenTelemetry trace information into SQL queries. It adds a SQL comment containing
-  the W3C trace context (traceparent) to each query, enabling correlation between
-  database operations and distributed traces.
-
-  ## Usage
-
-  In your Ecto repository, add:
-
-      defmodule YourApp.Repo do
-        use Ecto.Repo,
-          otp_app: :your_app,
-          adapter: Ecto.Adapters.Postgres
-
-        defdelegate prepare_query(operation, query, opts), to: OpentelemetrySqlcommenter
-      end
-
-  ## Format
-
-  The module adds SQL comments in the following format:
-
-  ```
-  YOUR QUERY/*traceparent='00-trace_id-span_id-flags'*/
-  ```
   """
 
   @doc """
@@ -160,15 +135,16 @@ defmodule OpentelemetrySqlcommenter do
     * `{modified_query, modified_opts}` - Tuple containing the query and modified options with trace context
     * `{query, opts}` - Original query and options if no active sampled trace is present
 
-  Note: This function disables prepared statements by setting `prepare: :unnamed` when adding trace context.
+  Note: This function defaults to `prepare: :unnamed` when adding trace context.
   """
   def prepare_query(_operation, query, opts) do
-    with span_ctx when elem(span_ctx, 0) == :span_ctx <- OpenTelemetry.Tracer.current_span_ctx(),
-         traceparent when is_binary(traceparent) <- build_traceparent(span_ctx) do
-      comment = "traceparent='#{traceparent}'"
-      {query, [comment: comment, prepare: :unnamed] ++ opts}
-    else
-      _ -> {query, opts}
+    case build_traceparent(OpenTelemetry.Tracer.current_span_ctx()) do
+      traceparent when is_binary(traceparent) ->
+        comment = "traceparent='#{traceparent}'"
+        {query, opts |> Keyword.put(:comment, comment) |> Keyword.put_new(:prepare, :unnamed)}
+
+      _ ->
+        {query, opts}
     end
   end
 
@@ -199,51 +175,27 @@ defmodule OpentelemetrySqlcommenter do
     * `{modified_query, modified_opts}` - Tuple containing the query and modified options with trace context
     * `{query, opts}` - Original query and options if no active trace is present
 
-  Note: This function disables prepared statements by setting `prepare: :unnamed` when adding trace context.
+  Note: This function defaults to `prepare: :unnamed` when adding trace context.
   """
   def prepare_query_sampled(_operation, query, opts) do
-    with {:span_ctx, _, _, _trace_flags = 1, _, _, _, _, _} = span_ctx <-
-           OpenTelemetry.Tracer.current_span_ctx(),
+    span_ctx = OpenTelemetry.Tracer.current_span_ctx()
+
+    with %{otel_trace_flags: "01"} <- OpenTelemetry.Span.hex_span_ctx(span_ctx),
          traceparent when is_binary(traceparent) <- build_traceparent(span_ctx) do
       comment = "traceparent='#{traceparent}'"
-      {query, [comment: comment, prepare: :unnamed] ++ opts}
+      {query, opts |> Keyword.put(:comment, comment) |> Keyword.put_new(:prepare, :unnamed)}
     else
       _ -> {query, opts}
     end
   end
 
-  defp build_traceparent(
-         {:span_ctx, trace_id, span_id, trace_flags, _tracestate, _is_valid, _is_remote,
-          _has_remote_parent, _impl}
-       ) do
-    version = "00"
-    trace_id = encode_trace_id(trace_id)
-    span_id = encode_span_id(span_id)
-    trace_flags = encode_flags(trace_flags)
+  defp build_traceparent(span_ctx) do
+    case OpenTelemetry.Span.hex_span_ctx(span_ctx) do
+      %{otel_trace_id: trace_id, otel_span_id: span_id, otel_trace_flags: trace_flags} ->
+        "00-#{trace_id}-#{span_id}-#{trace_flags}"
 
-    "#{version}-#{trace_id}-#{span_id}-#{trace_flags}"
-  end
-
-  defp build_traceparent(_), do: nil
-
-  defp encode_trace_id(trace_id) when is_integer(trace_id) do
-    trace_id
-    |> :binary.encode_unsigned()
-    |> Base.encode16(case: :lower)
-    |> String.pad_leading(32, "0")
-  end
-
-  defp encode_span_id(span_id) when is_integer(span_id) do
-    span_id
-    |> :binary.encode_unsigned()
-    |> Base.encode16(case: :lower)
-    |> String.pad_leading(16, "0")
-  end
-
-  defp encode_flags(1), do: "01"
-  defp encode_flags(0), do: "00"
-
-  defp encode_flags(trace_flags) when is_integer(trace_flags) do
-    Integer.to_string(trace_flags, 16) |> String.pad_leading(2, "0")
+      _ ->
+        nil
+    end
   end
 end
