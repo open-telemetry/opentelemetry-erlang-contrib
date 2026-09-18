@@ -18,6 +18,10 @@ One does not replace the other — `record_exception` without `set_status` leave
 the span looking successful, and `set_status` without `record_exception` loses
 the structured exception detail.
 
+Do not add span events other than the exception event. New events belong on
+the Logs API once it is available in Erlang; see
+[Status](../reference/recording-exceptions.md#status).
+
 ## Handling a `:telemetry` `[:*, :exception]` event
 
 You have `%{kind: kind, reason: reason, stacktrace: stacktrace}`.
@@ -108,8 +112,9 @@ binary.
 
 ## Checklist for new instrumentation
 
-1. Add an **exception event** via `OpenTelemetry.Span.record_exception/4`
+1. Add the **exception event** via `OpenTelemetry.Span.record_exception/4`
    (exception struct) or `:otel_span.record_exception/5` (raw kind/reason).
+   This is the only span event new instrumentation should add.
 2. Set **span status** to `OpenTelemetry.status(:error, description)` with a
    concise description.
 3. When SemConv applies, set **`error.type`** with a low-cardinality value.
