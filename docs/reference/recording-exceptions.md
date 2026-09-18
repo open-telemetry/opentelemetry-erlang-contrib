@@ -5,6 +5,25 @@ instrumentations.
 
 See [How to record exceptions](../how-to/record-exceptions.md) for usage guidance.
 
+## Status
+
+Span events are the current mechanism for recording exceptions in
+opentelemetry-erlang-contrib.
+
+[OTEP 4430](https://github.com/open-telemetry/opentelemetry-specification/blob/main/oteps/4430-span-event-api-deprecation-plan.md)
+accepts a plan to migrate event recording from the Span API to the Logs API,
+making log-based events the single recommended way to emit events. The
+corresponding trace API deprecation has not merged into the specification.
+
+The Erlang Logs API is unreleased: `opentelemetry_api` ships no logs modules,
+and no released package provides an OTLP logs exporter
+([opentelemetry-erlang#1006](https://github.com/open-telemetry/opentelemetry-erlang/issues/1006)).
+Until that changes, `record_exception` remains the correct call for
+instrumentation in this repository.
+
+Span status and `error.type` are span fields rather than events and are
+unaffected by this migration.
+
 ## Mechanisms
 
 | Mechanism | Role |
