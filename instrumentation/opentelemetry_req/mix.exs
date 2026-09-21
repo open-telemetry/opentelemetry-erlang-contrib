@@ -65,7 +65,7 @@ defmodule OpentelemetryReq.MixProject do
       {:otel_http, "~> 0.2"},
       {:req, "~> 0.7"},
       {:ex_doc, "== 0.40.4", only: [:dev, :test]},
-      {:opentelemetry_exporter, "== 1.10.0", only: [:test]},
+      {:opentelemetry_exporter, "== 1.11.0", only: [:test]},
       {:opentelemetry, "== 1.7.0", only: :test},
       {:bypass, "== 2.1.0", only: :test},
       {:plug, "== 1.20.3", only: [:test]},
