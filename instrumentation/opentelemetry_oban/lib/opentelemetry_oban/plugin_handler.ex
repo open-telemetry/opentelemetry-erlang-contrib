@@ -121,6 +121,18 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp set_error_type(_error), do: :ok
 
+  # TODO: both of the following are candidates for a future breaking change, whenever a major
+  # version is on the table.
+  #
+  #   * The attribute keys below keep the `oban.plugins.*` namespace even though Oban moved these
+  #     modules to the top level, so that existing dashboards keep working. Aligning the keys with
+  #     the new module names would read more consistently, at the cost of breaking every consumer.
+  #   * A metadata key that is absent currently reports a count of `0` instead of being omitted, so
+  #     a genuine zero and "Oban reported nothing" are indistinguishable. If Oban ever changes the
+  #     metadata a renamed plugin emits, the normalization below would report zeros rather than
+  #     nothing. Omitting the attribute when its key is missing is safer, but changes the output
+  #     users see today.
+
   # Oban 2.24 renamed Cron, Lifeline, Pruner and Reindexer to the top level and left the old
   # `Oban.Plugins.*` modules as deprecated delegates. A legacy name passed in `:plugins` still
   # runs the renamed module, so the metadata here always carries the new name; this map lets
