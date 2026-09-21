@@ -9,5 +9,6 @@
       "otp_version": "27.2.4",
       "check_formatted": true
     }
-  ]
+  ],
+  "exclude": []
 }
