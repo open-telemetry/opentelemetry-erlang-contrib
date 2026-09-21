@@ -344,7 +344,12 @@ defmodule OpentelemetryReqTest do
       require OpenTelemetry.Tracer, as: Tracer
 
       Tracer.with_span "parent" do
-        Req.get!(client(), url: "http://localhost:#{bypass.port}/retry", retry: :transient, max_retries: 1, retry_delay: fn _ -> 0 end)
+        Req.get!(client(),
+          url: "http://localhost:#{bypass.port}/retry",
+          retry: :transient,
+          max_retries: 1,
+          retry_delay: fn _ -> 0 end
+        )
       end
 
       assert_receive {:span, span(name: :GET, attributes: first_attrs)}
