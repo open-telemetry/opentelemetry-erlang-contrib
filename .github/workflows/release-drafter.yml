@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-aws-xray-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-broadway-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-cowboy-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -50,7 +50,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-dataloader-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-ecto-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -74,7 +74,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-elli-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-finch-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -98,7 +98,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-grpc-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -110,7 +110,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-grpcbox-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -122,7 +122,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-httpoison-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -134,7 +134,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-nebulex-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -146,7 +146,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-oban-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -158,7 +158,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-phoenix-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -170,7 +170,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-bandit-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -182,7 +182,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-process-propagator-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -194,7 +194,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-redix-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -206,7 +206,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-req-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -218,7 +218,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-telemetry-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -230,7 +230,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-tesla-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -242,7 +242,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-xandra-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -254,7 +254,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[otel-http-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
@@ -266,7 +266,7 @@ jobs:
     permissions:
       contents: write # required for creating draft releases
     name: '[opentelemetry-commanded-release] Draft release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7.7.0
         with:
