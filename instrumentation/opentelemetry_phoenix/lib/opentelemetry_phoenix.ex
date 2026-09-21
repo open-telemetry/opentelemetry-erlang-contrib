@@ -73,8 +73,6 @@ defmodule OpentelemetryPhoenix do
 
   alias OpenTelemetry.Tracer
 
-  require OpenTelemetry.Tracer
-
   @tracer_id __MODULE__
 
   @live_view_route_key {__MODULE__, :live_view_route}

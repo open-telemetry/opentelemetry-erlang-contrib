@@ -2,8 +2,6 @@ defmodule OpentelemetryPhoenixTest do
   use ExUnit.Case, async: false
   doctest OpentelemetryPhoenix
 
-  require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   alias OpentelemetryPhoenix.TestSupport.LiveViewMeta

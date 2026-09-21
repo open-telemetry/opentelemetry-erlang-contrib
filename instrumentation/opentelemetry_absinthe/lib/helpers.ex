@@ -11,7 +11,6 @@ defmodule OpentelemetryAbsinthe.Helpers do
   """
 
   alias Absinthe.Middleware.Batch
-  require OpenTelemetry.Tracer
 
   @doc """
   Works like Absinthe.Resolution.Helpers.batch, but preserves the active span.

@@ -4,7 +4,6 @@ defmodule OpentelemetryFinchTest do
   doctest OpentelemetryFinch
 
   require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   alias OpenTelemetry.SemConv.ErrorAttributes

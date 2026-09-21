@@ -8,7 +8,6 @@ defmodule OpentelemetryRedixTest do
   alias OpentelemetryRedix.RedixAttributes
 
   require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do

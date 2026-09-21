@@ -1,8 +1,6 @@
 defmodule OpentelemetryCommanded.ProcessManager do
   @moduledoc false
 
-  require OpenTelemetry.Tracer
-
   import OpentelemetryCommanded.Util
 
   alias OpenTelemetry.Span

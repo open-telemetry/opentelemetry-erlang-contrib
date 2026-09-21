@@ -2,8 +2,6 @@ defmodule OpentelemetryGrpc.ClientTest do
   use ExUnit.Case, async: false
   doctest OpentelemetryGrpc.Client
 
-  require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   alias OpentelemetryGrpc.TestSupport

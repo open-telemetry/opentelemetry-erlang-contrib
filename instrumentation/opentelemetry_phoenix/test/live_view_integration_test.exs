@@ -157,7 +157,6 @@ defmodule OpentelemetryPhoenix.LiveViewIntegrationTest do
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
 
-  require OpenTelemetry.Span
   require Record
 
   alias OpenTelemetry.SemConv.ExceptionAttributes

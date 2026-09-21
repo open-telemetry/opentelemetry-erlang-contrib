@@ -8,10 +8,7 @@ defmodule OpentelemetryHTTPoison do
 
   use HTTPoison.Base
 
-  require OpenTelemetry
-  require OpenTelemetry.Span
   require OpenTelemetry.Tracer
-  require Record
   require Logger
 
   alias HTTPoison.Request

@@ -4,7 +4,6 @@ defmodule OpentelemetryProcessPropagator.TaskTest do
   alias OpentelemetryProcessPropagator.Task
 
   require OpenTelemetry.Tracer, as: Tracer
-  require OpenTelemetry.Span
   require Record
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
