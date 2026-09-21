@@ -56,7 +56,7 @@ defmodule OpentelemetryOban.MixProject do
       {:opentelemetry_telemetry, "~> 1.1"},
       {:opentelemetry_semantic_conventions, "~> 1.27"},
       {:opentelemetry, "== 1.7.0", only: [:test]},
-      {:opentelemetry_exporter, "== 1.10.0", only: [:test]},
+      {:opentelemetry_exporter, "== 1.11.0", only: [:test]},
       {:nimble_options, "~> 1.1"},
       {:telemetry, "~> 1.0"},
       {:jason, "== 1.4.5", only: [:dev, :test]},
