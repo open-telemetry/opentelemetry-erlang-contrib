@@ -302,7 +302,6 @@ jobs:
         rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
         grpc_version: ["0", "1"]
         include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -432,7 +431,6 @@ jobs:
         rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
         nebulex_version: ["2", "3"]
         include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -820,7 +818,6 @@ jobs:
         elixir_version: ["1.18.2"]
         rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
         include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
-        exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
     services:
       cassandra:
         image: cassandra@sha256:ee178b38a2746a8e15a115bd038ad1f864391d04a84162a018cb0dd79511709a

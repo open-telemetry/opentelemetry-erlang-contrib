@@ -1,11 +1,11 @@
 {
   "otp_version": ["27.2.4"],
-  "elixir_version": ["1.18.2"],
+  "elixir_version": ["1.19.6", "1.18.5"],
   "rebar3_version": ["3.24.0"],
   "os": ["ubuntu-24.04"],
   "include": [
     {
-      "elixir_version": "1.18.2",
+      "elixir_version": "1.18.5",
       "otp_version": "27.2.4",
       "check_formatted": true
     }
