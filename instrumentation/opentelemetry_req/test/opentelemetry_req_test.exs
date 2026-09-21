@@ -333,6 +333,42 @@ defmodule OpentelemetryReqTest do
     end
   end
 
+  describe "retries" do
+    test "retry does not modify parent span", %{bypass: bypass} do
+      Bypass.expect(bypass, "GET", "/retry", fn conn ->
+        conn
+        |> Plug.Conn.put_status(500)
+        |> Req.Test.text("retry")
+      end)
+
+      require OpenTelemetry.Tracer, as: Tracer
+
+      Tracer.with_span "parent" do
+        Req.get!(client(),
+          url: "http://localhost:#{bypass.port}/retry",
+          retry: :transient,
+          max_retries: 1,
+          retry_delay: fn _ -> 0 end
+        )
+      end
+
+      assert_receive {:span, span(name: :GET, attributes: first_attrs)}
+      assert :otel_attributes.map(first_attrs)[HTTPAttributes.http_response_status_code()] == 500
+
+      assert_receive {:span, span(name: :GET, attributes: second_attrs)}
+      assert :otel_attributes.map(second_attrs)[HTTPAttributes.http_response_status_code()] == 500
+
+      assert_receive {:span, span(name: "parent", attributes: parent_attrs)}
+      parent_attr_map = :otel_attributes.map(parent_attrs)
+
+      refute Map.has_key?(parent_attr_map, HTTPAttributes.http_response_status_code()),
+             "parent span must not have http.response.status_code attribute from a retry"
+
+      refute Map.has_key?(parent_attr_map, ErrorAttributes.error_type()),
+             "parent span must not have error.type attribute from a retry"
+    end
+  end
+
   describe "redirects" do
     test "redirect does not modify parent span", %{bypass: bypass} do
       Bypass.expect_once(bypass, "GET", "/initial", fn conn ->

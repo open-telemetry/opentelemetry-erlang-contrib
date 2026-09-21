@@ -193,8 +193,7 @@ defmodule OpentelemetryReq do
 
     attrs = build_req_attrs(request)
 
-    parent_ctx = OpenTelemetry.Ctx.get_current()
-    Process.put(:otel_parent_ctx, parent_ctx)
+    parent_ctx = Ctx.get_current()
 
     Tracer.start_span(span_name, %{
       attributes: attrs,
@@ -203,9 +202,12 @@ defmodule OpentelemetryReq do
     |> Tracer.set_current_span()
 
     request
+    |> Req.Request.put_private(:otel_parent_ctx, parent_ctx)
+    |> Req.Request.put_private(:otel_span_ended, false)
   end
 
   defp end_span({request, %Req.Response{} = response}) do
+    request = ensure_span_started(request)
     config = Req.Request.get_private(request, :otel)
 
     opt_in =
@@ -235,13 +237,13 @@ defmodule OpentelemetryReq do
 
     OpenTelemetry.Tracer.end_span()
 
-    Process.delete(:otel_parent_ctx)
-    |> OpenTelemetry.Ctx.attach()
-
+    request = restore_parent_context(request)
     {request, response}
   end
 
   defp end_errored_span({request, exception}) do
+    request = ensure_span_started(request)
+
     Tracer.set_status(OpenTelemetry.status(:error, format_exception(exception)))
 
     Tracer.set_attributes(%{
@@ -250,10 +252,25 @@ defmodule OpentelemetryReq do
 
     Tracer.end_span()
 
-    Process.delete(:otel_parent_ctx)
+    request = restore_parent_context(request)
+    {request, exception}
+  end
+
+
+  defp ensure_span_started(request) do
+    if Req.Request.get_private(request, :otel_span_ended, false) do
+      start_span(request)
+    else
+      request
+    end
+  end
+
+  defp restore_parent_context(request) do
+    request
+    |> Req.Request.get_private(:otel_parent_ctx)
     |> Ctx.attach()
 
-    {request, exception}
+    Req.Request.put_private(request, :otel_span_ended, true)
   end
 
   defp format_exception(%{__exception__: true} = exception) do
