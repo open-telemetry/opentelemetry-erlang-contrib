@@ -4,6 +4,15 @@
 
 ### Fixed
 
+* Report the `oban.plugins.*_count` attributes again on Oban 2.24 and later.
+  Oban 2.24 renamed `Oban.Plugins.Cron`, `Oban.Plugins.Lifeline`,
+  `Oban.Plugins.Pruner` and `Oban.Plugins.Reindexer` to the top level and made
+  the old names deprecated delegates. Because Oban runs the renamed module even
+  when a legacy name is configured, plugin telemetry metadata reports the new
+  name, which no longer matched the pattern `OpentelemetryOban.PluginHandler`
+  matched on. The `oban.plugins.*_count` attributes were silently dropped for
+  every plugin on Oban 2.24+, regardless of which module name was configured.
+
 * Fix `OpentelemetryOban.PluginHandler` crashing with `:badarg` when an
   `Oban.Plugins.Cron` (or `Oban.Pro.Plugins.DynamicCron`) `[:oban, :plugin, :stop]`
   event carries no `:jobs` in its metadata. Oban omits `:jobs` when the scheduled

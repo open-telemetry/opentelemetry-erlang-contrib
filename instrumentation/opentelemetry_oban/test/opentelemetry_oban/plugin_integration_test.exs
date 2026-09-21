@@ -8,6 +8,11 @@ defmodule OpentelemetryOban.PluginIntegrationTest do
 
   require Record
 
+  @lifeline if Code.ensure_loaded?(Oban.Lifeline), do: Oban.Lifeline, else: Oban.Plugins.Lifeline
+  @reindexer if Code.ensure_loaded?(Oban.Reindexer),
+               do: Oban.Reindexer,
+               else: Oban.Plugins.Reindexer
+
   alias Oban.Job
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -68,36 +73,42 @@ defmodule OpentelemetryOban.PluginIntegrationTest do
     insert_orphan(attempt: 1, max_attempts: 20, attempted_at: orphaned_at)
     insert_orphan(attempt: 20, max_attempts: 20, attempted_at: orphaned_at)
 
-    run_plugin({Oban.Plugins.Lifeline, interval: :timer.hours(1), rescue_after: 1}, :rescue)
+    run_plugin({@lifeline, interval: :timer.hours(1), rescue_after: 1}, :rescue)
+
+    expected_plugin = inspect(@lifeline)
 
     assert %{
-             "oban.plugin": "Oban.Plugins.Lifeline",
+             "oban.plugin": ^expected_plugin,
              "oban.plugins.lifeline.rescued_count": 1,
              "oban.plugins.lifeline.discarded_count": 1
-           } = receive_span_attrs(Oban.Plugins.Lifeline)
+           } = receive_span_attrs(@lifeline)
   end
 
   test "a failing plugin produces an errored span" do
     # REINDEX CONCURRENTLY cannot run inside the sandbox transaction, so the plugin fails for real
     # and reports it through the {:error, meta} return value of :telemetry.span/3.
-    run_plugin({Oban.Plugins.Reindexer, schedule: "@daily"}, :reindex)
+    run_plugin({@reindexer, schedule: "@daily"}, :reindex)
+
+    expected_name = "#{inspect(@reindexer)} process"
 
     assert_receive {:span,
                     span(
-                      name: "Oban.Plugins.Reindexer process",
+                      name: ^expected_name,
                       status: status(code: :error)
                     )},
                    1000
   end
 
   test "a non-leader plugin run is not reported as an error" do
-    run_plugin({Oban.Plugins.Reindexer, schedule: "@daily"}, :reindex,
+    run_plugin({@reindexer, schedule: "@daily"}, :reindex,
       peer: {Oban.Peers.Isolated, leader?: false}
     )
 
+    expected_name = "#{inspect(@reindexer)} process"
+
     assert_receive {:span,
                     span(
-                      name: "Oban.Plugins.Reindexer process",
+                      name: ^expected_name,
                       attributes: attributes,
                       status: :undefined
                     )},

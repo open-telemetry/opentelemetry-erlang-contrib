@@ -318,6 +318,42 @@ defmodule OpentelemetryOban.PluginHandlerTest do
                receive_span_attrs(Oban.Plugins.Pruner)
     end
 
+    # Oban 2.24 renamed these plugins to the top level, and runs the renamed module even when a
+    # legacy name is configured, so this is the metadata every Oban 2.24+ user actually emits.
+    test "Oban.Cron plugin" do
+      execute_plugin(Oban.Cron, %{jobs: [1, 3, 4]})
+
+      assert %{
+               "oban.plugin": "Oban.Cron",
+               "oban.plugins.cron.jobs_count": 3
+             } ==
+               receive_span_attrs(Oban.Cron)
+    end
+
+    test "Oban.Lifeline plugin" do
+      execute_plugin(Oban.Lifeline, %{
+        discarded_jobs: [1, 2, 3],
+        rescued_jobs: [4, 5]
+      })
+
+      assert %{
+               "oban.plugin": "Oban.Lifeline",
+               "oban.plugins.lifeline.discarded_count": 3,
+               "oban.plugins.lifeline.rescued_count": 2
+             } ==
+               receive_span_attrs(Oban.Lifeline)
+    end
+
+    test "Oban.Pruner plugin" do
+      execute_plugin(Oban.Pruner, %{pruned_count: 3})
+
+      assert %{
+               "oban.plugin": "Oban.Pruner",
+               "oban.plugins.pruner.pruned_count": 3
+             } ==
+               receive_span_attrs(Oban.Pruner)
+    end
+
     test "Oban.Pro.Plugins.DynamicCron plugin" do
       execute_plugin(Oban.Pro.Plugins.DynamicCron, %{jobs: [1, 3, 4]})
 
