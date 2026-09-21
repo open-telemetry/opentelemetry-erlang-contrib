@@ -94,9 +94,9 @@ defmodule OpentelemetryOban.PluginHandler do
   # Plugins report failure through the `{:error, meta}` return value of `:telemetry.span/3`, which
   # emits a `:stop` event carrying `:error` instead of an `:exception` event.
   #
-  # `Oban.Plugins.Reindexer` has no `else` branch for the non-leader case, so every follower node
-  # reports `nil` on each scheduled run. That is a no-op rather than a failure, and it carries no
-  # diagnostic value, so it is not recorded as an error.
+  # `Oban.Reindexer` (formerly `Oban.Plugins.Reindexer`) has no `else` branch for the non-leader
+  # case, so every follower node reports `nil` on each scheduled run. That is a no-op rather than
+  # a failure, and it carries no diagnostic value, so it is not recorded as an error.
   defp maybe_record_stop_error(%{error: nil}), do: :ok
 
   defp maybe_record_stop_error(%{error: error}) do
@@ -121,30 +121,50 @@ defmodule OpentelemetryOban.PluginHandler do
 
   defp set_error_type(_error), do: :ok
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Cron} = metadata) do
+  # Oban 2.24 renamed Cron, Lifeline, Pruner and Reindexer to the top level and left the old
+  # `Oban.Plugins.*` modules as deprecated delegates. A legacy name passed in `:plugins` still
+  # runs the renamed module, so the metadata here always carries the new name; this map lets
+  # attribute selection recognise either name while keeping the emitted attribute keys unchanged.
+  @renamed_plugins %{
+    Oban.Cron => Oban.Plugins.Cron,
+    Oban.Lifeline => Oban.Plugins.Lifeline,
+    Oban.Pruner => Oban.Plugins.Pruner,
+    Oban.Reindexer => Oban.Plugins.Reindexer
+  }
+
+  defp end_span_plugin_attrs(%{plugin: plugin} = metadata) do
+    canonical = Map.get(@renamed_plugins, plugin, plugin)
+    plugin_attrs(canonical, metadata)
+  end
+
+  defp end_span_plugin_attrs(_) do
+    %{}
+  end
+
+  defp plugin_attrs(Oban.Plugins.Cron, metadata) do
     %{"oban.plugins.cron.jobs_count": length(metadata[:jobs] || [])}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Gossip} = metadata) do
+  defp plugin_attrs(Oban.Plugins.Gossip, metadata) do
     %{"oban.plugins.gossip.gossip_count": metadata[:gossip_count]}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Lifeline} = metadata) do
+  defp plugin_attrs(Oban.Plugins.Lifeline, metadata) do
     %{
       "oban.plugins.lifeline.discarded_count": length(metadata[:discarded_jobs] || []),
       "oban.plugins.lifeline.rescued_count": length(metadata[:rescued_jobs] || [])
     }
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Plugins.Pruner} = metadata) do
+  defp plugin_attrs(Oban.Plugins.Pruner, metadata) do
     %{"oban.plugins.pruner.pruned_count": metadata[:pruned_count]}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicCron} = metadata) do
+  defp plugin_attrs(Oban.Pro.Plugins.DynamicCron, metadata) do
     %{"oban.pro.plugins.dynamic_cron.jobs_count": length(metadata[:jobs] || [])}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicLifeline} = metadata) do
+  defp plugin_attrs(Oban.Pro.Plugins.DynamicLifeline, metadata) do
     %{
       "oban.pro.plugins.dynamic_lifeline.discarded_count":
         length(metadata[:discarded_jobs] || []),
@@ -152,15 +172,15 @@ defmodule OpentelemetryOban.PluginHandler do
     }
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPrioritizer} = metadata) do
+  defp plugin_attrs(Oban.Pro.Plugins.DynamicPrioritizer, metadata) do
     %{"oban.pro.plugins.dynamic_prioritizer.reprioritized_count": metadata[:reprioritized_count]}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicPruner} = metadata) do
+  defp plugin_attrs(Oban.Pro.Plugins.DynamicPruner, metadata) do
     %{"oban.pro.plugins.dynamic_pruner.pruned_count": metadata[:pruned_count]}
   end
 
-  defp end_span_plugin_attrs(%{plugin: Oban.Pro.Plugins.DynamicScaler} = metadata) do
+  defp plugin_attrs(Oban.Pro.Plugins.DynamicScaler, metadata) do
     %{
       "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_to": metadata[:scaler][:last_scaled_to],
       "oban.pro.plugins.dynamic_scaler.scaler.last_scaled_at":
@@ -168,7 +188,7 @@ defmodule OpentelemetryOban.PluginHandler do
     }
   end
 
-  defp end_span_plugin_attrs(_) do
+  defp plugin_attrs(_plugin, _metadata) do
     %{}
   end
 end
