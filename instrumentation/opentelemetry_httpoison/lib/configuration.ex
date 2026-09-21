@@ -1,8 +1,6 @@
 defmodule OpentelemetryHTTPoison.Configuration do
   @moduledoc false
 
-  require Logger
-
   @spec setup(any) :: nil
   def setup(opts \\ []) do
     errors = []

@@ -12,7 +12,7 @@ defmodule OpentelemetryGrpc.Client do
   alias OpenTelemetry.SemConv.ServerAttributes
   alias OpenTelemetry.SemConv.ErrorAttributes
 
-  require OpenTelemetry.Tracer, as: Tracer
+  alias OpenTelemetry.Tracer
 
   @grpc_client_tracer_id OpentelemetryGrpc.Client
 

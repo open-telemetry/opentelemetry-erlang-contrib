@@ -13,8 +13,6 @@ defmodule OpentelemetryCommanded.Middleware do
 
   @behaviour Commanded.Middleware
 
-  require OpenTelemetry.Tracer
-
   import Commanded.Middleware.Pipeline
   import OpentelemetryCommanded.Util
 

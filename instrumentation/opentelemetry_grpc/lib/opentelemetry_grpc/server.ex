@@ -3,8 +3,7 @@ defmodule OpentelemetryGrpc.Server do
   alias OpenTelemetry.SemConv.Incubating.RPCAttributes
   alias OpenTelemetry.SemConv.NetworkAttributes
 
-  require OpenTelemetry.Tracer, as: Tracer
-  require Logger
+  alias OpenTelemetry.Tracer
 
   @options_schema [
     span_relationship: [
