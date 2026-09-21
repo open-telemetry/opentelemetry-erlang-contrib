@@ -5,7 +5,6 @@ defmodule OpentelemetryCommanded.ApplicationTest do
   alias OpentelemetryCommanded.DummyApp.Commands, as: C
 
   import ExUnit.CaptureLog
-  require Logger
 
   describe "dispatch command when telemetry attached" do
     setup _ do

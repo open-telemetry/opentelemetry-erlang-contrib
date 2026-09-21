@@ -3,7 +3,6 @@ defmodule OpentelemetryBroadwayTest do
   doctest OpentelemetryBroadway
 
   require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   alias OpentelemetryBroadway.BroadwayAttributes

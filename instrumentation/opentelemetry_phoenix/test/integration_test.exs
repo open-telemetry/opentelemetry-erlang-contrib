@@ -136,7 +136,6 @@ if otp_vsn >= 27 do
       end
     end
 
-    require OpenTelemetry.Span
     require Record
 
     for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do

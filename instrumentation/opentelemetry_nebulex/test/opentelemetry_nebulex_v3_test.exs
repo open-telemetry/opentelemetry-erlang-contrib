@@ -7,7 +7,6 @@ if Application.spec(:nebulex, :vsn) |> to_string() |> String.starts_with?("3.") 
     doctest OpentelemetryNebulex
 
     require OpenTelemetry.Tracer
-    require OpenTelemetry.Span
     require Record
 
     for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do

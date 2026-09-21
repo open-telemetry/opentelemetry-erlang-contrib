@@ -1,8 +1,6 @@
 defmodule OpentelemetryBanditTest do
   use ExUnit.Case, async: false
 
-  require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
   require Record
 
   alias OpenTelemetry.SemConv.ClientAttributes

@@ -2,9 +2,6 @@ defmodule OpentelemetryGrpc.ContextPropagatorInterceptorTest do
   use ExUnit.Case, async: false
   doctest OpentelemetryGrpc.ContextPropagatorInterceptor
 
-  require OpenTelemetry.Tracer
-  require OpenTelemetry.Span
-
   alias OpentelemetryGrpc.ContextPropagatorInterceptor
   alias Testserver.V1.HelloRequest
 
