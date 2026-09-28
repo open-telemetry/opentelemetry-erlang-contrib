@@ -56,6 +56,59 @@ defmodule OpentelemetryBanditTest do
            )
   end
 
+  test "with exception raised before the conn is built" do
+    OpentelemetryBandit.setup(response_headers: ["content-type"])
+
+    # Bandit emits these without a :conn when building the conn raises a non-protocol error,
+    # which no client request can trigger
+    metadata = %{
+      telemetry_span_context: make_ref(),
+      connection_telemetry_span_context: make_ref(),
+      plug: {__MODULE__, []}
+    }
+
+    :telemetry.execute(
+      [:bandit, :request, :start],
+      %{monotonic_time: System.monotonic_time()},
+      metadata
+    )
+
+    :telemetry.execute(
+      [:bandit, :request, :exception],
+      %{monotonic_time: System.monotonic_time()},
+      Map.merge(metadata, %{
+        kind: :exit,
+        exception: %RuntimeError{message: "boom"},
+        stacktrace: []
+      })
+    )
+
+    expected_status = OpenTelemetry.status(:error, "")
+
+    assert_receive {:span,
+                    span(
+                      name: :HTTP,
+                      attributes: span_attrs,
+                      events: events,
+                      status: ^expected_status
+                    )}
+
+    attrs = :otel_attributes.map(span_attrs)
+
+    assert Map.get(attrs, ErrorAttributes.error_type()) == RuntimeError
+    assert Map.get(attrs, HTTPAttributes.http_response_status_code()) == 500
+
+    [event(name: :exception)] = :otel_events.list(events)
+
+    # the handler is still attached, so later requests keep producing spans
+    port = start_server()
+
+    {:ok, {{_, 200, _}, _, _}} =
+      :httpc.request(:get, {~c"http://localhost:#{port}/hello", []}, [], [])
+
+    assert_receive {:span, span(name: :GET)}
+  end
+
   describe "GET" do
     test "basic request with default options" do
       OpentelemetryBandit.setup()

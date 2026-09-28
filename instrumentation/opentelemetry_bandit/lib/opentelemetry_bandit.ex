@@ -290,6 +290,8 @@ defmodule OpentelemetryBandit do
     )
   end
 
+  # error with no conn
+  defp set_resp_header_attrs(attrs, nil, _config), do: attrs
   defp set_resp_header_attrs(attrs, _conn, %{response_headers: []}), do: attrs
 
   defp set_resp_header_attrs(attrs, conn, %{response_headers: headers}) do
@@ -506,7 +508,7 @@ defmodule OpentelemetryBandit do
       HTTPAttributes.http_response_status_code() => status_code,
       ErrorAttributes.error_type() => error_type(meta.exception)
     }
-    |> set_resp_header_attrs(meta.conn, config)
+    |> set_resp_header_attrs(meta[:conn], config)
     |> Tracer.set_attributes()
 
     Tracer.end_span()
