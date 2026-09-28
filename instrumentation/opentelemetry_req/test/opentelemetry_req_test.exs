@@ -372,6 +372,77 @@ defmodule OpentelemetryReqTest do
     end
   end
 
+  describe "retries" do
+    test "each attempt gets its own client span under the parent", %{bypass: bypass} do
+      attempts = :counters.new(1, [])
+      test_pid = self()
+
+      Bypass.expect(bypass, "GET", "/flaky", fn conn ->
+        :counters.add(attempts, 1, 1)
+        [traceparent] = Plug.Conn.get_req_header(conn, "traceparent")
+        send(test_pid, {:traceparent, traceparent})
+
+        case :counters.get(attempts, 1) do
+          1 -> Plug.Conn.send_resp(conn, 503, "")
+          _ -> ok_resp(conn)
+        end
+      end)
+
+      require OpenTelemetry.Tracer, as: Tracer
+
+      Tracer.with_span "parent" do
+        Req.get!(client(propagate_trace_headers: true),
+          url: "http://localhost:#{bypass.port}/flaky",
+          retry: :transient,
+          retry_delay: 0
+        )
+      end
+
+      assert_receive {:traceparent, first_traceparent}
+      assert_receive {:traceparent, second_traceparent}
+
+      assert_receive {:span,
+                      span(name: :GET, span_id: first_id, parent_span_id: first_parent_id) =
+                        first_span}
+
+      assert_receive {:span,
+                      span(name: :GET, span_id: second_id, parent_span_id: second_parent_id) =
+                        second_span}
+
+      assert_receive {:span, span(name: "parent", span_id: parent_id, attributes: parent_attrs)}
+
+      assert first_parent_id == parent_id
+      assert second_parent_id == parent_id
+      refute first_id == second_id
+
+      assert :otel_attributes.map(span(first_span, :attributes))[
+               HTTPAttributes.http_response_status_code()
+             ] == 503
+
+      assert :otel_attributes.map(span(second_span, :attributes))[
+               HTTPAttributes.http_response_status_code()
+             ] == 200
+
+      assert first_traceparent =~ span_id_hex(first_id)
+      assert second_traceparent =~ span_id_hex(second_id)
+
+      parent_attr_map = :otel_attributes.map(parent_attrs)
+
+      refute Map.has_key?(parent_attr_map, HTTPAttributes.http_response_status_code()),
+             "parent span must not have http.response.status_code attribute from a retry"
+
+      refute Map.has_key?(parent_attr_map, ErrorAttributes.error_type()),
+             "parent span must not have error.type attribute from a retry"
+    end
+  end
+
+  defp span_id_hex(span_id) do
+    span_id
+    |> Integer.to_string(16)
+    |> String.pad_leading(16, "0")
+    |> String.downcase()
+  end
+
   describe "propagation" do
     test "off by default" do
       plug = fn conn ->
