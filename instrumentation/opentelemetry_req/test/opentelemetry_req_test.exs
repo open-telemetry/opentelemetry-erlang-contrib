@@ -395,12 +395,18 @@ defmodule OpentelemetryReqTest do
       assert_receive {:span,
                       span(name: :GET, parent_span_id: first_parent_id, attributes: first_attrs)}
 
-      assert :otel_attributes.map(first_attrs)[HTTPAttributes.http_response_status_code()] == 503
+      first_attr_map = :otel_attributes.map(first_attrs)
+      assert first_attr_map[HTTPAttributes.http_response_status_code()] == 503
+      refute Map.has_key?(first_attr_map, HTTPAttributes.http_request_resend_count())
 
       assert_receive {:span,
                       span(name: :GET, parent_span_id: second_parent_id, attributes: second_attrs)}
 
-      assert :otel_attributes.map(second_attrs)[HTTPAttributes.http_response_status_code()] == 200
+      second_attr_map = :otel_attributes.map(second_attrs)
+      assert second_attr_map[HTTPAttributes.http_response_status_code()] == 200
+      assert second_attr_map[HTTPAttributes.http_request_resend_count()] == 1
+
+      refute_receive {:span, span(name: :GET)}
 
       assert_receive {:span, span(name: "parent", span_id: parent_id, attributes: parent_attrs)}
       assert first_parent_id == parent_id
