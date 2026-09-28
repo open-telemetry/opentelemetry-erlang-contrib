@@ -8,9 +8,8 @@ defmodule OpentelemetryReq do
   alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
-  alias OpenTelemetry.Tracer, as: Tracer
-  alias OpenTelemetry.SemanticConventions.Trace, as: Trace
-  require Logger
+  alias OpenTelemetry.Tracer
+  require Tracer
 
   opt_ins = [
     HTTPAttributes.http_request_body_size(),
