@@ -9,6 +9,7 @@ defmodule OpentelemetryReqTest do
   alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
+  require OpenTelemetry.Tracer, as: Tracer
   require Record
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -347,8 +348,6 @@ defmodule OpentelemetryReqTest do
         |> Req.Test.text("ok")
       end)
 
-      require OpenTelemetry.Tracer, as: Tracer
-
       Tracer.with_span "parent" do
         Req.get!(client(), url: "http://localhost:#{bypass.port}/initial")
       end
@@ -387,8 +386,6 @@ defmodule OpentelemetryReqTest do
           _ -> ok_resp(conn)
         end
       end)
-
-      require OpenTelemetry.Tracer, as: Tracer
 
       Tracer.with_span "parent" do
         Req.get!(client(propagate_trace_headers: true),
