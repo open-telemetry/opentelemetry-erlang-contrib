@@ -9,6 +9,7 @@ defmodule OpentelemetryReqTest do
   alias OpenTelemetry.SemConv.Incubating.HTTPAttributes
   alias OpenTelemetry.SemConv.Incubating.URLAttributes
 
+  require OpenTelemetry.Tracer, as: Tracer
   require Record
 
   for {name, spec} <- Record.extract_all(from_lib: "opentelemetry/include/otel_span.hrl") do
@@ -347,8 +348,6 @@ defmodule OpentelemetryReqTest do
         |> Req.Test.text("ok")
       end)
 
-      require OpenTelemetry.Tracer, as: Tracer
-
       Tracer.with_span "parent" do
         Req.get!(client(), url: "http://localhost:#{bypass.port}/initial")
       end
@@ -369,6 +368,57 @@ defmodule OpentelemetryReqTest do
 
       refute Map.has_key?(parent_attr_map, ErrorAttributes.error_type()),
              "parent span must not have error.type attribute from a redirect"
+    end
+  end
+
+  describe "retries" do
+    test "retry does not modify parent span", %{bypass: bypass} do
+      attempts = :counters.new(1, [])
+
+      Bypass.expect(bypass, "GET", "/flaky", fn conn ->
+        :counters.add(attempts, 1, 1)
+
+        case :counters.get(attempts, 1) do
+          1 -> Plug.Conn.send_resp(conn, 503, "")
+          _ -> ok_resp(conn)
+        end
+      end)
+
+      Tracer.with_span "parent" do
+        Req.get!(client(),
+          url: "http://localhost:#{bypass.port}/flaky",
+          retry: :transient,
+          retry_delay: 0
+        )
+      end
+
+      assert_receive {:span,
+                      span(name: :GET, parent_span_id: first_parent_id, attributes: first_attrs)}
+
+      first_attr_map = :otel_attributes.map(first_attrs)
+      assert first_attr_map[HTTPAttributes.http_response_status_code()] == 503
+      refute Map.has_key?(first_attr_map, HTTPAttributes.http_request_resend_count())
+
+      assert_receive {:span,
+                      span(name: :GET, parent_span_id: second_parent_id, attributes: second_attrs)}
+
+      second_attr_map = :otel_attributes.map(second_attrs)
+      assert second_attr_map[HTTPAttributes.http_response_status_code()] == 200
+      assert second_attr_map[HTTPAttributes.http_request_resend_count()] == 1
+
+      refute_receive {:span, span(name: :GET)}
+
+      assert_receive {:span, span(name: "parent", span_id: parent_id, attributes: parent_attrs)}
+      assert first_parent_id == parent_id
+      assert second_parent_id == parent_id
+
+      parent_attr_map = :otel_attributes.map(parent_attrs)
+
+      refute Map.has_key?(parent_attr_map, HTTPAttributes.http_response_status_code()),
+             "parent span must not have http.response.status_code attribute from a retry"
+
+      refute Map.has_key?(parent_attr_map, ErrorAttributes.error_type()),
+             "parent span must not have error.type attribute from a retry"
     end
   end
 
