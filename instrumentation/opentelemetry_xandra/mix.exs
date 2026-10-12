@@ -46,7 +46,7 @@ defmodule OpentelemetryXandra.MixProject do
     [
       # Dev and test dependencies
       # override until a Xandra release allows decimal ~> 3.0 (already relaxed on main)
-      {:decimal, "== 3.1.1", only: [:dev, :test], override: true},
+      {:decimal, "== 3.2.0", only: [:dev, :test], override: true},
       {:ex_doc, "== 0.40.4", only: :dev},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "== 1.11.0", only: [:dev, :test]},
