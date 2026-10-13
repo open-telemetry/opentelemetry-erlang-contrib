@@ -1,0 +1,16 @@
+{application, opentelemetry_process,
+ [{description, "OpenTelemetry process metrics "
+   "Exposes the current state of process metrics including cpu, memory, "
+   "file descriptor usage and native threads count as well as the process start and up times."},
+  {vsn, semver},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {licenses, ["MIT"]},
+  {links, []}
+ ]}.
