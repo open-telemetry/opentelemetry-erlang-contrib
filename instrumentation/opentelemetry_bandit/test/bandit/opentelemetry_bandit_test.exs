@@ -600,6 +600,66 @@ defmodule OpentelemetryBanditTest do
     end
   end
 
+  describe "client disconnects before the request starts" do
+    setup do
+      test_pid = self()
+
+      :telemetry.attach(
+        :disconnect_gate,
+        [:bandit, :request, :start],
+        fn _event, _measurements, %{conn: conn}, _config ->
+          send(test_pid, {:request_started, self()})
+
+          receive do
+            :client_closed -> await_peer_gone(conn)
+          after
+            1_000 -> :ok
+          end
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(:disconnect_gate) end)
+    end
+
+    test "keeps the handler attached and still records the span" do
+      OpentelemetryBandit.setup()
+      port = start_server()
+
+      {:ok, socket} =
+        :gen_tcp.connect(~c"localhost", port, [:binary, active: false, linger: {true, 0}])
+
+      :ok = :gen_tcp.send(socket, "GET /hello HTTP/1.1\r\nhost: localhost\r\n\r\n")
+
+      assert_receive {:request_started, handler_pid}
+      :ok = :gen_tcp.close(socket)
+      send(handler_pid, :client_closed)
+
+      assert_receive {:span, span(name: :GET, kind: :server, attributes: span_attrs)}
+
+      attrs = :otel_attributes.map(span_attrs)
+      assert Map.get(attrs, URLAttributes.url_path()) == "/hello"
+      refute Map.has_key?(attrs, NetworkAttributes.network_peer_address())
+      refute Map.has_key?(attrs, NetworkAttributes.network_peer_port())
+      refute Map.has_key?(attrs, ClientAttributes.client_address())
+
+      assert [_] =
+               :telemetry.list_handlers([:bandit, :request, :start])
+               |> Enum.filter(&(&1.id == {OpentelemetryBandit, :otel_bandit}))
+    end
+  end
+
+  defp await_peer_gone(conn, attempts \\ 100) do
+    Plug.Conn.get_peer_data(conn)
+
+    if attempts > 0 do
+      Process.sleep(10)
+      await_peer_gone(conn, attempts - 1)
+    end
+  rescue
+    Bandit.TransportError -> :ok
+  end
+
   def hello(conn) do
     conn |> send_resp(200, "OK")
   end
