@@ -189,9 +189,9 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     do: Enum.flat_map(selections, &selection_names(&1, fragments))
 
   defp selection_names(%Blueprint.Document.Fragment.Spread{name: name}, fragments) do
-    case Enum.find(fragments, &(&1.name == name)) do
-      nil -> []
-      fragment -> Enum.flat_map(fragment.selections, &selection_names(&1, fragments))
+    case Enum.split_with(fragments, &(&1.name == name)) do
+      {[fragment | _], remaining} -> Enum.flat_map(fragment.selections, &selection_names(&1, remaining))
+      {[], _} -> []
     end
   end
 
