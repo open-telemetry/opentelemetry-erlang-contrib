@@ -57,6 +57,25 @@ defmodule OpentelemetryAbsintheTest.Support.GraphQL.Queries do
     """
   end
 
+  def cyclic_fragment_spread_query do
+    """
+    query {
+      ...BookFields
+    }
+
+    fragment BookFields on RootQueryType {
+      books {
+        title
+      }
+      ...MoreBookFields
+    }
+
+    fragment MoreBookFields on RootQueryType {
+      ...BookFields
+    }
+    """
+  end
+
   def mutation do
     """
     mutation($title: String!) {

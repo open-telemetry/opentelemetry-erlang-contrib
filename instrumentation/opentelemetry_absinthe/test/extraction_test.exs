@@ -75,6 +75,17 @@ defmodule OpentelemetryAbsintheTest.Extraction do
                |> Jason.decode!()
     end
 
+    @tag timeout: 10_000
+    test "request selections inside cyclic fragment spreads" do
+      OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
+
+      assert ["books"] =
+               Queries.cyclic_fragment_spread_query()
+               |> Query.query_for_attrs()
+               |> Map.fetch!(@graphql_request_selections)
+               |> Jason.decode!()
+    end
+
     test "request selections on multiple queries" do
       OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
 
