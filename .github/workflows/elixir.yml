@@ -816,8 +816,7 @@ jobs:
       fail-fast: false
       matrix:
         otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
-        # xandra 0.20+ requires Elixir 1.17+, so the shared elixir_version list does not apply here
-        elixir_version: ["1.18.2"]
+        elixir_version: ${{ fromJson(needs.test-matrix.outputs.matrix).elixir_version }}
         rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
         include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
         exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
