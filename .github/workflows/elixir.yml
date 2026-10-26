@@ -816,8 +816,7 @@ jobs:
       fail-fast: false
       matrix:
         otp_version: ${{ fromJson(needs.test-matrix.outputs.matrix).otp_version }}
-        # xandra 0.20+ requires Elixir 1.17+, so the shared elixir_version list does not apply here
-        elixir_version: ["1.18.2"]
+        elixir_version: ${{ fromJson(needs.test-matrix.outputs.matrix).elixir_version }}
         rebar3_version: ${{ fromJson(needs.test-matrix.outputs.matrix).rebar3_version }}
         include: ${{ fromJson(needs.test-matrix.outputs.matrix).include }}
         exclude: ${{ fromJson(needs.test-matrix.outputs.matrix).exclude }}
@@ -826,7 +825,7 @@ jobs:
         image: cassandra@sha256:3ea9333712c5692f3fe91d6c4dcc262df9e36338c4fdd1bc00a5e53f1137a1a0
         ports:
           - 9042:9042
-        options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 10
+        options: --health-cmd "cqlsh --debug" --health-interval 5s --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

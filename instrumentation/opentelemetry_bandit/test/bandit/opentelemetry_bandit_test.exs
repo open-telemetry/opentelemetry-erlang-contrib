@@ -204,7 +204,7 @@ defmodule OpentelemetryBanditTest do
 
       Req.get!("http://localhost:#{port}/with_body",
         compressed: true,
-        headers: %{"test-header" => "request header"}
+        headers: %{"accept-encoding" => "gzip", "test-header" => "request header"}
       )
 
       assert_receive {:span,
@@ -624,7 +624,13 @@ defmodule OpentelemetryBanditTest do
 
     test "keeps the handler attached and still records the span" do
       OpentelemetryBandit.setup()
-      port = start_server()
+
+      port = Enum.random(4000..10_000)
+
+      start_supervised!(
+        {Bandit,
+         plug: __MODULE__, port: port, thousand_island_options: [transport_module: LivePeerTCP]}
+      )
 
       {:ok, socket} =
         :gen_tcp.connect(~c"localhost", port, [:binary, active: false, linger: {true, 0}])
