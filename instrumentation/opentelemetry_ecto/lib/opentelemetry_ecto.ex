@@ -516,6 +516,10 @@ defmodule OpentelemetryEcto do
        when is_binary(summary) and summary != "",
        do: summary
 
+  defp span_name(%{"db.query.summary" => summary}, _)
+       when is_binary(summary) and summary != "",
+       do: summary
+
   # SHOULD be `{db.operation.name} {target}` if there is a (low-cardinality) {db.operation.name} available.
   defp span_name(
          %{unquote(DBAttributes.db_operation_name()) => db_operation_name} = attributes,

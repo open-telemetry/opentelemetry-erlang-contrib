@@ -360,6 +360,16 @@ defmodule OpentelemetryEctoTest do
     )
 
     assert_receive {:span, span(name: "custom summary", attributes: attributes)}
+
+    Repo.all(User,
+      telemetry_options: [
+        otel: %{
+          attributes: %{"db.query.summary" => "custom string summary"}
+        }
+      ]
+    )
+
+    assert_receive {:span, span(name: "custom string summary")}
   end
 
   def custom_metadata_processor(meta) do
