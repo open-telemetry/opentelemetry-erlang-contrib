@@ -204,7 +204,7 @@ defmodule OpentelemetryBanditTest do
 
       Req.get!("http://localhost:#{port}/with_body",
         compressed: true,
-        headers: %{"test-header" => "request header"}
+        headers: %{"accept-encoding" => "gzip", "test-header" => "request header"}
       )
 
       assert_receive {:span,
