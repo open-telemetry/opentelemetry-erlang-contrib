@@ -181,14 +181,21 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     |> Blueprint.current_operation()
     |> Kernel.||(%{})
     |> Map.get(:selections, [])
-    |> Enum.flat_map(&selection_names/1)
+    |> Enum.flat_map(&selection_names(&1, blueprint.fragments))
     |> Enum.uniq()
   end
 
-  defp selection_names(%Blueprint.Document.Fragment.Inline{selections: selections}),
-    do: Enum.flat_map(selections, &selection_names/1)
+  defp selection_names(%Blueprint.Document.Fragment.Inline{selections: selections}, fragments),
+    do: Enum.flat_map(selections, &selection_names(&1, fragments))
 
-  defp selection_names(%{name: name}), do: [name]
+  defp selection_names(%Blueprint.Document.Fragment.Spread{name: name}, fragments) do
+    case Enum.find(fragments, &(&1.name == name)) do
+      nil -> []
+      fragment -> Enum.flat_map(fragment.selections, &selection_names(&1, fragments))
+    end
+  end
+
+  defp selection_names(%{name: name}, _fragments), do: [name]
 
   def default_config do
     @default_config
