@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Generate Markdown documentation with ExDoc.
 
+### Fixed
+
+- Report fields selected through top-level inline fragments and fragment spreads in `graphql.request.selections` instead of crashing and detaching the operation-stop handler.
+
 ---
 
 ## [2.4.0] - 2026-02-20
