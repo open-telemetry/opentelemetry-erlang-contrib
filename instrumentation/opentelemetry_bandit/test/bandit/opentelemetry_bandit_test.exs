@@ -601,29 +601,45 @@ defmodule OpentelemetryBanditTest do
   end
 
   describe "client disconnects before the request starts" do
-    defmodule DisconnectedAdapter do
-      def get_peer_data(_payload) do
-        raise Bandit.TransportError, message: "Unable to obtain peer_data", error: :enotconn
-      end
+    setup do
+      test_pid = self()
 
-      def get_http_protocol(_payload), do: :"HTTP/1.1"
+      :telemetry.attach(
+        :disconnect_gate,
+        [:bandit, :request, :start],
+        fn _event, _measurements, %{conn: conn}, _config ->
+          send(test_pid, {:request_started, self()})
+
+          receive do
+            :client_closed -> await_peer_gone(conn)
+          after
+            1_000 -> :ok
+          end
+        end,
+        nil
+      )
+
+      on_exit(fn -> :telemetry.detach(:disconnect_gate) end)
     end
 
     test "keeps the handler attached and still records the span" do
       OpentelemetryBandit.setup()
 
-      conn = %Plug.Conn{
-        adapter: {DisconnectedAdapter, nil},
-        host: "localhost",
-        method: "GET",
-        port: 4000,
-        request_path: "/hello",
-        scheme: :http,
-        status: 200
-      }
+      port = Enum.random(4000..10_000)
 
-      :telemetry.execute([:bandit, :request, :start], %{monotonic_time: 0}, %{conn: conn})
-      :telemetry.execute([:bandit, :request, :stop], %{duration: 0}, %{conn: conn})
+      start_supervised!(
+        {Bandit,
+         plug: __MODULE__, port: port, thousand_island_options: [transport_module: LivePeerTCP]}
+      )
+
+      {:ok, socket} =
+        :gen_tcp.connect(~c"localhost", port, [:binary, active: false, linger: {true, 0}])
+
+      :ok = :gen_tcp.send(socket, "GET /hello HTTP/1.1\r\nhost: localhost\r\n\r\n")
+
+      assert_receive {:request_started, handler_pid}
+      :ok = :gen_tcp.close(socket)
+      send(handler_pid, :client_closed)
 
       assert_receive {:span, span(name: :GET, kind: :server, attributes: span_attrs)}
 
@@ -637,6 +653,17 @@ defmodule OpentelemetryBanditTest do
                :telemetry.list_handlers([:bandit, :request, :start])
                |> Enum.filter(&(&1.id == {OpentelemetryBandit, :otel_bandit}))
     end
+  end
+
+  defp await_peer_gone(conn, attempts \\ 100) do
+    Plug.Conn.get_peer_data(conn)
+
+    if attempts > 0 do
+      Process.sleep(10)
+      await_peer_gone(conn, attempts - 1)
+    end
+  rescue
+    Bandit.TransportError -> :ok
   end
 
   def hello(conn) do
