@@ -55,6 +55,37 @@ defmodule OpentelemetryAbsintheTest.Extraction do
                |> Jason.decode!()
     end
 
+    test "request selections inside a top-level inline fragment" do
+      OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
+
+      assert ["book"] =
+               Queries.inline_fragment_query()
+               |> Query.query_for_attrs(variables: %{"isbn" => "A1"})
+               |> Map.fetch!(@graphql_request_selections)
+               |> Jason.decode!()
+    end
+
+    test "request selections inside a top-level fragment spread" do
+      OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
+
+      assert ["book"] =
+               Queries.fragment_spread_query()
+               |> Query.query_for_attrs(variables: %{"isbn" => "A1"})
+               |> Map.fetch!(@graphql_request_selections)
+               |> Jason.decode!()
+    end
+
+    @tag timeout: 10_000
+    test "request selections inside cyclic fragment spreads" do
+      OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
+
+      assert ["books"] =
+               Queries.cyclic_fragment_spread_query()
+               |> Query.query_for_attrs()
+               |> Map.fetch!(@graphql_request_selections)
+               |> Jason.decode!()
+    end
+
     test "request selections on multiple queries" do
       OpentelemetryAbsinthe.Instrumentation.setup(trace_request_selections: true)
 
