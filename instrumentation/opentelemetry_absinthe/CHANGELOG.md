@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Generate Markdown documentation with ExDoc.
 
+### Fixed
+
+- Only JSON-encode request variables, response result and response errors when `trace_request_variables`,
+  `trace_response_result` or `trace_response_errors` is enabled. Previously they were encoded on every operation and
+  then discarded, adding latency and memory pressure on large responses.
+
 ---
 
 ## [2.4.0] - 2026-02-20
