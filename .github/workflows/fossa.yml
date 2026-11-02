@@ -20,7 +20,7 @@ jobs:
         with:
           otp-version: "29.1.2"
           rebar3-version: "3.28.0"
-          elixir-version: "v1.20.4"
+          elixir-version: "v1.20.5"
           version-type: "strict"
 
       - uses: fossas/fossa-action@29693cc50323968e039056be419b32989fc5880c # v2.0.0
