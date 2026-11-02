@@ -25,6 +25,30 @@ defmodule OpentelemetryOban.JobHandlerTest do
     TestHelpers.remove_oban_handlers()
   end
 
+  describe "inline testing mode" do
+    setup do
+      setup_otel()
+      OpentelemetryOban.setup()
+
+      start_supervised!(
+        {Oban, name: InlineOban, repo: TestRepo, testing: :inline, notifier: Oban.Notifiers.PG}
+      )
+
+      :ok
+    end
+
+    test "records the process span when the job has no persisted timestamps" do
+      assert {:ok, %{state: "completed"}} =
+               OpentelemetryOban.insert(InlineOban, TestJob.new(%{}))
+
+      assert_receive {:span, span(name: "process events", attributes: attributes)}
+
+      attrs = :otel_attributes.map(attributes)
+      assert %{"oban.job.worker": "TestJob", "oban.job.queue": "events"} = attrs
+      refute Map.has_key?(attrs, :"oban.job.inserted_at")
+    end
+  end
+
   describe "span_relationship: :child" do
     setup do
       setup_otel()
