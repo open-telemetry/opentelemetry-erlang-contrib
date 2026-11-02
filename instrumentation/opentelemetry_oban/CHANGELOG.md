@@ -4,6 +4,10 @@
 
 ### Fixed
 
+* Stop crashing and detaching the job handler for jobs run with `testing: :inline`.
+  Such jobs are never persisted, so their `inserted_at`, `scheduled_at` and
+  `attempted_at` timestamps are `nil`; the matching `oban.job.*_at` attributes
+  are now omitted instead.
 * Report the `oban.plugins.*_count` attributes again on Oban 2.24 and later.
   Oban 2.24 renamed `Oban.Plugins.Cron`, `Oban.Plugins.Lifeline`,
   `Oban.Plugins.Pruner` and `Oban.Plugins.Reindexer` to the top level and made
