@@ -100,11 +100,11 @@ defmodule OpentelemetryOban.JobHandler do
         :"oban.job.queue" => queue,
         :"oban.job.priority" => priority,
         :"oban.job.attempt" => attempt,
-        :"oban.job.max_attempts" => max_attempts,
-        :"oban.job.inserted_at" => DateTime.to_iso8601(inserted_at),
-        :"oban.job.scheduled_at" => DateTime.to_iso8601(scheduled_at),
-        :"oban.job.attempted_at" => DateTime.to_iso8601(attempted_at)
+        :"oban.job.max_attempts" => max_attempts
       }
+      |> put_timestamp(:"oban.job.inserted_at", inserted_at)
+      |> put_timestamp(:"oban.job.scheduled_at", scheduled_at)
+      |> put_timestamp(:"oban.job.attempted_at", attempted_at)
       |> put_workflow_id(job_meta)
 
     span_name = "process #{queue}"
@@ -151,6 +151,12 @@ defmodule OpentelemetryOban.JobHandler do
 
   defp put_links(span_opts, []), do: span_opts
   defp put_links(span_opts, links), do: Map.put(span_opts, :links, links)
+
+  # Jobs run with `testing: :inline` are never persisted, so their timestamps are nil.
+  defp put_timestamp(attributes, _key, nil), do: attributes
+
+  defp put_timestamp(attributes, key, datetime),
+    do: Map.put(attributes, key, DateTime.to_iso8601(datetime))
 
   defp put_workflow_id(attributes, job_meta) do
     case get_in(job_meta, ["workflow_id"]) do
