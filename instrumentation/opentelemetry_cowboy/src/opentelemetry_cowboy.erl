@@ -348,7 +348,7 @@ handle_event([cowboy, request, stop], Measurements, Meta, Config) ->
             case maps:get(error, Meta, undefined) of
               {ErrorType, Error, Reason} ->
                 otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
-                otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason));
+                otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, atom_to_binary(Reason, utf8)));
               _ ->
                 % do nothing first as I'm unsure how should we handle this
                 ok
@@ -449,7 +449,7 @@ handle_event([cowboy, request, early_error], Measurements, Meta, Config) ->
 
     Ctx = otel_telemetry:start_telemetry_span(?TRACER_ID, 'HTTP', Meta, #{attributes => FinalAttrs, kind => ?SPAN_KIND_SERVER}),
     otel_span:add_events(Ctx, [opentelemetry:event(ErrorType, #{error => Error, reason => Reason})]),
-    otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, Reason)),
+    otel_span:set_status(Ctx, opentelemetry:status(?OTEL_STATUS_ERROR, atom_to_binary(Reason, utf8))),
     otel_telemetry:end_telemetry_span(?TRACER_ID, Meta),
     otel_ctx:clear().
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Set the span status to error when the client closes the socket or the connection fails before a response is sent, and for early errors. Cowboy gives the reason as an atom, so `opentelemetry:status/2` returned `undefined` and the status stayed unset.
+
 # v1.0.0
 
 NOTE: This release includes numerous breaking changes with implementation
