@@ -179,6 +179,29 @@ defmodule OpentelemetryFinchTest do
     end
   end
 
+  test "records span for a Req request that collects the response into a collectable", %{
+    bypass: bypass
+  } do
+    Bypass.expect_once(bypass, "GET", "/", fn conn ->
+      Plug.Conn.resp(conn, 403, ~s({"error": "forbidden"}))
+    end)
+
+    response =
+      Req.get!(endpoint_url(bypass.port),
+        finch: HttpFinch,
+        into: "",
+        retry: false
+      )
+
+    assert response.status == 403
+    assert response.body == ~s({"error": "forbidden"})
+
+    assert_receive {:span, span(name: "GET", kind: :client, attributes: attributes)}
+
+    attrs = :otel_attributes.map(attributes)
+    assert attrs[HTTPAttributes.http_request_method()] == "GET"
+  end
+
   test "records span on streamed requests where the acc is a 3 elements tuple", %{
     bypass: bypass,
     test: finch_name
