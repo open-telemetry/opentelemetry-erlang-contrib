@@ -366,9 +366,10 @@ client_timeout_request(_Config) ->
     {error, timeout} =
         httpc:request(get, {"http://localhost:8080/slow", []}, [{timeout, 50}], [{socket_opts, [{port, Port}]}]),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind,status=Status}} ->
             [Event] = otel_events:list(Events),
             #event{name='socket_error',attributes = EventAttributes} = Event,
+            ?assertEqual(#status{code=?OTEL_STATUS_ERROR, message = <<"The socket has been closed.">>}, Status),
             ExpectedEventAttrs = #{
                                    error => closed,
                                    reason => 'The socket has been closed.'
@@ -398,9 +399,10 @@ idle_timeout_request(_Config) ->
     {error, socket_closed_remotely} =
         httpc:request(head, {"http://localhost:8080/slow", []}, [], [{socket_opts, [{port, Port}]}]),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind,status=Status}} ->
             [Event] = otel_events:list(Events),
             #event{name= 'connection_error',attributes = EventAttributes} = Event,
+            ?assertEqual(#status{code=?OTEL_STATUS_ERROR, message = <<"Connection idle longer than configuration allows.">>}, Status),
             ExpectedEventAttrs = #{
                                    error => timeout,
                                    reason => 'Connection idle longer than configuration allows.'
@@ -459,9 +461,10 @@ bad_request(_Config) ->
     {ok, {{_Version, 501, _ReasonPhrase}, _Headers, _Body}} =
         httpc:request(trace, {"http://localhost:8080/", Headers}, [], [{socket_opts, [{port, Port}]}]),
     receive
-        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind}} ->
+        {span, #span{name=Name,events=Events,attributes=Attributes,parent_span_id=undefined,kind=Kind,status=Status}} ->
             [Event] = otel_events:list(Events),
             #event{name='connection_error',attributes = EventAttributes} = Event,
+            ?assertEqual(#status{code=?OTEL_STATUS_ERROR, message = <<"The TRACE method is currently not implemented. (RFC7231 4.3.8)">>}, Status),
             ExpectedEventAttrs = #{
                                    error => no_error,
                                    reason => 'The TRACE method is currently not implemented. (RFC7231 4.3.8)'
