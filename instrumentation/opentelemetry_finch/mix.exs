@@ -64,7 +64,8 @@ defmodule OpentelemetryFinch.MixProject do
       {:ex_doc, "== 0.40.4", only: [:dev], runtime: false},
       {:finch, "== 0.24.0", only: [:dev, :test]},
       {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false},
-      {:bypass, "== 2.1.0", only: :test}
+      {:bypass, "== 2.1.0", only: :test},
+      {:req, "== 0.5.17", only: :test}
     ]
   end
 end

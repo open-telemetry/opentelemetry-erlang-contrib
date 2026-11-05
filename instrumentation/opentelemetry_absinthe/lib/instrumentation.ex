@@ -118,7 +118,7 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
       []
       |> put_if(
         config.trace_request_variables,
-        {:"graphql.request.variables", Jason.encode!(variables)}
+        fn -> {:"graphql.request.variables", Jason.encode!(variables)} end
       )
       |> put_if(config.trace_request_query, {@graphql_document, document})
       |> List.insert_at(0, {:"graphql.event.type", config.type})
@@ -146,8 +146,8 @@ defmodule OpentelemetryAbsinthe.Instrumentation do
     []
     |> put_if(config.trace_request_type, {@graphql_operation_type, operation_type})
     |> put_if(config.trace_request_name, {@graphql_operation_name, operation_name})
-    |> put_if(config.trace_response_result, {:"graphql.response.result", Jason.encode!(data.blueprint.result)})
-    |> put_if(config.trace_response_errors, {:"graphql.response.errors", Jason.encode!(errors)})
+    |> put_if(config.trace_response_result, fn -> {:"graphql.response.result", Jason.encode!(data.blueprint.result)} end)
+    |> put_if(config.trace_response_errors, fn -> {:"graphql.response.errors", Jason.encode!(errors)} end)
     |> put_if(
       config.trace_request_selections,
       fn -> {:"graphql.request.selections", data |> get_graphql_selections() |> Jason.encode!()} end

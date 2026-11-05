@@ -206,27 +206,27 @@ defmodule OpentelemetryBandit do
 
   @doc false
   def handle_request_start(%{conn: conn}, config) do
-    peer_data = Plug.Conn.get_peer_data(conn)
+    peer_data = fetch_peer_data(conn)
     request_method = parse_method(conn.method)
-    client_address = extract_client_address(conn, config)
+    client_address = extract_client_address(conn, peer_data, config)
 
-    opt_in = %{
-      ClientAttributes.client_port() => client_address.port,
-      NetworkAttributes.network_local_address() => conn.host,
-      NetworkAttributes.network_local_port() => conn.port,
-      NetworkAttributes.network_transport() => :tcp
-    }
+    opt_in =
+      %{
+        NetworkAttributes.network_local_address() => conn.host,
+        NetworkAttributes.network_local_port() => conn.port,
+        NetworkAttributes.network_transport() => :tcp
+      }
+      |> set_client_port_attr(client_address)
 
     attrs =
       %{
-        ClientAttributes.client_address() => client_address.ip,
         HTTPAttributes.http_request_method() => request_method,
-        NetworkAttributes.network_peer_address() => ip_to_string(peer_data.address),
-        NetworkAttributes.network_peer_port() => peer_data.port,
         URLAttributes.url_path() => conn.request_path,
         URLAttributes.url_scheme() => extract_scheme(conn, config),
         UserAgentAttributes.user_agent_original() => header_value(conn, "user-agent")
       }
+      |> set_client_address_attr(client_address)
+      |> set_peer_attrs(peer_data)
       |> set_network_protocol_attrs(conn)
       |> set_query_string_attr(conn)
       |> set_server_address_attrs(conn, config)
@@ -386,21 +386,50 @@ defmodule OpentelemetryBandit do
     :otel_http.extract_scheme(headers, sort_fn)
   end
 
+  # peer
+  defp fetch_peer_data(conn) do
+    {:ok, Plug.Conn.get_peer_data(conn)}
+  rescue
+    Bandit.TransportError -> :error
+  end
+
+  defp set_peer_attrs(attrs, {:ok, %{address: address, port: port}}) do
+    Map.merge(attrs, %{
+      NetworkAttributes.network_peer_address() => ip_to_string(address),
+      NetworkAttributes.network_peer_port() => port
+    })
+  end
+
+  defp set_peer_attrs(attrs, :error), do: attrs
+
   # client
-  defp extract_client_address(conn, config) do
+  defp extract_client_address(conn, peer_data, config) do
     client_headers =
       conn.req_headers
       |> extract_headers_by_sort(config.client_address_headers)
 
-    case otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]) do
-      %{ip: :undefined} ->
-        %{address: peer_address, port: peer_port} = Plug.Conn.get_peer_data(conn)
-        %{ip: ip_to_string(peer_address), port: peer_port}
+    case {otel_http_extract_client_info(client_headers, config[:client_headers_sort_fn]),
+          peer_data} do
+      {%{ip: :undefined}, {:ok, %{address: peer_address, port: peer_port}}} ->
+        {:ok, %{ip: ip_to_string(peer_address), port: peer_port}}
 
-      client_address ->
-        client_address
+      {%{ip: :undefined}, :error} ->
+        :error
+
+      {client_address, _peer_data} ->
+        {:ok, client_address}
     end
   end
+
+  defp set_client_address_attr(attrs, {:ok, %{ip: ip}}),
+    do: Map.put(attrs, ClientAttributes.client_address(), ip)
+
+  defp set_client_address_attr(attrs, :error), do: attrs
+
+  defp set_client_port_attr(attrs, {:ok, %{port: port}}),
+    do: Map.put(attrs, ClientAttributes.client_port(), port)
+
+  defp set_client_port_attr(attrs, :error), do: attrs
 
   defp otel_http_extract_client_info(headers, nil) do
     :otel_http.extract_client_info(headers)

@@ -333,6 +333,7 @@ defmodule OpentelemetryEctoTest do
           attributes: %{
             "config.attribute": "special value overwritten",
             "db.system": "my_system",
+            "db.query.summary": "custom summary",
             extra: "should add"
           }
         }
@@ -345,9 +346,30 @@ defmodule OpentelemetryEctoTest do
     assert %{
              "config.attribute": "special value overwritten",
              "db.system": :postgresql,
+             "db.query.summary": "custom summary",
              extra: "should add"
            } =
              :otel_attributes.map(attributes)
+
+    Repo.all(User,
+      telemetry_options: [
+        otel: %{
+          attributes: %{:"db.query.summary" => "custom summary"}
+        }
+      ]
+    )
+
+    assert_receive {:span, span(name: "custom summary", attributes: attributes)}
+
+    Repo.all(User,
+      telemetry_options: [
+        otel: %{
+          attributes: %{"db.query.summary" => "custom string summary"}
+        }
+      ]
+    )
+
+    assert_receive {:span, span(name: "custom string summary")}
   end
 
   def custom_metadata_processor(meta) do

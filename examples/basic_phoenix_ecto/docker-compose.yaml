@@ -1,7 +1,7 @@
 version: '3'
 services:
   postgres:
-    image: 'postgres:18.6@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336'
+    image: 'postgres:18.6@sha256:3a4264520e121176619f54ff867d12774bc81e95e7b84db58d63bccdb6144b81'
     ports:
       - 5432:5432
 
@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: demo_dev
 
   otel:
-    image: otel/opentelemetry-collector-contrib:0.162.0@sha256:39923a8e431bd1f57be82411999d389fcfe40857492e4365456d97a4c1f74be6
+    image: otel/opentelemetry-collector-contrib:0.164.0@sha256:340c9ca6a36617084c6661bdc4f0fe92b7cda5a805d61673ec8db375fddc522b
     command: ["--config=/etc/otel-collector-config.yaml"]
     ports:
       - "4318:4318"

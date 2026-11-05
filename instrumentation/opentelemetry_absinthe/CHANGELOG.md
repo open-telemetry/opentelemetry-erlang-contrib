@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Report fields selected through top-level inline fragments and fragment spreads in `graphql.request.selections` instead of crashing and detaching the operation-stop handler.
+- Only JSON-encode request variables, response result and response errors when `trace_request_variables`,
+  `trace_response_result` or `trace_response_errors` is enabled. Previously they were encoded on every operation and
+  then discarded, adding latency and memory pressure on large responses.
 
 ---
 
