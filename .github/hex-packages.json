@@ -6,7 +6,7 @@
     "tagPrefix": "opentelemetry-aws-xray-v",
     "buildTool": "rebar3",
     "language": "erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "bandit": {
     "workingDirectory": "instrumentation/opentelemetry_bandit",
@@ -15,7 +15,7 @@
     "tagPrefix": "opentelemetry-bandit-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "broadway": {
     "workingDirectory": "instrumentation/opentelemetry_broadway",
@@ -24,7 +24,7 @@
     "tagPrefix": "opentelemetry-broadway-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tomtaylor", "tsloughter", "whatyouhide"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tomtaylor", "tsloughter", "whatyouhide"]
   },
   "cowboy": {
     "workingDirectory": "instrumentation/opentelemetry_cowboy",
@@ -33,7 +33,7 @@
     "tagPrefix": "opentelemetry-cowboy-v",
     "buildTool": "rebar3",
     "language": "erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "dataloader": {
     "workingDirectory": "instrumentation/opentelemetry_dataloader",
@@ -42,7 +42,7 @@
     "tagPrefix": "opentelemetry-dataloader-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "ecto": {
     "workingDirectory": "instrumentation/opentelemetry_ecto",
@@ -51,7 +51,7 @@
     "tagPrefix": "opentelemetry-ecto-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "elli": {
     "workingDirectory": "instrumentation/opentelemetry_elli",
@@ -60,7 +60,7 @@
     "tagPrefix": "opentelemetry-elli-v",
     "buildTool": "rebar3",
     "language": "erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "finch": {
     "workingDirectory": "instrumentation/opentelemetry_finch",
@@ -69,7 +69,7 @@
     "tagPrefix": "opentelemetry-finch-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "grpc": {
     "workingDirectory": "instrumentation/opentelemetry_grpc",
@@ -78,7 +78,7 @@
     "tagPrefix": "opentelemetry-grpc-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "grpcbox": {
     "workingDirectory": "instrumentation/opentelemetry_grpcbox",
@@ -87,7 +87,7 @@
     "tagPrefix": "opentelemetry-grpcbox-v",
     "buildTool": "rebar3",
     "language": "erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "http": {
     "workingDirectory": "utilities/otel_http",
@@ -96,7 +96,7 @@
     "tagPrefix": "otel-http-v",
     "buildTool": "rebar3",
     "language": "erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "httpoison": {
     "workingDirectory": "instrumentation/opentelemetry_httpoison",
@@ -105,7 +105,7 @@
     "tagPrefix": "opentelemetry-httpoison-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "nebulex": {
     "workingDirectory": "instrumentation/opentelemetry_nebulex",
@@ -114,7 +114,7 @@
     "tagPrefix": "opentelemetry-nebulex-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "oban": {
     "workingDirectory": "instrumentation/opentelemetry_oban",
@@ -123,7 +123,7 @@
     "tagPrefix": "opentelemetry-oban-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "opentelemetry_telemetry": {
     "workingDirectory": "utilities/opentelemetry_telemetry",
@@ -132,7 +132,7 @@
     "tagPrefix": "opentelemetry-telemetry-v",
     "buildTool": "mix",
     "language": "elixir-erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "phoenix": {
     "workingDirectory": "instrumentation/opentelemetry_phoenix",
@@ -141,7 +141,7 @@
     "tagPrefix": "opentelemetry-phoenix-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "redix": {
     "workingDirectory": "instrumentation/opentelemetry_redix",
@@ -150,7 +150,7 @@
     "tagPrefix": "opentelemetry-redix-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "req": {
     "workingDirectory": "instrumentation/opentelemetry_req",
@@ -159,7 +159,7 @@
     "tagPrefix": "opentelemetry-req-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "sqlcommenter": {
     "workingDirectory": "instrumentation/opentelemetry_sqlcommenter",
@@ -168,7 +168,7 @@
     "tagPrefix": "opentelemetry-sqlcommenter-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "dkuku", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "dkuku", "GregMefford", "tsloughter"]
   },
   "tesla": {
     "workingDirectory": "instrumentation/opentelemetry_tesla",
@@ -177,7 +177,7 @@
     "tagPrefix": "opentelemetry-tesla-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "process_propagator": {
     "workingDirectory": "propagators/opentelemetry_process_propagator",
@@ -186,7 +186,7 @@
     "tagPrefix": "opentelemetry-process-propagator-v",
     "buildTool": "mix",
     "language": "elixir-erlang",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   },
   "xandra": {
     "workingDirectory": "instrumentation/opentelemetry_xandra",
@@ -195,7 +195,7 @@
     "tagPrefix": "opentelemetry-xandra-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["whatyouhide"]
+    "authorizedUsers": ["GregMefford", "whatyouhide"]
   },
   "commanded": {
     "workingDirectory": "instrumentation/opentelemetry_commanded",
@@ -204,6 +204,6 @@
     "tagPrefix": "opentelemetry-commanded-v",
     "buildTool": "mix",
     "language": "elixir",
-    "authorizedUsers": ["bryannaegele", "tsloughter"]
+    "authorizedUsers": ["bryannaegele", "GregMefford", "tsloughter"]
   }
 }
