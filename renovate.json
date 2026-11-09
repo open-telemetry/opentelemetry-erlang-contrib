@@ -8,7 +8,7 @@
   "ignorePaths":[],
   "constraints": {
     "elixir": "1.20.5",
-    "erlang": "27.2.4.0"
+    "erlang": "27.3.4.19"
   },
   "labels": ["renovate"],
   "schedule": ["before 6am on monday"],
