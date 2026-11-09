@@ -79,7 +79,7 @@ defmodule OpentelemetryPhoenix.MixProject do
       {:phoenix, "== 1.8.16", only: [:dev, :test]},
       {:phoenix_live_view, "== 1.2.13", only: [:dev, :test]},
       {:phoenix_html, "== 4.4.0", only: [:dev, :test]},
-      {:lazy_html, "== 0.1.13", only: [:dev, :test]},
+      {:lazy_html, "== 0.1.14", only: [:dev, :test]},
       {:plug_cowboy, "== 2.9.0", only: [:dev, :test]},
       {:bandit, "== 1.14.1", only: [:dev, :test]},
       {:req, "== 0.7.5", only: [:dev, :test]},
