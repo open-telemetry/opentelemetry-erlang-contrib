@@ -31,6 +31,51 @@ defmodule OpentelemetryAbsintheTest.Support.GraphQL.Queries do
     """
   end
 
+  def inline_fragment_query do
+    """
+    query($isbn: String!) {
+      ... on RootQueryType {
+        book(isbn: $isbn) {
+          title
+        }
+      }
+    }
+    """
+  end
+
+  def fragment_spread_query do
+    """
+    query($isbn: String!) {
+      ...BookFields
+    }
+
+    fragment BookFields on RootQueryType {
+      book(isbn: $isbn) {
+        title
+      }
+    }
+    """
+  end
+
+  def cyclic_fragment_spread_query do
+    """
+    query {
+      ...BookFields
+    }
+
+    fragment BookFields on RootQueryType {
+      books {
+        title
+      }
+      ...MoreBookFields
+    }
+
+    fragment MoreBookFields on RootQueryType {
+      ...BookFields
+    }
+    """
+  end
+
   def mutation do
     """
     mutation($title: String!) {
