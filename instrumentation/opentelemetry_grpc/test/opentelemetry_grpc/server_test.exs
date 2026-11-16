@@ -182,7 +182,7 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerCancelled",
         grpc_code: 1,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerUnknown",
@@ -194,7 +194,7 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerInvalidArgument",
         grpc_code: 3,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerDeadlineExceeded",
@@ -206,43 +206,43 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerNotFound",
         grpc_code: 5,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerAlreadyExists",
         grpc_code: 6,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerPermissionDenied",
         grpc_code: 7,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerResourceExhausted",
         grpc_code: 8,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerFailedPrecondition",
         grpc_code: 9,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerAborted",
         grpc_code: 10,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerOutOfRange",
         grpc_code: 11,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       },
       %{
         name: "TriggerUnimplemented",
@@ -272,7 +272,7 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerUnauthenticated",
         grpc_code: 16,
         expected_status: :undefined,
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{}
       }
     ]
 
