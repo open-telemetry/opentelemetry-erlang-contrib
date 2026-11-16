@@ -80,7 +80,7 @@ defmodule OpentelemetryEcto.MixProject do
       {:postgrex, "== 0.22.4", only: [:dev, :test]},
       {:myxql, "== 0.9.0", only: [:dev, :test]},
       {:tds, "== 2.3.8", only: [:dev, :test]},
-      {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false}
+      {:dialyxir, "== 1.4.9", only: [:dev, :test], runtime: false}
     ]
   end
 end

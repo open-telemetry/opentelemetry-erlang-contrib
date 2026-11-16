@@ -69,7 +69,7 @@ defmodule OpentelemetryReq.MixProject do
       {:opentelemetry, "== 1.7.0", only: :test},
       {:bypass, "== 2.1.0", only: :test},
       {:plug, "== 1.20.3", only: [:test]},
-      {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false}
+      {:dialyxir, "== 1.4.9", only: [:dev, :test], runtime: false}
     ]
   end
 end
