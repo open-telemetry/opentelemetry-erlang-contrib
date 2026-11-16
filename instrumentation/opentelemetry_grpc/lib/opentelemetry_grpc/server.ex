@@ -180,13 +180,13 @@ defmodule OpentelemetryGrpc.Server do
 
   defp record_server_span_result({:error, %GRPC.RPCError{status: status, message: message}}) do
     Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() => Map.get(@status_code_mapping, status, status),
-      ErrorAttributes.error_type() => to_string(GRPC.RPCError)
+      RPCAttributes.rpc_grpc_status_code() => Map.get(@status_code_mapping, status, status)
     })
 
     case to_otel_status(status) do
       :error ->
         status_name = GRPC.Status.code_name(status)
+        Tracer.set_attributes(%{ErrorAttributes.error_type() => to_string(GRPC.RPCError)})
         Tracer.set_status(OpenTelemetry.status(:error, message || "gRPC error: #{status_name}"))
 
       :unset ->
