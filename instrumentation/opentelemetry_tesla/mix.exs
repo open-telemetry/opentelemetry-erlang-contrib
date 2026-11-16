@@ -72,7 +72,7 @@ defmodule OpentelemetryTesla.MixProject do
       {:ex_doc, "== 0.40.4", only: :dev, runtime: false},
       {:bypass, "== 2.1.0", only: :test},
       {:jason, "== 1.4.5", only: :test},
-      {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false}
+      {:dialyxir, "== 1.4.9", only: [:dev, :test], runtime: false}
     ]
   end
 end
