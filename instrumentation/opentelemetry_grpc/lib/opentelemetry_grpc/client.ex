@@ -13,6 +13,7 @@ defmodule OpentelemetryGrpc.Client do
   alias OpenTelemetry.SemConv.ErrorAttributes
 
   alias OpenTelemetry.Tracer
+  alias OpentelemetryGrpc.StatusCode
 
   @grpc_client_tracer_id OpentelemetryGrpc.Client
 
@@ -108,6 +109,10 @@ defmodule OpentelemetryGrpc.Client do
 
     OpenTelemetry.Span.record_exception(span_ctx, reason, stacktrace)
 
+    OpenTelemetry.Span.set_attributes(span_ctx, %{
+      ErrorAttributes.error_type() => exception_error_type(reason)
+    })
+
     OpenTelemetry.Span.set_status(
       span_ctx,
       OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
@@ -130,7 +135,7 @@ defmodule OpentelemetryGrpc.Client do
   defp record_client_span_result({:error, %GRPC.RPCError{status: status, message: message}}) do
     Tracer.set_attributes(%{
       RPCAttributes.rpc_grpc_status_code() => Map.get(@status_code_mapping, status, status),
-      ErrorAttributes.error_type() => "grpc_error"
+      ErrorAttributes.error_type() => StatusCode.name(status)
     })
 
     status_name = GRPC.Status.code_name(status)
@@ -142,6 +147,15 @@ defmodule OpentelemetryGrpc.Client do
   end
 
   defp record_client_span_result(_result), do: :ok
+
+  # the call failed before a status code came back, so the exception names the error
+  defp exception_error_type(%error_struct{} = reason) when is_exception(reason) do
+    to_string(error_struct)
+  end
+
+  defp exception_error_type(_reason) do
+    "_OTHER"
+  end
 
   defp maybe_add_server_address(attrs, %{channel: %{host: host}})
        when is_binary(host) and host != "unknown" do
