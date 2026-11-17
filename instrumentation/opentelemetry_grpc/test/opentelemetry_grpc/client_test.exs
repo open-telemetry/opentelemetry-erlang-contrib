@@ -298,5 +298,34 @@ defmodule OpentelemetryGrpc.ClientTest do
         TestSupport.disconnect_client(channel)
       end
     end
+
+    test "records an exception event when the request fails to encode", %{port: port} do
+      {:ok, channel} =
+        TestSupport.connect_client(port,
+          interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
+        )
+
+      assert_raise Protobuf.EncodeError, fn ->
+        TestService.Stub.say_hello(channel, %HelloRequest{name: 123})
+      end
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        events: events
+                      )}
+
+      assert [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
+
+      assert %{
+               :"exception.type" => "Elixir.Protobuf.EncodeError",
+               :"exception.stacktrace" => stacktrace
+             } = :otel_attributes.map(event_attributes)
+
+      assert stacktrace =~ "GRPC.Telemetry.client_span/3"
+
+      TestSupport.disconnect_client(channel)
+    end
   end
 end
