@@ -127,7 +127,7 @@ defmodule OpentelemetryGrpc.Server do
   def handle_event([:grpc, :server, :rpc, :exception], _measurements, metadata, _config) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_server_tracer_id, metadata)
 
-    OpenTelemetry.Span.record_exception(ctx, metadata.kind, metadata.reason, metadata.stacktrace)
+    OpenTelemetry.Span.record_exception(ctx, metadata.reason, metadata.stacktrace)
 
     record_exception_result(ctx, metadata)
 
