@@ -69,7 +69,8 @@ defmodule OpentelemetryGrpc.Server do
     16 => @status_codes.unauthenticated
   }
   @status_code_ok RPCAttributes.rpc_grpc_status_code_values().ok
-  @status_code_internal RPCAttributes.rpc_grpc_status_code_values().internal
+  # the status code grpc replies with when a handler crashes
+  @status_code_unknown RPCAttributes.rpc_grpc_status_code_values().unknown
 
   @doc """
   Set up telemetry handlers for gRPC server events.
@@ -144,8 +145,10 @@ defmodule OpentelemetryGrpc.Server do
     record_server_span_result({:error, reason})
   end
 
-  # throw and exit carry no exception or status code to map
+  # throw and exit carry no exception to record
   defp record_exception_result(ctx, metadata) do
+    Tracer.set_attributes(%{RPCAttributes.rpc_grpc_status_code() => @status_code_unknown})
+
     OpenTelemetry.Span.set_status(
       ctx,
       OpenTelemetry.status(
@@ -202,7 +205,7 @@ defmodule OpentelemetryGrpc.Server do
 
   defp record_server_span_result({:error, %error_struct{} = error}) when is_exception(error) do
     Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() => @status_code_internal,
+      RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
       ErrorAttributes.error_type() => to_string(error_struct)
     })
 
