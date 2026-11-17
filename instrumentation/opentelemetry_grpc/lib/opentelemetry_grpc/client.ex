@@ -106,7 +106,7 @@ defmodule OpentelemetryGrpc.Client do
       ) do
     span_ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_client_tracer_id, metadata)
 
-    OpenTelemetry.Span.record_exception(span_ctx, kind, reason, stacktrace)
+    OpenTelemetry.Span.record_exception(span_ctx, reason, stacktrace)
 
     OpenTelemetry.Span.set_status(
       span_ctx,
