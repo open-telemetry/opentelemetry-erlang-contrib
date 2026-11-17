@@ -127,8 +127,6 @@ defmodule OpentelemetryGrpc.Server do
   def handle_event([:grpc, :server, :rpc, :exception], _measurements, metadata, _config) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_server_tracer_id, metadata)
 
-    OpenTelemetry.Span.record_exception(ctx, metadata.reason, metadata.stacktrace)
-
     record_exception_result(ctx, metadata)
 
     OpentelemetryTelemetry.end_telemetry_span(@grpc_server_tracer_id, metadata)
@@ -136,11 +134,13 @@ defmodule OpentelemetryGrpc.Server do
 
   # a raised GRPC.RPCError is how a handler returns a status, so it goes through
   # the same status code mapping as a returned error
-  defp record_exception_result(_ctx, %{reason: %GRPC.RPCError{} = error}) do
+  defp record_exception_result(ctx, %{reason: %GRPC.RPCError{} = error} = metadata) do
     record_server_span_result({:error, error})
+    record_rpc_error_exception(to_otel_status(error.status), ctx, metadata)
   end
 
-  defp record_exception_result(_ctx, %{reason: reason}) when is_exception(reason) do
+  defp record_exception_result(ctx, %{reason: reason} = metadata) when is_exception(reason) do
+    OpenTelemetry.Span.record_exception(ctx, reason, metadata.stacktrace)
     record_server_span_result({:error, reason})
   end
 
@@ -153,6 +153,15 @@ defmodule OpentelemetryGrpc.Server do
         Exception.format_banner(metadata.kind, metadata.reason, metadata.stacktrace)
       )
     )
+  end
+
+  # only a status code that fails the span makes the raise a failed operation
+  defp record_rpc_error_exception(:error, ctx, metadata) do
+    OpenTelemetry.Span.record_exception(ctx, metadata.reason, metadata.stacktrace)
+  end
+
+  defp record_rpc_error_exception(:unset, _ctx, _metadata) do
+    :ok
   end
 
   defp build_server_attributes(metadata) do
