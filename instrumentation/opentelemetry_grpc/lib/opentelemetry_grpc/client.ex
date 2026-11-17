@@ -13,6 +13,7 @@ defmodule OpentelemetryGrpc.Client do
   alias OpenTelemetry.SemConv.ErrorAttributes
 
   alias OpenTelemetry.Tracer
+  alias OpentelemetryGrpc.StatusCode
 
   @grpc_client_tracer_id OpentelemetryGrpc.Client
 
@@ -98,22 +99,38 @@ defmodule OpentelemetryGrpc.Client do
   end
 
   @doc false
-  def handle_event(
-        [:grpc, :client, :rpc, :exception],
-        _measurements,
-        %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
-        _config
-      ) do
+  def handle_event([:grpc, :client, :rpc, :exception], _measurements, metadata, _config) do
     span_ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_client_tracer_id, metadata)
+    record_client_exception(span_ctx, metadata)
+    OpentelemetryTelemetry.end_telemetry_span(@grpc_client_tracer_id, metadata)
+  end
 
-    OpenTelemetry.Span.record_exception(span_ctx, kind, reason, stacktrace)
+  # the call failed before a status code came back, so the exception names the error
+  defp record_client_exception(span_ctx, %{reason: %error_struct{} = reason} = metadata)
+       when is_exception(reason) do
+    OpenTelemetry.Span.record_exception(span_ctx, reason, metadata.stacktrace)
+
+    OpenTelemetry.Span.set_attributes(span_ctx, %{
+      ErrorAttributes.error_type() => to_string(error_struct)
+    })
 
     OpenTelemetry.Span.set_status(
       span_ctx,
-      OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
+      OpenTelemetry.status(:error, Exception.message(reason))
     )
+  end
 
-    OpentelemetryTelemetry.end_telemetry_span(@grpc_client_tracer_id, metadata)
+  # throw and exit carry no exception to record or name the error by
+  defp record_client_exception(span_ctx, metadata) do
+    OpenTelemetry.Span.set_attributes(span_ctx, %{ErrorAttributes.error_type() => "_OTHER"})
+
+    OpenTelemetry.Span.set_status(
+      span_ctx,
+      OpenTelemetry.status(
+        :error,
+        Exception.format_banner(metadata.kind, metadata.reason, metadata.stacktrace)
+      )
+    )
   end
 
   defp record_client_span_result({:ok, response, _metadata}) do
@@ -130,7 +147,7 @@ defmodule OpentelemetryGrpc.Client do
   defp record_client_span_result({:error, %GRPC.RPCError{status: status, message: message}}) do
     Tracer.set_attributes(%{
       RPCAttributes.rpc_grpc_status_code() => Map.get(@status_code_mapping, status, status),
-      ErrorAttributes.error_type() => "grpc_error"
+      ErrorAttributes.error_type() => StatusCode.name(status)
     })
 
     status_name = GRPC.Status.code_name(status)
