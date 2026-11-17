@@ -99,26 +99,38 @@ defmodule OpentelemetryGrpc.Client do
   end
 
   @doc false
-  def handle_event(
-        [:grpc, :client, :rpc, :exception],
-        _measurements,
-        %{kind: kind, reason: reason, stacktrace: stacktrace} = metadata,
-        _config
-      ) do
+  def handle_event([:grpc, :client, :rpc, :exception], _measurements, metadata, _config) do
     span_ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_client_tracer_id, metadata)
+    record_client_exception(span_ctx, metadata)
+    OpentelemetryTelemetry.end_telemetry_span(@grpc_client_tracer_id, metadata)
+  end
 
-    OpenTelemetry.Span.record_exception(span_ctx, reason, stacktrace)
+  # the call failed before a status code came back, so the exception names the error
+  defp record_client_exception(span_ctx, %{reason: %error_struct{} = reason} = metadata)
+       when is_exception(reason) do
+    OpenTelemetry.Span.record_exception(span_ctx, reason, metadata.stacktrace)
 
     OpenTelemetry.Span.set_attributes(span_ctx, %{
-      ErrorAttributes.error_type() => exception_error_type(reason)
+      ErrorAttributes.error_type() => to_string(error_struct)
     })
 
     OpenTelemetry.Span.set_status(
       span_ctx,
-      OpenTelemetry.status(:error, Exception.format_banner(kind, reason, stacktrace))
+      OpenTelemetry.status(:error, Exception.message(reason))
     )
+  end
 
-    OpentelemetryTelemetry.end_telemetry_span(@grpc_client_tracer_id, metadata)
+  # throw and exit carry no exception to record or name the error by
+  defp record_client_exception(span_ctx, metadata) do
+    OpenTelemetry.Span.set_attributes(span_ctx, %{ErrorAttributes.error_type() => "_OTHER"})
+
+    OpenTelemetry.Span.set_status(
+      span_ctx,
+      OpenTelemetry.status(
+        :error,
+        Exception.format_banner(metadata.kind, metadata.reason, metadata.stacktrace)
+      )
+    )
   end
 
   defp record_client_span_result({:ok, response, _metadata}) do
@@ -147,15 +159,6 @@ defmodule OpentelemetryGrpc.Client do
   end
 
   defp record_client_span_result(_result), do: :ok
-
-  # the call failed before a status code came back, so the exception names the error
-  defp exception_error_type(%error_struct{} = reason) when is_exception(reason) do
-    to_string(error_struct)
-  end
-
-  defp exception_error_type(_reason) do
-    "_OTHER"
-  end
 
   defp maybe_add_server_address(attrs, %{channel: %{host: host}})
        when is_binary(host) and host != "unknown" do
