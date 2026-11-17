@@ -337,6 +337,31 @@ defmodule OpentelemetryGrpc.ServerTest do
       assert :otel_events.list(events) == []
     end
 
+    test "records an exception event when the handler raises INTERNAL", %{port: port} do
+      {:ok, channel} =
+        TestSupport.connect_client(port,
+          interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
+        )
+
+      request = %HelloRequest{name: "TriggerInternal"}
+
+      assert {:error, %GRPC.RPCError{status: 13}} = TestService.Stub.say_hello(channel, request)
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :server,
+                        events: events
+                      )}
+
+      assert [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
+
+      assert %{
+               :"exception.type" => "Elixir.GRPC.RPCError",
+               :"exception.message" => "Internal error"
+             } = :otel_attributes.map(event_attributes)
+    end
+
     test "records span with exception", %{port: port} do
       {:ok, channel} =
         TestSupport.connect_client(port,
