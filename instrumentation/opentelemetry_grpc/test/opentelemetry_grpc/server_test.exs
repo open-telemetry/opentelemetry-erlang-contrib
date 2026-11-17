@@ -332,7 +332,8 @@ defmodule OpentelemetryGrpc.ServerTest do
                         name: "testserver.v1.TestService/SayHello",
                         kind: :server,
                         status: status,
-                        attributes: attributes
+                        attributes: attributes,
+                        events: events
                       )}
 
       assert :otel_attributes.map(attributes) == %{
@@ -348,6 +349,16 @@ defmodule OpentelemetryGrpc.ServerTest do
              }
 
       assert status == OpenTelemetry.status(:error, "Server crashed")
+
+      assert [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
+
+      assert %{
+               :"exception.type" => "Elixir.RuntimeError",
+               :"exception.message" => "Server crashed",
+               :"exception.stacktrace" => stacktrace
+             } = :otel_attributes.map(event_attributes)
+
+      assert stacktrace =~ "OpentelemetryGrpc.Test.TestServer.say_hello/2"
     end
   end
 end
