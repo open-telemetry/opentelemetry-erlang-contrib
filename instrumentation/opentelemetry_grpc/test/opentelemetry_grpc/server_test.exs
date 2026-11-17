@@ -432,4 +432,95 @@ defmodule OpentelemetryGrpc.ServerTest do
       end
     end
   end
+
+  describe "OTEL_SEMCONV_STABILITY_OPT_IN=rpc" do
+    setup do
+      opt_in_and_setup("rpc")
+    end
+
+    test "records the stable attributes on a successful call", %{port: port} do
+      assert {:ok, _response} = call_say_hello(port, "ServerTest")
+
+      assert_receive {:span, span(kind: :server, status: :undefined, attributes: attributes)}
+
+      assert :otel_attributes.map(attributes) == %{
+               :"rpc.system.name" => "grpc",
+               :"rpc.method" => "testserver.v1.TestService/SayHello",
+               :"rpc.status_code" => "OK",
+               :"network.protocol.name" => "http",
+               :"network.protocol.version" => "2",
+               "elixir.grpc.server_module" => "Elixir.OpentelemetryGrpc.Test.TestServer"
+             }
+    end
+
+    test "records the status code name without failing the span on NOT_FOUND", %{port: port} do
+      assert {:error, %GRPC.RPCError{status: 5}} = call_say_hello(port, "TriggerNotFound")
+
+      assert_receive {:span, span(kind: :server, status: :undefined, attributes: attributes)}
+
+      attributes = :otel_attributes.map(attributes)
+      assert %{:"rpc.status_code" => "NOT_FOUND"} = attributes
+      refute Map.has_key?(attributes, :"error.type")
+    end
+
+    test "records the status code name and error type on INTERNAL", %{port: port} do
+      assert {:error, %GRPC.RPCError{status: 13}} = call_say_hello(port, "TriggerInternal")
+
+      assert_receive {:span,
+                      span(
+                        kind: :server,
+                        status: {:status, :error, "Internal error"},
+                        attributes: attributes
+                      )}
+
+      assert %{:"rpc.status_code" => "INTERNAL", :"error.type" => "INTERNAL"} =
+               :otel_attributes.map(attributes)
+    end
+  end
+
+  describe "OTEL_SEMCONV_STABILITY_OPT_IN with rpc/dup next to rpc" do
+    setup do
+      opt_in_and_setup("rpc,rpc/dup")
+    end
+
+    test "records both the experimental and the stable attributes", %{port: port} do
+      assert {:ok, _response} = call_say_hello(port, "ServerTest")
+
+      assert_receive {:span, span(kind: :server, status: :undefined, attributes: attributes)}
+
+      assert :otel_attributes.map(attributes) == %{
+               :"rpc.system" => :grpc,
+               :"rpc.system.name" => "grpc",
+               :"rpc.service" => "testserver.v1.TestService",
+               :"rpc.method" => "testserver.v1.TestService/SayHello",
+               :"rpc.grpc.status_code" => 0,
+               :"rpc.status_code" => "OK",
+               :"network.protocol.name" => "http",
+               :"network.protocol.version" => "2",
+               :"network.transport" => "tcp",
+               "elixir.grpc.server_module" => "Elixir.OpentelemetryGrpc.Test.TestServer"
+             }
+    end
+  end
+
+  defp opt_in_and_setup(opt_in) do
+    System.put_env("OTEL_SEMCONV_STABILITY_OPT_IN", opt_in)
+    on_exit(fn -> System.delete_env("OTEL_SEMCONV_STABILITY_OPT_IN") end)
+
+    for h <- :telemetry.list_handlers([]), do: :telemetry.detach(h.id)
+    OpentelemetryGrpc.Server.setup()
+
+    :ok
+  end
+
+  defp call_say_hello(port, name) do
+    {:ok, channel} =
+      TestSupport.connect_client(port,
+        interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
+      )
+
+    result = TestService.Stub.say_hello(channel, %HelloRequest{name: name})
+    TestSupport.disconnect_client(channel)
+    result
+  end
 end
