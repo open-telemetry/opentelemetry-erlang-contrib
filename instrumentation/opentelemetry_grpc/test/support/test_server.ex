@@ -78,6 +78,14 @@ defmodule OpentelemetryGrpc.Test.TestServer do
     raise RuntimeError, "Server crashed"
   end
 
+  def say_hello(%{name: "TriggerThrow"}, _stream) do
+    throw(:server_crashed)
+  end
+
+  def say_hello(%{name: "TriggerExit"}, _stream) do
+    exit(:server_crashed)
+  end
+
   def say_hello(%{name: name}, _stream) do
     %HelloResponse{message: "Hello, #{name}!"}
   end
