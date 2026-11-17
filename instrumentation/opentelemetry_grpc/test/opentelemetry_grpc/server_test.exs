@@ -317,6 +317,26 @@ defmodule OpentelemetryGrpc.ServerTest do
       end
     end
 
+    test "does not record an exception event when the handler raises NOT_FOUND", %{port: port} do
+      {:ok, channel} =
+        TestSupport.connect_client(port,
+          interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
+        )
+
+      request = %HelloRequest{name: "TriggerNotFound"}
+
+      assert {:error, %GRPC.RPCError{status: 5}} = TestService.Stub.say_hello(channel, request)
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :server,
+                        events: events
+                      )}
+
+      assert :otel_events.list(events) == []
+    end
+
     test "records span with exception", %{port: port} do
       {:ok, channel} =
         TestSupport.connect_client(port,
