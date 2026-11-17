@@ -85,6 +85,13 @@ You can pass server-specific options through the main setup function:
 OpentelemetryGrpc.setup(server: [span_relationship: :link])
 ```
 
+### Semantic Conventions Stability
+
+The RPC semantic conventions are stable, but the spans keep the experimental attributes by default so existing dashboards keep working. Set `OTEL_SEMCONV_STABILITY_OPT_IN` before calling `setup/1` to migrate:
+
+- `rpc` emits only the stable attributes, such as `rpc.system.name`, `rpc.status_code` and the fully qualified `rpc.method`.
+- `rpc/dup` emits both. The two conventions share `rpc.method`, so it carries the stable, fully qualified value.
+
 ## Context Propagation
 
 The library supports OpenTelemetry context propagation:

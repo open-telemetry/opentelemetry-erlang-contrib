@@ -1,9 +1,9 @@
 defmodule OpentelemetryGrpc.Server do
   alias OpenTelemetry.SemConv.ErrorAttributes
-  alias OpenTelemetry.SemConv.Incubating.RPCAttributes
   alias OpenTelemetry.SemConv.NetworkAttributes
 
   alias OpenTelemetry.Tracer
+  alias OpentelemetryGrpc.SemConv
   alias OpentelemetryGrpc.StatusCode
 
   @options_schema [
@@ -48,30 +48,9 @@ defmodule OpentelemetryGrpc.Server do
     [:grpc, :server, :rpc, :stop],
     [:grpc, :server, :rpc, :exception]
   ]
-  @grpc_rpc_system RPCAttributes.rpc_system_values().grpc
-  @status_codes RPCAttributes.rpc_grpc_status_code_values()
-  @status_code_mapping %{
-    0 => @status_codes.ok,
-    1 => @status_codes.cancelled,
-    2 => @status_codes.unknown,
-    3 => @status_codes.invalid_argument,
-    4 => @status_codes.deadline_exceeded,
-    5 => @status_codes.not_found,
-    6 => @status_codes.already_exists,
-    7 => @status_codes.permission_denied,
-    8 => @status_codes.resource_exhausted,
-    9 => @status_codes.failed_precondition,
-    10 => @status_codes.aborted,
-    11 => @status_codes.out_of_range,
-    12 => @status_codes.unimplemented,
-    13 => @status_codes.internal,
-    14 => @status_codes.unavailable,
-    15 => @status_codes.data_loss,
-    16 => @status_codes.unauthenticated
-  }
-  @status_code_ok RPCAttributes.rpc_grpc_status_code_values().ok
+  @status_code_ok GRPC.Status.ok()
   # the status code grpc replies with when a handler crashes
-  @status_code_unknown RPCAttributes.rpc_grpc_status_code_values().unknown
+  @status_code_unknown GRPC.Status.unknown()
 
   @doc """
   Set up telemetry handlers for gRPC server events.
@@ -95,6 +74,7 @@ defmodule OpentelemetryGrpc.Server do
       opts
       |> NimbleOptions.validate!(@nimble_options_schema)
       |> Enum.into(%{})
+      |> Map.put(:stability, SemConv.stability())
 
     :telemetry.attach_many(
       {__MODULE__, :grpc_server_handler},
@@ -106,7 +86,7 @@ defmodule OpentelemetryGrpc.Server do
 
   @doc false
   def handle_event([:grpc, :server, :rpc, :start], _measurements, metadata, config) do
-    span_opts = %{kind: :server, attributes: build_server_attributes(metadata)}
+    span_opts = %{kind: :server, attributes: build_server_attributes(metadata, config.stability)}
     links = setup_context_propagation(metadata.stream, config.span_relationship)
     span_opts = put_links(span_opts, links)
 
@@ -119,37 +99,39 @@ defmodule OpentelemetryGrpc.Server do
   end
 
   @doc false
-  def handle_event([:grpc, :server, :rpc, :stop], _measurements, metadata, _config) do
+  def handle_event([:grpc, :server, :rpc, :stop], _measurements, metadata, config) do
     OpentelemetryTelemetry.set_current_telemetry_span(@grpc_server_tracer_id, metadata)
-    record_server_span_result(metadata.result)
+    record_server_span_result(metadata.result, config.stability)
     OpentelemetryTelemetry.end_telemetry_span(@grpc_server_tracer_id, metadata)
   end
 
   @doc false
-  def handle_event([:grpc, :server, :rpc, :exception], _measurements, metadata, _config) do
+  def handle_event([:grpc, :server, :rpc, :exception], _measurements, metadata, config) do
     ctx = OpentelemetryTelemetry.set_current_telemetry_span(@grpc_server_tracer_id, metadata)
 
-    record_exception_result(ctx, metadata)
+    record_exception_result(ctx, metadata, config.stability)
 
     OpentelemetryTelemetry.end_telemetry_span(@grpc_server_tracer_id, metadata)
   end
 
   # a raised GRPC.RPCError is how a handler returns a status, so it goes through
   # the same status code mapping as a returned error
-  defp record_exception_result(ctx, %{reason: %GRPC.RPCError{} = error} = metadata) do
-    record_server_span_result({:error, error})
+  defp record_exception_result(ctx, %{reason: %GRPC.RPCError{} = error} = metadata, stability) do
+    record_server_span_result({:error, error}, stability)
     record_rpc_error_exception(to_otel_status(error.status), ctx, metadata)
   end
 
-  defp record_exception_result(ctx, %{reason: reason} = metadata) when is_exception(reason) do
+  defp record_exception_result(ctx, %{reason: reason} = metadata, stability)
+       when is_exception(reason) do
     OpenTelemetry.Span.record_exception(ctx, reason, metadata.stacktrace)
-    record_server_span_result({:error, reason})
+    record_server_span_result({:error, reason}, stability)
   end
 
   # throw and exit carry no exception to record
-  defp record_exception_result(ctx, metadata) do
+  defp record_exception_result(ctx, metadata, stability) do
+    Tracer.set_attributes(SemConv.status_code_attributes(stability, @status_code_unknown))
+
     Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
       ErrorAttributes.error_type() => StatusCode.name(@status_code_unknown)
     })
 
@@ -171,16 +153,14 @@ defmodule OpentelemetryGrpc.Server do
     :ok
   end
 
-  defp build_server_attributes(metadata) do
-    %{
-      RPCAttributes.rpc_system() => @grpc_rpc_system,
-      RPCAttributes.rpc_service() => metadata.stream.service_name,
-      RPCAttributes.rpc_method() => metadata.stream.method_name,
+  defp build_server_attributes(metadata, stability) do
+    stability
+    |> SemConv.rpc_attributes(metadata.stream.service_name, metadata.stream.method_name)
+    |> Map.merge(%{
       NetworkAttributes.network_protocol_name() => "http",
       NetworkAttributes.network_protocol_version() => "2",
-      NetworkAttributes.network_transport() => "tcp",
       "elixir.grpc.server_module" => to_string(metadata.server)
-    }
+    })
     |> put_endpoint_module_attr(metadata.endpoint)
   end
 
@@ -192,31 +172,26 @@ defmodule OpentelemetryGrpc.Server do
     Map.put(attrs, "elixir.grpc.endpoint_module", to_string(endpoint))
   end
 
-  defp record_server_span_result({:ok, _stream, _response}) do
-    Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() => @status_code_ok
-    })
+  defp record_server_span_result({:ok, _stream, _response}, stability) do
+    Tracer.set_attributes(SemConv.status_code_attributes(stability, @status_code_ok))
   end
 
-  defp record_server_span_result({:error, %GRPC.RPCError{} = error}) do
-    Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() =>
-        Map.get(@status_code_mapping, error.status, error.status)
-    })
-
+  defp record_server_span_result({:error, %GRPC.RPCError{} = error}, stability) do
+    Tracer.set_attributes(SemConv.status_code_attributes(stability, error.status))
     record_rpc_error_status(to_otel_status(error.status), error)
   end
 
-  defp record_server_span_result({:error, error}) when is_exception(error) do
+  defp record_server_span_result({:error, error}, stability) when is_exception(error) do
+    Tracer.set_attributes(SemConv.status_code_attributes(stability, @status_code_unknown))
+
     Tracer.set_attributes(%{
-      RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
       ErrorAttributes.error_type() => StatusCode.name(@status_code_unknown)
     })
 
     Tracer.set_status(OpenTelemetry.status(:error, Exception.message(error)))
   end
 
-  defp record_server_span_result(_result) do
+  defp record_server_span_result(_result, _stability) do
     # Unknown result format - don't set status
     :ok
   end
