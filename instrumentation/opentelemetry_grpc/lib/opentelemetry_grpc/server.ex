@@ -4,6 +4,7 @@ defmodule OpentelemetryGrpc.Server do
   alias OpenTelemetry.SemConv.NetworkAttributes
 
   alias OpenTelemetry.Tracer
+  alias OpentelemetryGrpc.StatusCode
 
   @options_schema [
     span_relationship: [
@@ -147,7 +148,10 @@ defmodule OpentelemetryGrpc.Server do
 
   # throw and exit carry no exception to record
   defp record_exception_result(ctx, metadata) do
-    Tracer.set_attributes(%{RPCAttributes.rpc_grpc_status_code() => @status_code_unknown})
+    Tracer.set_attributes(%{
+      RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
+      ErrorAttributes.error_type() => StatusCode.name(@status_code_unknown)
+    })
 
     OpenTelemetry.Span.set_status(
       ctx,
@@ -203,10 +207,10 @@ defmodule OpentelemetryGrpc.Server do
     record_rpc_error_status(to_otel_status(error.status), error)
   end
 
-  defp record_server_span_result({:error, %error_struct{} = error}) when is_exception(error) do
+  defp record_server_span_result({:error, error}) when is_exception(error) do
     Tracer.set_attributes(%{
       RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
-      ErrorAttributes.error_type() => to_string(error_struct)
+      ErrorAttributes.error_type() => StatusCode.name(@status_code_unknown)
     })
 
     Tracer.set_status(OpenTelemetry.status(:error, Exception.message(error)))
@@ -218,7 +222,7 @@ defmodule OpentelemetryGrpc.Server do
   end
 
   defp record_rpc_error_status(:error, error) do
-    Tracer.set_attributes(%{ErrorAttributes.error_type() => to_string(GRPC.RPCError)})
+    Tracer.set_attributes(%{ErrorAttributes.error_type() => StatusCode.name(error.status)})
 
     Tracer.set_status(
       OpenTelemetry.status(
