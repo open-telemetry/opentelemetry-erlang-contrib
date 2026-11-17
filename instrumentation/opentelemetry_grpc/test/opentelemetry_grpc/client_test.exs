@@ -305,17 +305,21 @@ defmodule OpentelemetryGrpc.ClientTest do
           interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
         )
 
-      assert_raise Protobuf.EncodeError, fn ->
-        TestService.Stub.say_hello(channel, %HelloRequest{name: 123})
-      end
+      error =
+        assert_raise Protobuf.EncodeError, fn ->
+          TestService.Stub.say_hello(channel, %HelloRequest{name: 123})
+        end
 
       assert_receive {:span,
                       span(
                         name: "testserver.v1.TestService/SayHello",
                         kind: :client,
+                        status: status,
                         attributes: attributes,
                         events: events
                       )}
+
+      assert status == OpenTelemetry.status(:error, Exception.message(error))
 
       # the call failed before any status code came back
       assert %{:"error.type" => "Elixir.Protobuf.EncodeError"} = :otel_attributes.map(attributes)
