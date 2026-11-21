@@ -5,6 +5,8 @@
 Task-oriented guides:
 
 - [Record Exceptions](how-to/record-exceptions.md): recording exception events, span status, and `error.type` from Telemetry handlers and non-Telemetry code paths
+- [Release a Package to Hex](how-to/release-a-package.md): preparing the version pull request, publishing, changing the version, and recovering from a failed release
+- [Add a Package to the Release Workflows](how-to/add-a-package-to-the-release-workflows.md): workflow configuration, Hex ownership, and the starting version for a package that is already on Hex
 
 ## Reference
 
@@ -21,3 +23,4 @@ Technical specifications:
 Background and design rationale:
 
 - [Understanding Hooks and Callback Options](explanation/hooks.md): why user code must be a `setup/1` option rather than a second `:telemetry` handler, why callbacks take one map, and why span status is set after the hook
+- [Understanding the Release Process](explanation/releases.md): how Release Drafter and Publish Hex Release fit together, why the draft decides the version, why publishing takes two runs, and who can publish
