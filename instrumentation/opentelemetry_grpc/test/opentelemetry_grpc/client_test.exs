@@ -161,97 +161,97 @@ defmodule OpentelemetryGrpc.ClientTest do
         name: "TriggerCancelled",
         grpc_code: 1,
         expected_status: {:status, :error, "Client cancelled the request"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "CANCELLED"}
       },
       %{
         name: "TriggerUnknown",
         grpc_code: 2,
         expected_status: {:status, :error, "Unknown error"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "UNKNOWN"}
       },
       %{
         name: "TriggerInvalidArgument",
         grpc_code: 3,
         expected_status: {:status, :error, "Invalid argument"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "INVALID_ARGUMENT"}
       },
       %{
         name: "TriggerDeadlineExceeded",
         grpc_code: 4,
         expected_status: {:status, :error, "Deadline exceeded"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "DEADLINE_EXCEEDED"}
       },
       %{
         name: "TriggerNotFound",
         grpc_code: 5,
         expected_status: {:status, :error, "Not found"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "NOT_FOUND"}
       },
       %{
         name: "TriggerAlreadyExists",
         grpc_code: 6,
         expected_status: {:status, :error, "Already exists"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "ALREADY_EXISTS"}
       },
       %{
         name: "TriggerPermissionDenied",
         grpc_code: 7,
         expected_status: {:status, :error, "Permission denied"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "PERMISSION_DENIED"}
       },
       %{
         name: "TriggerResourceExhausted",
         grpc_code: 8,
         expected_status: {:status, :error, "Resource exhausted"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "RESOURCE_EXHAUSTED"}
       },
       %{
         name: "TriggerFailedPrecondition",
         grpc_code: 9,
         expected_status: {:status, :error, "Failed precondition"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "FAILED_PRECONDITION"}
       },
       %{
         name: "TriggerAborted",
         grpc_code: 10,
         expected_status: {:status, :error, "Aborted"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "ABORTED"}
       },
       %{
         name: "TriggerOutOfRange",
         grpc_code: 11,
         expected_status: {:status, :error, "Out of range"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "OUT_OF_RANGE"}
       },
       %{
         name: "TriggerUnimplemented",
         grpc_code: 12,
         expected_status: {:status, :error, "Unimplemented"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "UNIMPLEMENTED"}
       },
       %{
         name: "TriggerInternal",
         grpc_code: 13,
         expected_status: {:status, :error, "Internal error"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "INTERNAL"}
       },
       %{
         name: "TriggerUnavailable",
         grpc_code: 14,
         expected_status: {:status, :error, "Service unavailable"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "UNAVAILABLE"}
       },
       %{
         name: "TriggerDataLoss",
         grpc_code: 15,
         expected_status: {:status, :error, "Data loss"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "DATA_LOSS"}
       },
       %{
         name: "TriggerUnauthenticated",
         grpc_code: 16,
         expected_status: {:status, :error, "Unauthenticated"},
-        extra_attrs: %{:"error.type" => "grpc_error"}
+        extra_attrs: %{:"error.type" => "UNAUTHENTICATED"}
       }
     ]
 
@@ -298,5 +298,146 @@ defmodule OpentelemetryGrpc.ClientTest do
         TestSupport.disconnect_client(channel)
       end
     end
+
+    test "records an exception event when the request fails to encode", %{port: port} do
+      {:ok, channel} =
+        TestSupport.connect_client(port,
+          interceptors: [OpentelemetryGrpc.ContextPropagatorInterceptor]
+        )
+
+      error =
+        assert_raise Protobuf.EncodeError, fn ->
+          TestService.Stub.say_hello(channel, %HelloRequest{name: 123})
+        end
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: status,
+                        attributes: attributes,
+                        events: events
+                      )}
+
+      assert status == OpenTelemetry.status(:error, Exception.message(error))
+
+      # the call failed before any status code came back
+      assert %{:"error.type" => "Elixir.Protobuf.EncodeError"} = :otel_attributes.map(attributes)
+
+      assert [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
+
+      assert %{
+               :"exception.type" => "Elixir.Protobuf.EncodeError",
+               :"exception.stacktrace" => stacktrace
+             } = :otel_attributes.map(event_attributes)
+
+      assert stacktrace =~ "GRPC.Telemetry.client_span/3"
+
+      TestSupport.disconnect_client(channel)
+    end
+
+    test "records an error type when the call fails on a disconnected channel", %{port: port} do
+      {:ok, channel} = TestSupport.connect_client(port)
+      TestSupport.disconnect_client(channel)
+
+      # grpc 1.x exits before any status code comes back, grpc 0.x replies UNKNOWN
+      expected_error_type =
+        try do
+          TestService.Stub.say_hello(channel, %HelloRequest{name: "ClientTest"})
+        catch
+          :exit, _reason -> "_OTHER"
+        else
+          {:error, %GRPC.RPCError{status: 2}} -> "UNKNOWN"
+        end
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: {:status, :error, _description},
+                        attributes: attributes
+                      )}
+
+      assert %{:"error.type" => ^expected_error_type} = :otel_attributes.map(attributes)
+    end
+  end
+
+  describe "OTEL_SEMCONV_STABILITY_OPT_IN=rpc" do
+    setup do
+      opt_in_and_setup("rpc")
+    end
+
+    test "records the stable attributes on a successful call", %{port: port} do
+      assert {:ok, _response} = call_say_hello(port, "ClientTest")
+
+      assert_receive {:span, span(kind: :client, status: :undefined, attributes: attributes)}
+
+      assert :otel_attributes.map(attributes) == %{
+               :"rpc.system.name" => "grpc",
+               :"rpc.method" => "testserver.v1.TestService/SayHello",
+               :"rpc.status_code" => "OK",
+               :"network.protocol.name" => "http",
+               :"network.protocol.version" => "2",
+               :"server.address" => "127.0.0.1",
+               :"server.port" => port
+             }
+    end
+
+    test "records the status code name as the error type on NOT_FOUND", %{port: port} do
+      assert {:error, %GRPC.RPCError{status: 5}} = call_say_hello(port, "TriggerNotFound")
+
+      assert_receive {:span,
+                      span(
+                        kind: :client,
+                        status: {:status, :error, "Not found"},
+                        attributes: attributes
+                      )}
+
+      assert %{:"rpc.status_code" => "NOT_FOUND", :"error.type" => "NOT_FOUND"} =
+               :otel_attributes.map(attributes)
+    end
+  end
+
+  describe "OTEL_SEMCONV_STABILITY_OPT_IN with rpc/dup next to rpc" do
+    setup do
+      opt_in_and_setup("rpc,rpc/dup")
+    end
+
+    test "records both the experimental and the stable attributes", %{port: port} do
+      assert {:ok, _response} = call_say_hello(port, "ClientTest")
+
+      assert_receive {:span, span(kind: :client, status: :undefined, attributes: attributes)}
+
+      assert :otel_attributes.map(attributes) == %{
+               :"rpc.system" => :grpc,
+               :"rpc.system.name" => "grpc",
+               :"rpc.service" => "testserver.v1.TestService",
+               :"rpc.method" => "testserver.v1.TestService/SayHello",
+               :"rpc.grpc.status_code" => 0,
+               :"rpc.status_code" => "OK",
+               :"network.protocol.name" => "http",
+               :"network.protocol.version" => "2",
+               :"network.transport" => "tcp",
+               :"server.address" => "127.0.0.1",
+               :"server.port" => port
+             }
+    end
+  end
+
+  defp opt_in_and_setup(opt_in) do
+    System.put_env("OTEL_SEMCONV_STABILITY_OPT_IN", opt_in)
+    on_exit(fn -> System.delete_env("OTEL_SEMCONV_STABILITY_OPT_IN") end)
+
+    for h <- :telemetry.list_handlers([]), do: :telemetry.detach(h.id)
+    OpentelemetryGrpc.Client.setup()
+
+    :ok
+  end
+
+  defp call_say_hello(port, name) do
+    {:ok, channel} = TestSupport.connect_client(port)
+    result = TestService.Stub.say_hello(channel, %HelloRequest{name: name})
+    TestSupport.disconnect_client(channel)
+    result
   end
 end
