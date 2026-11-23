@@ -45,7 +45,7 @@ defmodule OpentelemetryProcessPropagator.MixProject do
     end)
     |> Enum.concat([
       {:dialyxir, "== 1.4.9", only: [:dev, :test], runtime: false},
-      {:ex_doc, "== 0.40.4", only: :dev, runtime: false},
+      {:ex_doc, "== 0.40.5", only: :dev, runtime: false},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
       {:opentelemetry_exporter, "== 1.11.0", only: [:dev, :test]}
     ])

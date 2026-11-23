@@ -70,7 +70,7 @@ defmodule OpentelemetryGrpc.MixProject do
       {:protobuf, "~> 0.15 or ~> 0.17"},
       {:opentelemetry_exporter, "== 1.11.0", only: [:dev, :test]},
       {:opentelemetry, "== 1.7.0", only: [:dev, :test]},
-      {:ex_doc, "== 0.40.4", only: [:dev], runtime: false},
+      {:ex_doc, "== 0.40.5", only: [:dev], runtime: false},
       {:excoveralls, "== 0.18.5", only: :test},
       {:dialyxir, "== 1.4.9", only: [:dev, :test], runtime: false}
     ] ++ grpc_deps()
