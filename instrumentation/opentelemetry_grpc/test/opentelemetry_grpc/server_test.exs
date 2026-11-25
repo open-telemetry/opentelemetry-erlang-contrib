@@ -188,7 +188,7 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerUnknown",
         grpc_code: 2,
         expected_status: {:status, :error, "Unknown error"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "UNKNOWN"}
       },
       %{
         name: "TriggerInvalidArgument",
@@ -200,7 +200,7 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerDeadlineExceeded",
         grpc_code: 4,
         expected_status: {:status, :error, "Deadline exceeded"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "DEADLINE_EXCEEDED"}
       },
       %{
         name: "TriggerNotFound",
@@ -248,25 +248,25 @@ defmodule OpentelemetryGrpc.ServerTest do
         name: "TriggerUnimplemented",
         grpc_code: 12,
         expected_status: {:status, :error, "Unimplemented"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "UNIMPLEMENTED"}
       },
       %{
         name: "TriggerInternal",
         grpc_code: 13,
         expected_status: {:status, :error, "Internal error"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "INTERNAL"}
       },
       %{
         name: "TriggerUnavailable",
         grpc_code: 14,
         expected_status: {:status, :error, "Service unavailable"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "UNAVAILABLE"}
       },
       %{
         name: "TriggerDataLoss",
         grpc_code: 15,
         expected_status: {:status, :error, "Data loss"},
-        extra_attrs: %{:"error.type" => "Elixir.GRPC.RPCError"}
+        extra_attrs: %{:"error.type" => "DATA_LOSS"}
       },
       %{
         name: "TriggerUnauthenticated",
@@ -389,7 +389,7 @@ defmodule OpentelemetryGrpc.ServerTest do
                :"network.protocol.version" => "2",
                :"network.transport" => "tcp",
                :"rpc.grpc.status_code" => 2,
-               :"error.type" => "Elixir.RuntimeError",
+               :"error.type" => "UNKNOWN",
                "elixir.grpc.server_module" => "Elixir.OpentelemetryGrpc.Test.TestServer"
              }
 
@@ -408,7 +408,7 @@ defmodule OpentelemetryGrpc.ServerTest do
 
     for {name, kind} <- [{"TriggerThrow", :throw}, {"TriggerExit", :exit}] do
       @tag request_name: name
-      test "records the UNKNOWN status code the client receives when the handler uses #{kind}",
+      test "records UNKNOWN without a description when the handler uses #{kind}",
            %{port: port, request_name: request_name} do
         {:ok, channel} =
           TestSupport.connect_client(port,
@@ -423,11 +423,15 @@ defmodule OpentelemetryGrpc.ServerTest do
                         span(
                           name: "testserver.v1.TestService/SayHello",
                           kind: :server,
-                          status: {:status, :error, _description},
+                          status: status,
                           attributes: attributes
                         )}
 
-        assert %{:"rpc.grpc.status_code" => 2} = :otel_attributes.map(attributes)
+        # the thrown or exited term is arbitrary, so it does not describe the error
+        assert status == OpenTelemetry.status(:error)
+
+        assert %{:"rpc.grpc.status_code" => 2, :"error.type" => "UNKNOWN"} =
+                 :otel_attributes.map(attributes)
       end
     end
   end
