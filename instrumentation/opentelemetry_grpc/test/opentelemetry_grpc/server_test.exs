@@ -408,7 +408,7 @@ defmodule OpentelemetryGrpc.ServerTest do
 
     for {name, kind} <- [{"TriggerThrow", :throw}, {"TriggerExit", :exit}] do
       @tag request_name: name
-      test "records the UNKNOWN status code the client receives when the handler uses #{kind}",
+      test "records UNKNOWN without a description when the handler uses #{kind}",
            %{port: port, request_name: request_name} do
         {:ok, channel} =
           TestSupport.connect_client(port,
@@ -423,9 +423,12 @@ defmodule OpentelemetryGrpc.ServerTest do
                         span(
                           name: "testserver.v1.TestService/SayHello",
                           kind: :server,
-                          status: {:status, :error, _description},
+                          status: status,
                           attributes: attributes
                         )}
+
+        # the thrown or exited term is arbitrary, so it does not describe the error
+        assert status == OpenTelemetry.status(:error)
 
         assert %{:"rpc.grpc.status_code" => 2, :"error.type" => "UNKNOWN"} =
                  :otel_attributes.map(attributes)
