@@ -408,6 +408,35 @@ defmodule OpentelemetryGrpc.ClientTest do
 
       TestSupport.disconnect_client(channel)
     end
+
+    test "names a raised RPCError by its status code", %{port: port} do
+      channel =
+        connect_failing_client(port, fn ->
+          raise GRPC.RPCError, status: :unavailable, message: "Service unavailable"
+        end)
+
+      assert_raise GRPC.RPCError, fn ->
+        TestService.Stub.say_hello(channel, %HelloRequest{name: "ClientTest"})
+      end
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: status,
+                        attributes: attributes,
+                        events: events
+                      )}
+
+      assert status == OpenTelemetry.status(:error, "Service unavailable")
+
+      assert %{:"rpc.grpc.status_code" => 14, :"error.type" => "UNAVAILABLE"} =
+               :otel_attributes.map(attributes)
+
+      assert [event(name: :exception)] = :otel_events.list(events)
+
+      TestSupport.disconnect_client(channel)
+    end
   end
 
   defp connect_failing_client(port, fail) do
