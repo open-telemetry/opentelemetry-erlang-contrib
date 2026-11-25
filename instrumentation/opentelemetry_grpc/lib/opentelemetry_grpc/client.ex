@@ -111,7 +111,7 @@ defmodule OpentelemetryGrpc.Client do
     OpenTelemetry.Span.record_exception(span_ctx, reason, metadata.stacktrace)
 
     OpenTelemetry.Span.set_attributes(span_ctx, %{
-      ErrorAttributes.error_type() => to_string(error_struct)
+      ErrorAttributes.error_type() => inspect(error_struct)
     })
 
     OpenTelemetry.Span.set_status(
