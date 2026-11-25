@@ -112,18 +112,10 @@ defmodule OpentelemetryGrpc.Client do
   end
 
   # the call failed before a status code came back, so the exception names the error
-  defp record_client_exception(span_ctx, %{reason: %error_struct{} = reason} = metadata)
+  defp record_client_exception(span_ctx, %{reason: reason} = metadata)
        when is_exception(reason) do
     OpenTelemetry.Span.record_exception(span_ctx, reason, metadata.stacktrace)
-
-    OpenTelemetry.Span.set_attributes(span_ctx, %{
-      ErrorAttributes.error_type() => inspect(error_struct)
-    })
-
-    OpenTelemetry.Span.set_status(
-      span_ctx,
-      OpenTelemetry.status(:error, Exception.message(reason))
-    )
+    record_client_span_result({:error, reason})
   end
 
   # throw and exit carry no exception to record or name the error by, and the
