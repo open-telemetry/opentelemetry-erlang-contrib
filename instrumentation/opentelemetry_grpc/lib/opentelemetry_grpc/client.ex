@@ -126,17 +126,11 @@ defmodule OpentelemetryGrpc.Client do
     )
   end
 
-  # throw and exit carry no exception to record or name the error by
-  defp record_client_exception(span_ctx, metadata) do
+  # throw and exit carry no exception to record or name the error by, and the
+  # thrown or exited term is arbitrary, so it does not describe the error either
+  defp record_client_exception(span_ctx, _metadata) do
     OpenTelemetry.Span.set_attributes(span_ctx, %{ErrorAttributes.error_type() => "_OTHER"})
-
-    OpenTelemetry.Span.set_status(
-      span_ctx,
-      OpenTelemetry.status(
-        :error,
-        Exception.format_banner(metadata.kind, metadata.reason, metadata.stacktrace)
-      )
-    )
+    OpenTelemetry.Span.set_status(span_ctx, OpenTelemetry.status(:error))
   end
 
   defp record_client_span_result({:ok, response, _metadata}) do
