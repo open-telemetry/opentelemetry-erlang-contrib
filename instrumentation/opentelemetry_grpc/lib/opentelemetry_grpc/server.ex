@@ -146,20 +146,15 @@ defmodule OpentelemetryGrpc.Server do
     record_server_span_result({:error, reason})
   end
 
-  # throw and exit carry no exception to record
-  defp record_exception_result(ctx, metadata) do
+  # throw and exit carry no exception to record, and the thrown or exited term is
+  # arbitrary, so it does not describe the error
+  defp record_exception_result(ctx, _metadata) do
     Tracer.set_attributes(%{
       RPCAttributes.rpc_grpc_status_code() => @status_code_unknown,
       ErrorAttributes.error_type() => StatusCode.name(@status_code_unknown)
     })
 
-    OpenTelemetry.Span.set_status(
-      ctx,
-      OpenTelemetry.status(
-        :error,
-        Exception.format_banner(metadata.kind, metadata.reason, metadata.stacktrace)
-      )
-    )
+    OpenTelemetry.Span.set_status(ctx, OpenTelemetry.status(:error))
   end
 
   # only a status code that fails the span makes the raise a failed operation
