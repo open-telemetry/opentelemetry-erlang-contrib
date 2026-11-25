@@ -465,6 +465,28 @@ defmodule OpentelemetryGrpc.ClientTest do
         TestSupport.disconnect_client(channel)
       end
     end
+
+    test "names a returned exception by its module and describes it by its message", %{
+      port: port
+    } do
+      channel = connect_failing_client(port, fn -> {:error, %ArgumentError{message: "Foo"}} end)
+
+      assert {:error, %ArgumentError{}} =
+               TestService.Stub.say_hello(channel, %HelloRequest{name: "ClientTest"})
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: status,
+                        attributes: attributes
+                      )}
+
+      assert status == OpenTelemetry.status(:error, "Foo")
+      assert %{:"error.type" => "ArgumentError"} = :otel_attributes.map(attributes)
+
+      TestSupport.disconnect_client(channel)
+    end
   end
 
   defp connect_failing_client(port, fail) do
