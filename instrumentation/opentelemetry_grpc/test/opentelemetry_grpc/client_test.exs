@@ -437,6 +437,34 @@ defmodule OpentelemetryGrpc.ClientTest do
 
       TestSupport.disconnect_client(channel)
     end
+
+    for kind <- [:throw, :exit] do
+      @tag kind: kind
+      test "leaves the description empty when the call fails with #{kind}", %{
+        port: port,
+        kind: kind
+      } do
+        channel = connect_failing_client(port, fn -> apply(Kernel, kind, [:connection_gone]) end)
+
+        assert catch_kind(kind, fn ->
+                 TestService.Stub.say_hello(channel, %HelloRequest{name: "ClientTest"})
+               end) == :connection_gone
+
+        assert_receive {:span,
+                        span(
+                          name: "testserver.v1.TestService/SayHello",
+                          kind: :client,
+                          status: status,
+                          attributes: attributes
+                        )}
+
+        # the thrown or exited term is arbitrary, so it does not describe the error
+        assert status == OpenTelemetry.status(:error)
+        assert %{:"error.type" => "_OTHER"} = :otel_attributes.map(attributes)
+
+        TestSupport.disconnect_client(channel)
+      end
+    end
   end
 
   defp connect_failing_client(port, fail) do
@@ -447,4 +475,7 @@ defmodule OpentelemetryGrpc.ClientTest do
 
     channel
   end
+
+  defp catch_kind(:throw, fun), do: catch_throw(fun.())
+  defp catch_kind(:exit, fun), do: catch_exit(fun.())
 end
