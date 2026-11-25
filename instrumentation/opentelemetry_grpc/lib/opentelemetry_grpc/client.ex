@@ -154,7 +154,9 @@ defmodule OpentelemetryGrpc.Client do
     Tracer.set_status(OpenTelemetry.status(:error, message || "gRPC error: #{status_name}"))
   end
 
+  # no status code came back, so no status name can describe the error
   defp record_client_span_result({:error, error}) do
+    Tracer.set_attributes(%{ErrorAttributes.error_type() => "_OTHER"})
     Tracer.set_status(:error, inspect(error))
   end
 
