@@ -386,5 +386,36 @@ defmodule OpentelemetryGrpc.ClientTest do
       # no status code came back to name the error by
       assert %{:"error.type" => "_OTHER"} = :otel_attributes.map(attributes)
     end
+
+    test "records a status code grpc has no name for without crashing", %{port: port} do
+      channel = connect_failing_client(port, fn -> {:error, %GRPC.RPCError{status: 100}} end)
+
+      assert {:error, %GRPC.RPCError{status: 100}} =
+               TestService.Stub.say_hello(channel, %HelloRequest{name: "ClientTest"})
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: status,
+                        attributes: attributes
+                      )}
+
+      assert status == OpenTelemetry.status(:error, "gRPC error: _OTHER")
+
+      assert %{:"rpc.grpc.status_code" => 100, :"error.type" => "_OTHER"} =
+               :otel_attributes.map(attributes)
+
+      TestSupport.disconnect_client(channel)
+    end
+  end
+
+  defp connect_failing_client(port, fail) do
+    {:ok, channel} =
+      TestSupport.connect_client(port,
+        interceptors: [{OpentelemetryGrpc.Test.FailingInterceptor, fail}]
+      )
+
+    channel
   end
 end
