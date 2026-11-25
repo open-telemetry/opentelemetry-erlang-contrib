@@ -150,7 +150,7 @@ defmodule OpentelemetryGrpc.Client do
       ErrorAttributes.error_type() => StatusCode.name(status)
     })
 
-    status_name = GRPC.Status.code_name(status)
+    status_name = StatusCode.name(status)
     Tracer.set_status(OpenTelemetry.status(:error, message || "gRPC error: #{status_name}"))
   end
 
