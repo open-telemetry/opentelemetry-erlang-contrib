@@ -360,5 +360,31 @@ defmodule OpentelemetryGrpc.ClientTest do
 
       assert %{:"error.type" => ^expected_error_type} = :otel_attributes.map(attributes)
     end
+
+    test "records an error type when the call returns an error that is not an RPCError" do
+      stream = %{
+        service_name: "testserver.v1.TestService",
+        method_name: "SayHello",
+        channel: %{host: "127.0.0.1", port: @test_port}
+      }
+
+      :telemetry.execute([:grpc, :client, :rpc, :start], %{}, %{stream: stream})
+
+      :telemetry.execute([:grpc, :client, :rpc, :stop], %{}, %{
+        stream: stream,
+        result: {:error, :closed}
+      })
+
+      assert_receive {:span,
+                      span(
+                        name: "testserver.v1.TestService/SayHello",
+                        kind: :client,
+                        status: {:status, :error, _description},
+                        attributes: attributes
+                      )}
+
+      # no status code came back to name the error by
+      assert %{:"error.type" => "_OTHER"} = :otel_attributes.map(attributes)
+    end
   end
 end
