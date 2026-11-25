@@ -105,6 +105,12 @@ defmodule OpentelemetryGrpc.Client do
     OpentelemetryTelemetry.end_telemetry_span(@grpc_client_tracer_id, metadata)
   end
 
+  # a raised RPCError carries the status code, which names the error like a returned one
+  defp record_client_exception(span_ctx, %{reason: %GRPC.RPCError{} = error} = metadata) do
+    OpenTelemetry.Span.record_exception(span_ctx, error, metadata.stacktrace)
+    record_client_span_result({:error, error})
+  end
+
   # the call failed before a status code came back, so the exception names the error
   defp record_client_exception(span_ctx, %{reason: %error_struct{} = reason} = metadata)
        when is_exception(reason) do
