@@ -322,7 +322,7 @@ defmodule OpentelemetryGrpc.ClientTest do
       assert status == OpenTelemetry.status(:error, Exception.message(error))
 
       # the call failed before any status code came back
-      assert %{:"error.type" => "Elixir.Protobuf.EncodeError"} = :otel_attributes.map(attributes)
+      assert %{:"error.type" => "Protobuf.EncodeError"} = :otel_attributes.map(attributes)
 
       assert [event(name: :exception, attributes: event_attributes)] = :otel_events.list(events)
 
