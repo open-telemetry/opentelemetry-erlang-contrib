@@ -312,7 +312,7 @@ defmodule OpentelemetryGrpc.Server do
 
   defp get_grpc_headers(_stream), do: []
 
-  # https://github.com/open-telemetry/opentelemetry-specification/blob/v1.50.0/specification/trace/semantic_conventions/rpc.md
+  # https://github.com/open-telemetry/semantic-conventions/blob/v1.45.0/docs/rpc/grpc.md
   defp to_otel_status(2), do: :error
   defp to_otel_status(4), do: :error
   defp to_otel_status(12), do: :error
